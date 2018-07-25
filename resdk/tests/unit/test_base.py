@@ -10,6 +10,7 @@ import slumber
 from mock import MagicMock, call, patch
 
 from resdk.resources.base import BaseResolweResource, BaseResource
+from resdk.resources.descriptor import DescriptorSchema
 
 # This is normally set in subclass
 BaseResolweResource.endpoint = 'endpoint'
@@ -48,12 +49,18 @@ class TestBaseResolweResource(unittest.TestCase):
         self.assertEqual(base_resource.fields(), ('writable', 'update_protected', 'read_only'))
 
     def test_dehydrate_resources(self):
-        obj = BaseResource(resolwe=self.resolwe_mock, id=1)
+        obj = BaseResolweResource(resolwe=self.resolwe_mock, id=1)
+        obj2 = DescriptorSchema(resolwe=self.resolwe_mock, slug='foo')
 
         self.assertEqual(obj._dehydrate_resources(obj), 1)
         self.assertEqual(obj._dehydrate_resources([obj]), [1])
         self.assertEqual(obj._dehydrate_resources({'key': obj}), {'key': 1})
         self.assertEqual(obj._dehydrate_resources({'key': [obj]}), {'key': [1]})
+
+        self.assertEqual(obj._dehydrate_resources(obj2), 'foo')
+        self.assertEqual(obj._dehydrate_resources([obj2]), ['foo'])
+        self.assertEqual(obj._dehydrate_resources({'key': obj2}), {'key': 'foo'})
+        self.assertEqual(obj._dehydrate_resources({'key': [obj2]}), {'key': ['foo']})
 
     def test_update_fileds(self):
         resource = BaseResource(resolwe=self.resolwe_mock)

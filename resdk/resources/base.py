@@ -76,6 +76,12 @@ class BaseResource(object):
 
     def _dehydrate_resources(self, obj):
         """Iterate through object and replace all objects with their ids."""
+        # Prevent circular imports:
+        from .descriptor import DescriptorSchema
+        from .process import Process
+
+        if isinstance(obj, DescriptorSchema) or isinstance(obj, Process):
+            return obj.slug
         if isinstance(obj, BaseResource):
             return obj.id
         if isinstance(obj, list):
