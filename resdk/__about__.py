@@ -10,7 +10,7 @@ __url__ = 'https://github.com/genialis/resolwe-bio-py'
 # https://packaging.python.org/en/latest/distributing/#semantic-versioning-preferred
 __version__ = '4.1.0a1'
 
-__author__ = 'Genialis d.o.o.'
+__author__ = 'Genialis, Inc.'
 __email__ = 'dev-team@genialis.com'
 
 __license__ = 'Apache License (2.0)'
