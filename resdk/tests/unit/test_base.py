@@ -49,7 +49,7 @@ class TestBaseResolweResource(unittest.TestCase):
         self.assertEqual(base_resource.fields(), ('writable', 'update_protected', 'read_only'))
 
     def test_dehydrate_resources(self):
-        obj = BaseResolweResource(resolwe=self.resolwe_mock, id=1)
+        obj = BaseResource(resolwe=self.resolwe_mock, id=1)
         obj2 = DescriptorSchema(resolwe=self.resolwe_mock, slug='foo')
 
         self.assertEqual(obj._dehydrate_resources(obj), 1)

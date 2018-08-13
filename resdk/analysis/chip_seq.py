@@ -104,7 +104,7 @@ def macs(resource, use_background=True, p_value=None):
     return results
 
 
-def rose2(resource, use_background=True, genome='HG19', tss=None, stitch=None, beds=None):
+def rose2(resource, use_background=True, tss=None, stitch=None, beds=None):
     """Run ``ROSE 2`` process on the resource.
 
     This method runs `ROSE2`_ process with ``tss_exclusion`` and
@@ -123,8 +123,6 @@ def rose2(resource, use_background=True, genome='HG19', tss=None, stitch=None, b
 
     :param bool use_background: if set to ``True``, background sample
         will be used in the process
-    :param str genome: Genome used in the process (options are HG18,
-        HG19, MM8, MM9, MM10, RN4 and RN6), default is ``HG19``
     :param int tss: TSS exclusion used in process
     :param int stitch: Stitch used in process
     :param list beds: subset of bed files to run process on, if empty
@@ -145,13 +143,7 @@ def rose2(resource, use_background=True, genome='HG19', tss=None, stitch=None, b
                 background_filter['collection'] = collection_id
 
         for sample in get_samples(single_resource):
-            valid_genomes = ['HG18', 'HG19', 'MM8', 'MM9', 'MM10', 'RN4', 'RN6']
-            if genome not in valid_genomes:
-                raise KeyError('Invalid `genome`, please use one of the following: '
-                               '{}'. format(', '.join(valid_genomes)))
-
             inputs = {
-                'genome': genome,
                 'rankby': sample.get_bam().id,
             }
 
