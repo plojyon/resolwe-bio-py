@@ -63,6 +63,17 @@ interpreter by '>>>'. Now we can connect to the Resolwe server:
 	use the ``resdk.start_logging()`` command. This allows you to see important
 	messages (`e.g.,` warnings and errors) when executing commands.
 
+.. note::
+
+  Entering username and password into resdk.Resolwe(...) can expose your
+  credentials to other users that have access to you terminal history. A safe
+  way to enter your credentials is to use the ``login()`` method::
+
+    res = resdk.Resolwe(url=...)
+    res.login()
+
+  In this case you will be prompted for username and password.
+
 Before we start querying data on the server we should become familiar with what
 a data object is. Everything that is uploaded or created (via processes) on a
 server is a data object. The data object contains a complete record of the

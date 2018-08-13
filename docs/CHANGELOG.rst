@@ -37,6 +37,8 @@ Added
 * Add ``bamsplit`` helper function
 * Add ``annotate`` and ``export_annotation`` functions for collections
 * Add ``upload_reads`` and ``upload_demulti`` functions for collections
+* Add ``login()`` method that enables to enter your credentials interactively.
+  This prevents others from seeing your password in terminal history.
 
 Fixed
 -----

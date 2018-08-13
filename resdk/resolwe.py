@@ -11,6 +11,7 @@ Resolwe
 from __future__ import absolute_import, division, print_function
 
 import copy
+import getpass
 import logging
 import ntpath
 import os
@@ -78,8 +79,7 @@ class Resolwe(object):
             password = os.environ.get('RESOLWE_API_PASSWORD', None)
 
         self.url = url
-        self.auth = ResAuth(username, password, url)
-        self.api = ResolweAPI(urljoin(url, '/api/'), self.auth, append_slash=False)
+        self._login(username=username, password=password)
 
         self.data = ResolweQuery(self, Data)
         self.collection = ResolweQuery(self, Collection)
@@ -93,6 +93,22 @@ class Resolwe(object):
         self.mapping = ResolweQuery(self, Mapping)
 
         self.logger = logging.getLogger(__name__)
+
+    def _login(self, username=None, password=None):
+        self.auth = ResAuth(username, password, self.url)
+        self.api = ResolweAPI(urljoin(self.url, '/api/'), self.auth, append_slash=False)
+
+    def login(self, username=None, password=None):
+        """Interactive login.
+
+        Ask the user to enter credentials in command prompt. If username
+        and password are given, login without prompt.
+        """
+        if username is None:
+            username = input('Username: ')
+        if password is None:
+            password = getpass.getpass('Password: ')
+        self._login(username=username, password=password)
 
     def __repr__(self):
         """Return string representation of the current object."""
