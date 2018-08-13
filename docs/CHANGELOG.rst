@@ -5,9 +5,14 @@ Change Log
 All notable changes to this project are documented in this file.
 
 
-==========
-Unreleased
-==========
+==================
+5.0.0 - 2018-08-13
+==================
+
+Changed
+-------
+* **BACKWARD INCOMPATIBLE:** Remove ``threads`` parameter from
+  ``cuffdiff`` helper function
 
 Added
 -----
@@ -17,10 +22,6 @@ Added
 * Add ``bamsplit`` helper function
 * Add ``annotate`` and ``export_annotation`` functions for collections
 * Add ``upload_reads`` and ``upload_demulti`` functions for collections
-
-Changed
--------
-* **BACKWARD INCOMPATIBLE:** Remove ``threads`` parameter from ``cuffdiff`` helper function
 
 Fixed
 -----
