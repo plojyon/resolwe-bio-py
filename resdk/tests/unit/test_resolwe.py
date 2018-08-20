@@ -9,16 +9,11 @@ import unittest
 
 import requests
 import six
-import slumber
-import yaml
 from mock import MagicMock, mock_open, patch
 from slumber.exceptions import SlumberHttpBaseException
 
-from resdk import resolwe
 from resdk.exceptions import ResolweServerError, ValidationError
-from resdk.resolwe import (
-    ResAuth, Resolwe, ResolweResource, version_str_to_tuple, version_tuple_to_str,
-)
+from resdk.resolwe import ResAuth, Resolwe, ResolweResource
 from resdk.resources import Collection, Data, Process
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -144,135 +139,6 @@ class TestResolwe(unittest.TestCase):
         self.assertEqual(resolwe_api.url, 'http://resolwe-api:9000')
         self.assertEqual(resauth_mock.call_args[0][0], 'foo')
         self.assertEqual(resauth_mock.call_args[0][1], 'bar')
-
-
-class TestVersionConverters(unittest.TestCase):
-
-    def test_version_string_to_tuple(self):
-        self.assertEqual(version_str_to_tuple('1.0.2'), (1, 0, 2))
-
-    def test_version_tuple_to_string(self):
-        self.assertEqual(version_tuple_to_str((1, 0, 2)), '1.0.2')
-
-
-class TestRegister(unittest.TestCase):
-
-    @patch('resdk.resolwe.Resolwe', spec=True)
-    def setUp(self, resolwe_mock):  # pylint: disable=arguments-differ
-        self.yaml_file = os.path.join(BASE_DIR, 'files', 'bowtie.yaml')
-        self.bad_yaml_file = os.path.join(BASE_DIR, 'files', 'bowtie_bad.yaml')
-        self.resolwe_mock = resolwe_mock
-        self.resolwe_mock.api = MagicMock()
-        self.resolwe_mock.logger = MagicMock()
-        self.resolwe_mock.process = MagicMock()
-
-    def test_raise_if_no_yaml_file(self):
-        message = r"File not found: .*"
-        with six.assertRaisesRegex(self, ValueError, message):
-            Resolwe._register(self.resolwe_mock, "/bad/path", "alignment-bowtie")
-
-    def test_raise_if_bad_yaml_file(self):
-        with self.assertRaises(yaml.parser.ParserError):
-            Resolwe._register(self.resolwe_mock, self.bad_yaml_file, "alignment-bowtie")
-
-    def test_raise_if_slug_not_in_yaml(self):
-        message = r"Process source given .* but process slug not found: .*"
-        with six.assertRaisesRegex(self, ValueError, message):
-            Resolwe._register(self.resolwe_mock, self.yaml_file, "bad-slug")
-
-    def test_update_existing_process(self):
-        """If process exists, process.filter returns list with exactly one element."""
-        # local process version > server process version
-        self.resolwe_mock.process.filter.return_value = [MagicMock(version='1.0.12')]
-        Resolwe._register(self.resolwe_mock, self.yaml_file, "alignment-bowtie")
-        self.assertEqual(self.resolwe_mock.api.process.post.call_count, 1)
-        self.assertEqual(self.resolwe_mock.api.process.post.call_args[0][0]['version'], '1.0.13')
-
-        self.resolwe_mock.reset_mock()
-
-        # local process version = server process version
-        self.resolwe_mock.process.filter.return_value = [MagicMock(version='1.0.13')]
-        Resolwe._register(self.resolwe_mock, self.yaml_file, "alignment-bowtie")
-        self.assertEqual(self.resolwe_mock.api.process.post.call_count, 1)
-        self.assertEqual(self.resolwe_mock.api.process.post.call_args[0][0]['version'], '1.0.14')
-
-    def test_completely_new_process(self):
-        """If process with given slug does not exist, process.filter will return empty list"""
-        self.resolwe_mock.process.filter.return_value = []
-
-        Resolwe._register(self.resolwe_mock, self.yaml_file, "alignment-bowtie")
-        self.assertEqual(self.resolwe_mock.api.process.post.call_count, 1)
-
-    def test_raises_client_error(self):
-        # Check raises error if slumber.exceptions.HttpClientError happens
-        self.resolwe_mock.process.filter.return_value = []
-
-        # Prepare response object & exception:
-        response = requests.Response()
-        response.status_code = 405
-        exception = slumber.exceptions.HttpClientError(response=response)
-
-        self.resolwe_mock.api.process.post.side_effect = exception
-        with self.assertRaises(slumber.exceptions.HttpClientError):
-            Resolwe._register(self.resolwe_mock, self.yaml_file, "alignment-bowtie")
-
-
-class TestUploadTools(unittest.TestCase):
-
-    @patch('resdk.resolwe.Resolwe', spec=True)
-    def setUp(self, resolwe_mock):  # pylint: disable=arguments-differ
-        self.resolwe_mock = resolwe_mock
-        self.resolwe_mock.logger = MagicMock()
-        self.tools = [os.path.join(BASE_DIR, 'files', 'tool1.py')]
-        resolwe.TOOLS_REMOTE_HOST = "not_none"
-
-    def test_remote_host_not_set(self):
-        resolwe.TOOLS_REMOTE_HOST = None
-        message = r"Define TOOLS_REMOTE_HOST environmental variable"
-        with six.assertRaisesRegex(self, ValueError, message):
-            Resolwe._upload_tools(self.resolwe_mock, self.tools)
-
-    @patch('resdk.resolwe.os')
-    def test_tools_file_not_found(self, os_mock):
-        resolwe.TOOLS_REMOTE_HOST = 'something'
-        os_mock.configure_mock(**{'path.isfile.return_value': False})
-
-        message = r"Tools file not found: .*"
-        with six.assertRaisesRegex(self, ValueError, message):
-            Resolwe._upload_tools(self.resolwe_mock, self.tools)
-
-    @patch('resdk.resolwe.subprocess')
-    def test_logger_calls(self, subprocess_mock):
-        fake_subprocess = MagicMock(returncode=0,
-                                    **{'communicate.return_value': ['Standard output...', ' ']})
-        subprocess_mock.Popen = MagicMock(return_value=fake_subprocess)
-
-        Resolwe._upload_tools(self.resolwe_mock, self.tools)
-
-        self.resolwe_mock.logger.info.assert_called_with('Standard output...')
-        # confirm that logger.warning was not called - all went ok...
-        self.assertEqual(self.resolwe_mock.logger.warning.call_count, 0)
-
-    @patch('resdk.resolwe.subprocess')
-    def test_raise_if_returncode_1(self, subprocess_mock):
-        fake_subprocess = MagicMock(returncode=1,
-                                    **{'communicate.return_value': ['Standard output...', 'b']})
-
-        subprocess_mock.Popen = MagicMock(return_value=fake_subprocess)
-
-        message = r"Something wrong while SCP for tool: .*"
-        with six.assertRaisesRegex(self, ValueError, message):
-            Resolwe._upload_tools(self.resolwe_mock, self.tools)
-
-    @patch('resdk.resolwe.subprocess')
-    def test_log_if_returncode_gt1(self, subprocess_mock):
-        fake_subprocess = MagicMock(returncode=2,
-                                    **{'communicate.return_value': ['Standard output...', 'b']})
-        subprocess_mock.Popen = MagicMock(return_value=fake_subprocess)
-
-        Resolwe._upload_tools(self.resolwe_mock, self.tools)
-
-        self.assertEqual(self.resolwe_mock.logger.warning.call_count, 1)
 
 
 class TestProcessFileField(unittest.TestCase):
@@ -473,12 +339,8 @@ class TestRun(unittest.TestCase):
                            data_name="some_name",
                            descriptor="descriptor",
                            descriptor_schema="descriptor_schema",
-                           collections=[1, 2, 3],
-                           src="123",
-                           tools="456")
-        # Confirm that process was registred, tool uploaded but no files to upload in input:
-        self.assertEqual(resolwe_mock._register.call_count, 1)
-        self.assertEqual(resolwe_mock._upload_tools.call_count, 1)
+                           collections=[1, 2, 3])
+        # Confirm that no files to upload in input:
         self.assertEqual(resolwe_mock._upload_file.call_count, 0)
         data_mock.assert_called_with(data='some_data', resolwe=resolwe_mock)
         self.assertEqual(data, "Data object")

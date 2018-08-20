@@ -10,9 +10,9 @@ from mock import MagicMock, call, patch
 
 from resdk.resources import Collection, Data, Process, Relation, Sample
 from resdk.resources.utils import (
-    _print_input_line, endswith_colon, fill_spaces, find_field, get_collection_id, get_data_id,
-    get_process_id, get_relation_id, get_resolwe, get_resource_collection, get_sample_id,
-    get_samples, iterate_fields, iterate_schema,
+    _print_input_line, fill_spaces, find_field, get_collection_id, get_data_id, get_process_id,
+    get_relation_id, get_resolwe, get_resource_collection, get_sample_id, get_samples,
+    iterate_fields, iterate_schema,
 )
 
 PROCESS_OUTPUT_SCHEMA = [
@@ -156,14 +156,6 @@ class TestUtils(unittest.TestCase):
             call(u'    - k    [basic:integer:] - k-mer size')]
 
         self.assertEqual(print_mock.mock_calls, calls)
-
-    def test_endswith_colon(self):
-
-        schema = {'process_type': 'data:reads:fastq:single'}
-
-        endswith_colon(schema, 'process_type')
-
-        self.assertEqual(schema, {'process_type': u'data:reads:fastq:single:'})
 
     def test_get_collection_id(self):
         collection = Collection(id=1, resolwe=MagicMock())

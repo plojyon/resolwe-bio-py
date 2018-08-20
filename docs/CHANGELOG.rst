@@ -11,6 +11,7 @@ Unreleased
 
 Changed
 -------
+* **BACKWARD INCOMPATIBLE:** Disable writing processes from ReSDK
 
 Added
 -----

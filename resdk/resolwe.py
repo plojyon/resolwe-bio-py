@@ -15,12 +15,10 @@ import logging
 import ntpath
 import os
 import re
-import subprocess
 import uuid
 
 import requests
 import slumber
-import yaml
 # Needed because we mock requests in test_resolwe.py
 from requests.exceptions import ConnectionError  # pylint: disable=redefined-builtin
 from six.moves.urllib.parse import urljoin  # pylint: disable=wrong-import-order
@@ -30,24 +28,9 @@ from .exceptions import ValidationError, handle_http_exception
 from .query import ResolweQuery
 from .resources import Collection, Data, DescriptorSchema, Group, Process, Relation, Sample, User
 from .resources.kb import Feature, Mapping
-from .resources.utils import (
-    endswith_colon, get_collection_id, get_data_id, iterate_fields, iterate_schema,
-)
+from .resources.utils import get_collection_id, get_data_id, iterate_fields
 
 DEFAULT_URL = 'http://localhost:8000'
-# Tools directory on the Resolwe server, for example:
-# username@torta.bcmt.bcm.edu://genialis/tools
-TOOLS_REMOTE_HOST = os.environ.get('TOOLS_REMOTE_HOST', None)
-
-
-def version_str_to_tuple(version):
-    """Split version string to tuple of integers."""
-    return tuple(map(int, (version.split("."))))
-
-
-def version_tuple_to_str(version):
-    """Join version tuple to string."""
-    return '.'.join(map(str, version))
 
 
 class ResolweResource(slumber.Resource):
@@ -116,113 +99,6 @@ class Resolwe(object):
         if self.auth.username:
             return "Resolwe <url: {}, username: {}>".format(self.url, self.auth.username)
         return "Resolwe <url: {}>".format(self.url)
-
-    def _register(self, src, slug):
-        """Register processes on the server.
-
-        :param src: Register process from source YAML file
-        :type src: str
-        :param slug: Process slug (unique identifier)
-        :type slug: str
-
-        """
-        if not os.path.isfile(src):
-            raise ValueError("File not found: {}.".format(src))
-
-        processes = []
-
-        try:
-            with open(src) as src_file:
-                processes = yaml.load(src_file)
-
-        except yaml.parser.ParserError:
-            raise
-
-        process = None
-        for process in processes:
-            if process.get('slug', None) == slug:
-                break
-        else:
-            raise ValueError("Process source given '{}' but process "
-                             "slug not found: '{}'.".format(src, slug))
-
-        endswith_colon(process, 'type')
-        endswith_colon(process, 'category')
-
-        for field in ['input', 'output']:
-            if field in process:
-                for schema, _, _ in iterate_schema({}, process[field], field):
-                    endswith_colon(schema, 'type')
-
-            process['{}_schema'.format(field)] = process.pop(field, [])
-
-        if 'persistence' in process:
-            persistence_map = {'RAW': 'RAW', 'CACHED': 'CAC',
-                               'CAC': 'CAC', 'TEMP': 'TMP', 'TMP': 'TMP'}
-            process['persistence'] = persistence_map[process['persistence']]
-
-        try:
-            server_process = self.process.filter(slug=process['slug'], ordering='-version')[:1]
-
-            if len(server_process) == 1:
-                server_process = server_process[0]
-                # Version for newly reistered process has to be increased. If
-                # this has not been already done in yaml file it is raised now.
-                process_version = version_str_to_tuple(process['version'])
-                server_version = version_str_to_tuple(server_process.version)
-                if process_version <= server_version:
-                    new_process_version = server_version[:-1] + (server_version[-1] + 1,)
-                    process['version'] = version_tuple_to_str(new_process_version)
-                    self.logger.warning(
-                        "Process '%s' version increased automatically: %s",
-                        slug, process['version']
-                    )
-
-            response = self.api.process.post(process)
-
-        # Updating processes is supported only on development servers
-        # This error will be raised on production server.
-        except slumber.exceptions.HttpClientError as http_client_error:
-            if http_client_error.response.status_code == 405:  # pylint: disable=no-member
-                self.logger.warning("Server does not support adding processes")
-            raise
-
-        return response
-
-    def _upload_tools(self, tools):
-        """Upload auxiliary scripts to Resolwe server.
-
-        Upload auxiliary script files (tools to call in the processes)
-        to the Resolwe server's runtime Docker container.
-
-        :param tools: Process auxiliary scripts
-        :type tools: list of str
-
-        :rtype: None
-
-        """
-        if TOOLS_REMOTE_HOST is None:
-            raise ValueError("Define TOOLS_REMOTE_HOST environmental variable")
-
-        self.logger.info("SCP: %s", TOOLS_REMOTE_HOST)
-        for tool in tools:
-            if not os.path.isfile(tool):
-                raise ValueError("Tools file not found: '{}'.".format(tool))
-            # Define subprocess, but not yet run it. Also:
-            # (1) redirect stderr to stdout
-            # (2) enable to retrieve stdout of the subprocess in here
-            sub_process = subprocess.Popen(
-                'scp -r {} {}'.format(tool, TOOLS_REMOTE_HOST),
-                shell=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT)
-            # Run the subprocess:
-            stdout, _ = sub_process.communicate()
-            self.logger.info(stdout)
-            if sub_process.returncode == 1:
-                raise ValueError("Something wrong while SCP for tool: '{}'.".format(tool))
-            if sub_process.returncode > 1:
-                self.logger.warning("STATUS: %s", sub_process.returncode)
 
     def _process_file_field(self, path):
         """Process file field and return it in resolwe-specific format.
@@ -312,8 +188,7 @@ class Resolwe(object):
         return inputs
 
     def run(self, slug=None, input={}, descriptor=None,  # pylint: disable=redefined-builtin
-            descriptor_schema=None, collections=[],
-            data_name='', src=None, tools=None):
+            descriptor_schema=None, collections=[], data_name=''):
         """Run process and return the corresponding Data object.
 
         1. Upload files referenced in inputs
@@ -325,33 +200,18 @@ class Resolwe(object):
         object does not have an OK status or outputs when returned.
         Use data.update() to refresh the Data resource object.
 
-        For process development, use src and tools arguments. If src
-        argument given, a process from the specified source YAML file
-        is first uploaded and registered on the server. List the
-        process auxiliary scripts (tools to call in the processes)
-        in the tools argument. This scripts will be copied to the
-        server automatically with SCP.
-
         :param str slug: Process slug (human readable unique identifier)
         :param dict input: Input values
         :param dict descriptor: Descriptor values
         :param str descriptor_schema: A valid descriptor schema slug
         :param list collections: Id's of collections into which data object should be included
         :param str data_name: Default name of data object
-        :param str src: Path to YAML file with custom process definition
-        :param list tools: Paths to auxiliary scripts to upload
 
         :return: data object that was just created
         :rtype: Data object
         """
         if ((descriptor and not descriptor_schema) or (not descriptor and descriptor_schema)):
             raise ValueError("Set both or neither descriptor and descriptor_schema.")
-
-        if src is not None:
-            self._register(src, slug)
-
-        if tools is not None:
-            self._upload_tools(tools)
 
         process = self._get_process(slug)
         inputs = self._process_inputs(input, process)

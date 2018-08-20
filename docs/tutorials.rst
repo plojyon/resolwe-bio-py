@@ -8,4 +8,3 @@ Tutorials
    tutorial-diffexp
    tutorial-resources
    tutorial-running-processes
-   tutorial-writing-processes

@@ -83,19 +83,6 @@ def _print_input_line(element_list, level):
                 element['label']))
 
 
-def endswith_colon(schema, field):
-    """Ensure the field ends with colon.
-
-    :param schema: Register process from source YAML file
-    :type schema: dict
-    :param field: field name
-    :type field: str
-
-    """
-    if field in schema and not schema[field].endswith(':'):
-        schema[field] += ':'
-
-
 def get_collection_id(collection):
     """Return id attribute of the object if it is collection, otherwise return given value."""
     return collection.id if type(collection).__name__ == 'Collection' else collection

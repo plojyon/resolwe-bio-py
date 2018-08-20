@@ -7,8 +7,8 @@ Resolwe SDK for Python
 
 Resolwe SDK for Python supports interaction with Resolwe_ server
 and its extension `Resolwe Bioinformatics`_. You can use it to upload
-and inspect biomedical data sets, contribute annotations, run
-analysis, and write pipelines.
+and inspect biomedical data sets, contribute annotations and run
+analysis.
 
 .. _Resolwe Bioinformatics: https://github.com/genialis/resolwe-bio
 .. _Resolwe: https://github.com/genialis/resolwe
