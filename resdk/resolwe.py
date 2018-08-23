@@ -400,6 +400,15 @@ class Resolwe(object):
                         for chunk in response.iter_content(chunk_size=CHUNK_SIZE):
                             file_handle.write(chunk)
 
+    def data_usage(self, **query_params):
+        """Get per-user data usage information.
+
+        Display number of samples, data objects and sum of data object
+        sizes for currently logged-in user. For admin users, display
+        data for **all** users.
+        """
+        return self.api.base.data_usage.get(**query_params)
+
 
 class ResAuth(requests.auth.AuthBase):
     """HTTP Resolwe Authentication for Request object.

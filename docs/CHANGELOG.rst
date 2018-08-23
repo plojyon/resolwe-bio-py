@@ -18,6 +18,9 @@ Changed
 Added
 -----
 * Add missing resource classes in the Reference section of documentation
+* Add ``Resolwe.data_usage`` method. It displays number of samples, data
+  objects and sum of data object sizes for currently logged-in user. For admin
+  users, it displays data for all users.
 
 Fixed
 -----
