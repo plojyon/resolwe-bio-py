@@ -1,24 +1,15 @@
-# Ignore temporary editor files.
-*.swp
+Ignore temporary editor files.
+.*.sw[po]
 *~
+.DS_Store
 
 # Ignore project files
 *.pyproj
+*.sublime-project
+*.sublime-workspace
 sftp-config.json
-
-# Ignore dot files.
-.*
-
-# Ignore backup files.
-*.orig
-*.bak
-
-# Ignore temporary editor files.
-*.swp
-*~
-
-# Ignore log files
-/resdk/logfile.txt
+.idea
+.vscode
 
 # Ignore binaries.
 *.py[cod]
@@ -26,20 +17,25 @@ sftp-config.json
 *.dll
 
 # Ignore built documentation
-html
+_build
+
+# Tox files
+.tox/
+
+# ignore Coverage.py files
+.coverage
+htmlcov/
 
 # Ignore files created by setup.py.
-build
-_build
-dist
+build/
+dist/
 MANIFEST
 *.egg-info
 *.egg
 distribute*.tar.gz
 
-# Ignore virtualenv folder
-venv
+# Ignore SDK log file
+/resdk/logfile.txt
 
-# ignore Coverage.py files
-.coverage
-htmlcov/
+# Ignore testing cache
+.pytest_cache
