@@ -11,7 +11,7 @@ from resdk.constants import CHUNK_SIZE
 
 from .base import BaseResolweResource
 from .descriptor import DescriptorSchema
-from .utils import get_descriptor_schema_id, is_descriptor_schema, iterate_schema
+from .utils import flatten_field, get_descriptor_schema_id, is_descriptor_schema
 
 
 class Data(BaseResolweResource):
@@ -128,38 +128,15 @@ class Data(BaseResolweResource):
 
         if 'input' in payload and 'process_input_schema' in payload:
             self.annotation.update(
-                self._flatten_field(payload['input'], payload['process_input_schema'], 'input')
+                flatten_field(payload['input'], payload['process_input_schema'], 'input')
             )
 
         if 'output' in payload and 'process_output_schema' in payload:
             self.annotation.update(
-                self._flatten_field(payload['output'], payload['process_output_schema'], 'output')
+                flatten_field(payload['output'], payload['process_output_schema'], 'output')
             )
 
         # TODO: Descriptor schema!
-
-    def _flatten_field(self, field, schema, path):
-        """Reduce dicts of dicts to dot separated keys.
-
-        :param field: Field instance (e.g. input)
-        :type field: dict
-        :param schema: Schema instance (e.g. input_schema)
-        :type schema: dict
-        :param path: Field path
-        :type path: string
-        :return: flattened annotations
-        :rtype: dictionary
-
-        """
-        flat = {}
-        for field_schema, fields, path in iterate_schema(field, schema, path):
-            name = field_schema['name']
-            typ = field_schema['type']
-            label = field_schema['label']
-            value = fields[name] if name in fields else None
-            flat[path] = {'name': name, 'value': value, 'type': typ, 'label': label}
-
-        return flat
 
     @property
     def collections(self):

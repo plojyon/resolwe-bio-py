@@ -10,9 +10,9 @@ from mock import MagicMock, call, patch
 
 from resdk.resources import Collection, Data, Process, Relation, Sample
 from resdk.resources.utils import (
-    _print_input_line, fill_spaces, find_field, get_collection_id, get_data_id, get_process_id,
-    get_relation_id, get_resolwe, get_resource_collection, get_sample_id, get_samples,
-    iterate_fields, iterate_schema,
+    _print_input_line, fill_spaces, find_field, flatten_field, get_collection_id, get_data_id,
+    get_process_id, get_relation_id, get_resolwe, get_resource_collection, get_sample_id,
+    get_samples, iterate_fields, iterate_schema,
 )
 
 PROCESS_OUTPUT_SCHEMA = [
@@ -29,7 +29,8 @@ OUTPUT = {
     'bases': "75",
     'options': {
         'id': 'abc',
-        'k': 123}
+        'k': 123,
+    },
 }
 
 
@@ -140,6 +141,46 @@ class TestUtils(unittest.TestCase):
 
         self.assertEqual(result1, expected1)
         self.assertEqual(result2, expected2)
+
+    def test_flatten_field(self):
+        process_input_schema = [
+            {
+                'name': "x",
+                'type': "basic:integer:",
+                'label': "Input X",
+            },
+            {
+                'name': "group_input",
+                'group': [
+                    {
+                        'name': "y1",
+                        'type': "basic:string:",
+                        'label': "Input Y1",
+                    },
+                ],
+            },
+        ]
+        input_ = {
+            'x': 123,
+            'group_input': {
+                'y1': 'bar',
+            },
+        }
+        flat = flatten_field(input_, process_input_schema, "input")
+        self.assertEqual(flat, {
+            'input.x': {
+                'name': 'x',
+                'type': 'basic:integer:',
+                'label': 'Input X',
+                'value': 123,
+            },
+            'input.group_input.y1': {
+                'name': 'y1',
+                'type': 'basic:string:',
+                'label': 'Input Y1',
+                'value': 'bar',
+            },
+        })
 
     def test_fill_spaces(self):
         result = fill_spaces("one_word", 12)

@@ -59,6 +59,30 @@ def iterate_schema(fields, schema, path=None):
                 yield (field_schema, fields, '{}.{}'.format(path, name))
 
 
+def flatten_field(field, schema, path):
+    """Reduce dicts of dicts to dot separated keys.
+
+    :param field: Field instance (e.g. input)
+    :type field: dict
+    :param schema: Schema instance (e.g. input_schema)
+    :type schema: dict
+    :param path: Field path
+    :type path: string
+    :return: flattened instance
+    :rtype: dictionary
+
+    """
+    flat = {}
+    for field_schema, fields, current_path in iterate_schema(field, schema, path):
+        name = field_schema['name']
+        typ = field_schema['type']
+        label = field_schema['label']
+        value = fields.get(name, None)
+        flat[current_path] = {'name': name, 'type': typ, 'label': label, 'value': value}
+
+    return flat
+
+
 def fill_spaces(word, desired_length):
     """Fill spaces at the end until word reaches desired length."""
     return str(word) + ' ' * (desired_length - len(word))

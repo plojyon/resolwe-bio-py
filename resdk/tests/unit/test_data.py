@@ -11,27 +11,55 @@ from mock import MagicMock, patch
 
 from resdk.resources.data import Data
 from resdk.resources.descriptor import DescriptorSchema
-from resdk.tests.mocks.data import DATA_SAMPLE
 
 
 class TestData(unittest.TestCase):
 
     @patch('resdk.resources.data.Data', spec=True, annotation={})
     def test_update_fields(self, data_mock):
-        Data._update_fields(data_mock, DATA_SAMPLE[0])
-        self.assertEqual(data_mock._flatten_field.call_count, 2)
-
-    @patch('resdk.resources.data.Data', spec=True)
-    def test_flatten_field(self, data_mock):
-
-        input_ = [{'src': "abc"}]
-        process_input_schema = [{'name': "src", 'type': "x", 'label': "y"}]
-        flat = Data._flatten_field(data_mock,
-                                   input_,
-                                   process_input_schema,
-                                   "p")
-        expected = {u'p.src': {u'type': 'x', u'name': 'src', u'value': None, u'label': 'y'}}
-        self.assertEqual(flat, expected)
+        payload = {
+            'id': 42,
+            'slug': 'foo',
+            'process_input_schema': [
+                {
+                    'name': "x",
+                    'type': "basic:integer:",
+                    'label': "Input X",
+                },
+                {
+                    'name': "group_input",
+                    'group': [
+                        {
+                            'name': "y1",
+                            'type': "basic:string:",
+                            'label': "Input Y1",
+                        },
+                    ],
+                }
+            ],
+            'input': {
+                'x': 123,
+                'group_input': {
+                    'y1': 'bar',
+                },
+            },
+        }
+        Data._update_fields(data_mock, payload)
+        expected = {
+            'input.x': {
+                'name': 'x',
+                'type': 'basic:integer:',
+                'label': 'Input X',
+                'value': 123
+            },
+            'input.group_input.y1': {
+                'name': 'y1',
+                'type': 'basic:string:',
+                'label': 'Input Y1',
+                'value': 'bar'
+            }
+        }
+        self.assertEqual(data_mock.annotation, expected)
 
     def test_sample(self):
         data = Data(id=1, resolwe=MagicMock())
