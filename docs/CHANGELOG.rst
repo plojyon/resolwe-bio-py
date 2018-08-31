@@ -22,6 +22,7 @@ Added
 
 Fixed
 -----
+* Fix filtering in cases where query parameter is a list
 
 
 ==================

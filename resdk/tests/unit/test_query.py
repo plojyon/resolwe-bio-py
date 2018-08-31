@@ -133,6 +133,16 @@ class TestResolweQuery(unittest.TestCase):
         ResolweQuery._add_filter(query, {'id': 1})
         self.assertEqual(query._filters, {'slug': 'test', 'id': 1})
 
+        query = MagicMock(spec=ResolweQuery, _filters={'slug': 'test'})
+        query.resource.query_method = 'POST'
+        ResolweQuery._add_filter(query, {'sample': 'my_sample'})
+        self.assertEqual(query._filters, {'slug': 'test', 'entity': 'my_sample'})
+
+        query = MagicMock(spec=ResolweQuery, _filters={'slug': 'test'})
+        query.resource.query_method = 'POST'
+        ResolweQuery._add_filter(query, {'id__in': [1, 2, 3]})
+        self.assertEqual(query._filters, {'slug': 'test', 'id__in': '1,2,3'})
+
     def test_compose_filters(self):
         query = MagicMock(spec=ResolweQuery)
 
