@@ -9,8 +9,10 @@ import unittest
 import six
 from mock import MagicMock, patch
 
+from resdk.resources.collection import Collection
 from resdk.resources.data import Data
 from resdk.resources.descriptor import DescriptorSchema
+from resdk.resources.sample import Sample
 
 
 class TestData(unittest.TestCase):
@@ -61,20 +63,26 @@ class TestData(unittest.TestCase):
         }
         self.assertEqual(data_mock.annotation, expected)
 
+    def test_no_sample(self):
+        data = Data(id=1, resolwe=MagicMock())
+
+        # Data object does not belong to any sample:
+        data.api(data.id).get = MagicMock(return_value={'entities': []})
+        self.assertEqual(data.sample, None)
+
     def test_sample(self):
         data = Data(id=1, resolwe=MagicMock())
 
-        data.resolwe.sample.filter = MagicMock(return_value=[])
-        self.assertEqual(data.sample, None)
-
-        data.resolwe.sample.filter = MagicMock(return_value=['sample'])
-        self.assertEqual(data.sample, 'sample')
+        data.api(data.id).get = MagicMock(return_value={'entities': [5]})
+        data.resolwe.sample.get = MagicMock(
+            return_value=Sample(data.resolwe, **{'id': 5, 'name': 'XYZ'}))
+        self.assertEqual(data.sample.id, 5)
+        self.assertEqual(data.sample.name, 'XYZ')
         # test caching
-        self.assertEqual(data.sample, 'sample')
-        self.assertEqual(data.resolwe.sample.filter.call_count, 1)
+        self.assertEqual(data.sample.id, 5)
+        self.assertEqual(data.resolwe.sample.get.call_count, 1)
 
         # cache is cleared at update
-        data._sample = 'sample'
         data.update()
         self.assertEqual(data._sample, None)
 
@@ -87,15 +95,20 @@ class TestData(unittest.TestCase):
         data = Data(id=1, resolwe=MagicMock())
 
         # test getting collections attribute
-        data.resolwe.collection.filter = MagicMock(return_value=['collection'])
-        self.assertEqual(data.collections, ['collection'])
+        data.api(data.id).get = MagicMock(return_value={'collections': [5]})
+        data.resolwe.collection.filter = MagicMock(return_value=[
+            Collection(data.resolwe, **{'id': 5, 'name': 'XYZ'})
+        ])
+
+        self.assertEqual(len(data.collections), 1)
+        self.assertEqual(data.collections[0].id, 5)
+        self.assertEqual(data.collections[0].name, 'XYZ')
 
         # test caching collections attribute
-        self.assertEqual(data.collections, ['collection'])
+        self.assertEqual(len(data.collections), 1)
         self.assertEqual(data.resolwe.collection.filter.call_count, 1)
 
         # cache is cleared at update
-        data._collections = ['collection']
         data.update()
         self.assertEqual(data._collections, None)
 

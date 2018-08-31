@@ -245,16 +245,20 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(get_samples([collection_1, collection_2]), ['sample_1', 'sample_2'])
 
         data = Data(id=1, resolwe=MagicMock())
-        data._sample = 'sample_1'
+        data.api(data.id).get = MagicMock(return_value={'entities': [7]})
+        data.resolwe.sample.get = MagicMock(return_value='sample_1')
         self.assertEqual(get_samples(data), ['sample_1'])
 
         data1 = Data(id=1, resolwe=MagicMock())
-        data1._sample = 'sample1'
+        data1.api(data.id).get = MagicMock(return_value={'entities': [7]})
+        data1.resolwe.sample.get = MagicMock(return_value='sample1')
+
         data2 = Data(id=2, resolwe=MagicMock())
-        data2._sample = 'sample2'
+        data2.api(data.id).get = MagicMock(return_value={'entities': [8]})
+        data2.resolwe.sample.get = MagicMock(return_value='sample2')
         self.assertEqual(get_samples([data1, data2]), ['sample1', 'sample2'])
 
-        data = Data(id=1, resolwe=MagicMock(**{'sample.filter.return_value': None}))
+        data = Data(id=1, resolwe=MagicMock(**{'sample.get.return_value': None}))
         data._sample = None
         with self.assertRaises(TypeError):
             get_samples(data)

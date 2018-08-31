@@ -251,6 +251,7 @@ class TestSample(unittest.TestCase):
 
     def test_collections(self):
         sample = Sample(id=1, resolwe=MagicMock())
+        sample._original_values = {'collections': [1, 2, 3]}
 
         # test getting data attribute
         sample.resolwe.collection.filter = MagicMock(

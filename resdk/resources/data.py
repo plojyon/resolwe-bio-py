@@ -136,15 +136,27 @@ class Data(BaseResolweResource):
                 flatten_field(payload['output'], payload['process_output_schema'], 'output')
             )
 
-        # TODO: Descriptor schema!
-
     @property
     def collections(self):
-        """Return list of collections to which data object belongs."""
+        """Get list of collections to which data object belongs."""
         if self.id is None:
             raise ValueError('Instance must be saved before accessing `collections` attribute.')
+
         if self._collections is None:
-            self._collections = self.resolwe.collection.filter(data=self.id)
+            # self._collections is set to False. This enables distinction between:
+            # (a) self._collections is None since self.collections was never accessed
+            # (b) self._collections is False since data object is not in any collection
+            self._collections = False
+
+            # Note: ``collections`` field will only be present on single data
+            # object endpoint (e.g. /api/data/<ID>), but not on list endpoint
+            # (e.g. /api/data?id=<ID>). Therefore, explicit call on ``self.api``
+            # is made instead of self.reslwe.data.get (which makes request on
+            # list view but requires that list of results is of length 1)
+            payload = self.api(self.id).get()
+
+            if payload['collections']:
+                self._collections = self.resolwe.collection.filter(id__in=payload['collections'])
 
         return self._collections
 
@@ -154,9 +166,23 @@ class Data(BaseResolweResource):
         if self.id is None:
             raise ValueError('Instance must be saved before accessing `sample` attribute.')
         if self._sample is None:
-            self._sample = self.resolwe.sample.filter(data=self.id)
-            self._sample = self._sample[0] if self._sample else None
-        return self._sample
+            # self._sample is set to False. This enables distinction between:
+            # (a) self._sample is None since self.sample was never accessed
+            # (b) self._sample is False since data object is not in any sample
+            self._sample = False
+
+            # Note: ``entities`` field will only be present on single data
+            # object endpoint (e.g. /api/data/<ID>), but not on list endpoint
+            # (e.g. /api/data?id=<ID>). Therefore, explicit call on ``self.api``
+            # is made instead of self.reslwe.data.get (which makes request on
+            # list view but requires that list of results is of length 1)
+            payload = self.api(self.id).get()
+
+            if payload['entities']:
+                self._sample = self.resolwe.sample.get(id=payload['entities'][0])
+
+        if self._sample:
+            return self._sample
 
     @property
     def descriptor_schema(self):

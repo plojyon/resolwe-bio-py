@@ -106,8 +106,13 @@ class Sample(SampleUtilsMixin, BaseCollection):
         """Return list of collections to which sample belongs."""
         if self.id is None:
             raise ValueError('Instance must be saved before accessing `collections` attribute.')
+
         if self._collections is None:
-            self._collections = self.resolwe.collection.filter(entity=self.id)
+            collection_ids = self._original_values.get('collections', [])
+            self._collections = self.resolwe.collection.filter(id__in=collection_ids)
+            if not collection_ids:
+                # Make querry empty.
+                self._collections._cache = []  # pylint: disable=protected-access
 
         return self._collections
 
