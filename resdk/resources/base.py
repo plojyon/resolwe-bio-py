@@ -86,19 +86,18 @@ class BaseResource(object):
         """Save resource to the server."""
         def field_changed(field_name):
             """Check if local field value is different from the server."""
-            return getattr(self, field_name) != self._original_values.get(field_name)
+            return getattr(self, field_name) != self._original_values.get(field_name, None)
 
-        def assert_fields_changed(field_names):
-            """Check if local field value is different from the server."""
-            changed_fields = [field_name for field_name in field_names if
-                              field_changed(field_name)]
+        def assert_fields_unchanged(field_names):
+            """Assert that fields in ``field_names`` were not changed."""
+            changed_fields = [name for name in field_names if field_changed(name)]
 
             if changed_fields:
                 msg = "Not allowed to change read only fields {}".format(', '.join(changed_fields))
                 raise ValueError(msg)
 
         if self.id:  # update resource
-            assert_fields_changed(self.READ_ONLY_FIELDS + self.UPDATE_PROTECTED_FIELDS)
+            assert_fields_unchanged(self.READ_ONLY_FIELDS + self.UPDATE_PROTECTED_FIELDS)
 
             payload = {}
             for field_name in self.WRITABLE_FIELDS:
@@ -110,7 +109,7 @@ class BaseResource(object):
                 self._update_fields(response)
 
         else:  # create resource
-            assert_fields_changed(self.READ_ONLY_FIELDS)
+            assert_fields_unchanged(self.READ_ONLY_FIELDS)
 
             field_names = self.WRITABLE_FIELDS + self.UPDATE_PROTECTED_FIELDS
             payload = {field_name: self._dehydrate_resources(getattr(self, field_name))
