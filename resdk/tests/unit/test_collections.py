@@ -38,11 +38,6 @@ class TestBaseCollection(unittest.TestCase):
         flist = BaseCollection.files(collection_mock)
         self.assertEqual(set(flist), set(['arch.gz', 'reads.fq', 'outfile.exp']))
 
-    @patch('resdk.resources.collection.BaseCollection', spec=True)
-    def test_print_annotation(self, collection_mock):
-        with self.assertRaises(NotImplementedError):
-            BaseCollection.print_annotation(collection_mock)
-
 
 class TestBaseCollectionDownload(unittest.TestCase):
 
@@ -68,11 +63,6 @@ class TestBaseCollectionDownload(unittest.TestCase):
 
 
 class TestCollection(unittest.TestCase):
-
-    @patch('resdk.resources.collection.Collection', spec=True)
-    def test_collection_print_ann(self, collection_mock):
-        with self.assertRaises(NotImplementedError):
-            Collection.print_annotation(collection_mock)
 
     def test_descriptor_schema(self):
         collection = Collection(id=1, resolwe=MagicMock())
@@ -276,11 +266,6 @@ class TestSample(unittest.TestCase):
         sample.id = None
         with self.assertRaises(ValueError):
             _ = sample.collections
-
-    @patch('resdk.resources.sample.Sample', spec=True)
-    def test_sample_print_annotation(self, sample_mock):
-        with self.assertRaises(NotImplementedError):
-            Sample.print_annotation(sample_mock)
 
     @patch('resdk.resources.sample.Sample', spec=True)
     def test_update_descriptor(self, sample_mock):

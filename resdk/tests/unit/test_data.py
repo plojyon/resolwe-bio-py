@@ -214,11 +214,6 @@ class TestData(unittest.TestCase):
         files_list = Data._files_dirs(data_mock, 'file', field_name="fastq")
         self.assertEqual(files_list, ['reads.fq'])
 
-    @patch('resdk.resources.data.Data', spec=True)
-    def test_print_annotation(self, data_mock):
-        with six.assertRaisesRegex(self, NotImplementedError, ""):
-            Data.print_annotation(data_mock)
-
     @patch('resdk.resources.data.requests')
     @patch('resdk.resources.data.urljoin')
     @patch('resdk.resources.data.Data', spec=True)

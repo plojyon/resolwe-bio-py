@@ -103,10 +103,6 @@ class Sample(SampleUtilsMixin, BaseCollection):
 
         return self._collections
 
-    def print_annotation(self):
-        """Provide annotation data."""
-        raise NotImplementedError()
-
     def update_descriptor(self, descriptor):
         """Update descriptor and descriptor_schema."""
         self.api(self.id).patch({'descriptor': descriptor})

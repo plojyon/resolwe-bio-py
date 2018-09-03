@@ -154,10 +154,6 @@ class BaseCollection(BaseResolweResource):
 
         self.resolwe._download_files(files, download_dir)  # pylint: disable=protected-access
 
-    def print_annotation(self):
-        """Provide annotation data."""
-        raise NotImplementedError()
-
 
 class Collection(CollectionRelationsMixin, BaseCollection):
     """Resolwe Collection resource.
@@ -234,7 +230,3 @@ class Collection(CollectionRelationsMixin, BaseCollection):
             self.resolwe.api.sample(sample).remove_from_collection.post({'ids': [self.id]})
 
         self.samples.clear_cache()
-
-    def print_annotation(self):
-        """Provide annotation data."""
-        raise NotImplementedError()

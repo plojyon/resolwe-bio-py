@@ -12,6 +12,7 @@ Unreleased
 Changed
 -------
 * **BACKWARD INCOMPATIBLE:** Disable writing processes from ReSDK
+* **BACKWARD INCOMPATIBLE:** Remove ``print_annotation`` methods
 * Add ``login()`` method that enables to enter your credentials interactively.
   This prevents others from seeing your password in terminal history.
 
