@@ -9,8 +9,11 @@ import six
 import slumber
 from mock import MagicMock, call, patch
 
+from resdk.resources import (
+    Collection, Data, DescriptorSchema, Group, Process, Relation, Sample, User,
+)
 from resdk.resources.base import BaseResolweResource, BaseResource
-from resdk.resources.descriptor import DescriptorSchema
+from resdk.resources.kb import Feature, Mapping
 
 # This is normally set in subclass
 BaseResolweResource.endpoint = 'endpoint'
@@ -202,6 +205,33 @@ class TestBaseMethods(unittest.TestCase):
         base_mock.configure_mock(id=1, slug='a', name='b')
         out = BaseResolweResource.__repr__(base_mock)
         self.assertEqual(out, 'BaseResolweResource <id: 1, slug: \'a\', name: \'b\'>')
+
+
+class TestAttributesDefined(unittest.TestCase):
+
+    def test_attributes_are_defined(self):
+
+        classes = [
+            BaseResource,
+            BaseResolweResource,
+            Collection,
+            Data,
+            DescriptorSchema,
+            Feature,
+            Group,
+            Mapping,
+            Process,
+            Relation,
+            Sample,
+            User,
+        ]
+
+        resolwe = MagicMock()
+
+        for class_ in classes:
+            resource = class_(resolwe)
+            for field in resource.fields():
+                assert hasattr(resource, field)
 
 
 if __name__ == '__main__':

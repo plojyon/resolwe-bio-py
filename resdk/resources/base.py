@@ -36,14 +36,6 @@ class BaseResource(object):
         """Verify that only a single attribute of slug, id or model_data given."""
         self._original_values = {}
 
-        def initialize_field(field_name, value):
-            """Initialize field and ignore those initialized in subclass."""
-            if not hasattr(self, field_name):  # check if field was initialized in subclass
-                setattr(self, field_name, value)
-
-        for field_name in self.fields():
-            initialize_field(field_name, None)
-
         #: unique identifier
         self.id = None  # pylint: disable=invalid-name
 

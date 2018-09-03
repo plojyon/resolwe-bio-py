@@ -11,10 +11,36 @@ class Feature(BaseResource):
     query_endpoint = 'kb.feature.search'
     query_method = 'POST'
 
-    WRITABLE_FIELDS = ('source', 'feature_id', 'species', 'type', 'sub_type', 'name',
-                       'full_name', 'description', 'aliases')
-    UPDATE_PROTECTED_FIELDS = ('source', 'feature_id')
-    READ_ONLY_FIELDS = ('id',)
+    WRITABLE_FIELDS = BaseResource.WRITABLE_FIELDS + (
+        'aliases', 'description', 'feature_id', 'full_name', 'name', 'species', 'source',
+        'sub_type', 'type',
+    )
+    UPDATE_PROTECTED_FIELDS = BaseResource.WRITABLE_FIELDS + (
+        'feature_id', 'source',
+    )
+
+    def __init__(self, resolwe, **model_data):
+        """Initialize attributes."""
+        #: Aliases
+        self.aliases = None
+        #: Description
+        self.description = None
+        #: Feature ID
+        self.feature_id = None
+        #: Full name
+        self.full_name = None
+        #: Name
+        self.name = None
+        #: Source
+        self.source = None
+        #: Species
+        self.species = None
+        #: Feature type (gene, transcript, exon, ...)
+        self.type = None
+        #: Feature subtype (tRNA, protein coding, rRNA, ...)
+        self.sub_type = None
+
+        super(Feature, self).__init__(resolwe, **model_data)
 
     def __repr__(self):
         """Format feature representation."""
