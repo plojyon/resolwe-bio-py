@@ -11,7 +11,6 @@ from mock import MagicMock, patch
 from resdk.resources.collection import BaseCollection, Collection
 from resdk.resources.descriptor import DescriptorSchema
 from resdk.resources.sample import Sample
-from resdk.tests.mocks.data import DATA_SAMPLE
 
 DATA0 = MagicMock(**{'files.return_value': [], 'id': 0})
 
@@ -24,7 +23,12 @@ class TestBaseCollection(unittest.TestCase):
 
     @patch('resdk.resources.collection.BaseCollection', spec=True)
     def test_data_types(self, collection_mock):
-        get_mock = MagicMock(**{'get.return_value': DATA_SAMPLE[0]})
+        payload = {
+            'id': 123,
+            'process_type': 'data:reads:fastq:single:',
+            # ...
+        }
+        get_mock = MagicMock(**{'get.return_value': payload})
         api_mock = MagicMock(**{'data.return_value': get_mock})
         collection_mock.configure_mock(data=[1, 2], resolwe=MagicMock(api=api_mock))
 

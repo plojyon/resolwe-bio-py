@@ -28,27 +28,34 @@ class Data(BaseResolweResource):
 
     endpoint = 'data'
 
-    #: (lazy loaded) annotated ``Sample`` to which ``Data`` object belongs
-    _sample = None
-    #: (lazy loaded) list of collections to which data object belongs
-    _collections = None
-
-    WRITABLE_FIELDS = ('descriptor_schema', 'descriptor',
-                       'tags') + BaseResolweResource.WRITABLE_FIELDS
-    UPDATE_PROTECTED_FIELDS = ('input', 'process') + BaseResolweResource.UPDATE_PROTECTED_FIELDS
-    READ_ONLY_FIELDS = ('process_input_schema', 'process_output_schema', 'output', 'started',
-                        'finished', 'checksum', 'status', 'process_progress', 'process_rc',
-                        'process_info', 'process_warning', 'process_error', 'process_type',
-                        'process_name') + BaseResolweResource.READ_ONLY_FIELDS
+    READ_ONLY_FIELDS = BaseResolweResource.READ_ONLY_FIELDS + (
+        'checksum', 'descriptor_dirty', 'finished', 'process_cores', 'process_error',
+        'process_info', 'process_input_schema', 'process_memory', 'process_name',
+        'process_output_schema', 'process_progress', 'process_rc', 'process_slug', 'process_type',
+        'process_warning', 'output', 'size', 'started', 'status',
+    )
+    UPDATE_PROTECTED_FIELDS = BaseResolweResource.UPDATE_PROTECTED_FIELDS + (
+        'input', 'process',
+    )
+    WRITABLE_FIELDS = BaseResolweResource.WRITABLE_FIELDS + (
+        'descriptor', 'descriptor_schema', 'tags',
+    )
 
     ALL_PERMISSIONS = ['view', 'download', 'edit', 'share', 'owner']
 
     def __init__(self, resolwe, **model_data):
         """Initialize attributes."""
-        #: descriptor schema id in which data object is
+        self.logger = logging.getLogger(__name__)
+
+        #: list of ``Collection``s that contain ``Data`` (lazy loaded)
+        self._collections = None
+        #: ``DescriptorSchema`` id of ``Data`` object
         self._descriptor_schema = None
-        #: (lazy loaded) descriptor schema object in which data object is
+        #: ``DescriptorSchema`` of ``Data`` object
         self._hydrated_descriptor_schema = None
+        #: ``Sample`` containing ``Data`` object (lazy loaded)
+        self._sample = None
+
         #: Flattened dict of inputs and outputs, where keys are dit separated paths to values
         self.annotation = {}
 
@@ -89,10 +96,18 @@ class Data(BaseResolweResource):
         self.process_name = None
         #: data object's tags
         self.tags = None
+        #: indicate whether `descriptor` doesn't match `descriptor_schema` (is dirty)
+        self.descriptor_dirty = None
+        #: process slug
+        self.process_slug = None
+        #: process cores
+        self.process_cores = None
+        #: process memory
+        self.process_memory = None
+        #: size
+        self.size = None
 
         super(Data, self).__init__(resolwe, **model_data)
-
-        self.logger = logging.getLogger(__name__)
 
     def update(self):
         """Clear cache and update resource fields from the server."""

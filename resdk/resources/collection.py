@@ -1,6 +1,8 @@
 """Collection resources."""
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import logging
+
 import six
 
 from resdk.shortcuts.collection import CollectionRelationsMixin
@@ -22,27 +24,29 @@ class BaseCollection(BaseResolweResource):
 
     """
 
-    #: lazy loaded list of data objects
-    _data = None
-
-    WRITABLE_FIELDS = ('description', 'settings', 'descriptor_schema',
-                       'descriptor') + BaseResolweResource.WRITABLE_FIELDS
+    WRITABLE_FIELDS = BaseResolweResource.WRITABLE_FIELDS + (
+        'description', 'descriptor', 'descriptor_schema', 'settings',
+    )
 
     ALL_PERMISSIONS = ['view', 'download', 'add', 'edit', 'share', 'owner']
 
     def __init__(self, resolwe, **model_data):
         """Initialize attributes."""
-        #: descriptor schema id in which data object is
+        self.logger = logging.getLogger(__name__)
+
+        #: list of Data objects in collection (lazy loaded)
+        self._data = None
+        #: ``DescriptorSchema`` id of a resource object
         self._descriptor_schema = None
-        #: (lazy loaded) descriptor schema object in which data object is
+        #: ``DescriptorSchema`` of a resource object
         self._hydrated_descriptor_schema = None
 
-        #: a description
+        #: description
         self.description = None
-        #: settings
-        self.settings = None
         #: descriptor
         self.descriptor = None
+        #: settings
+        self.settings = None
 
         super(BaseCollection, self).__init__(resolwe, **model_data)
 
@@ -83,6 +87,7 @@ class BaseCollection(BaseResolweResource):
 
     def update(self):
         """Clear cache and update resource fields from the server."""
+        self._data = None
         self._hydrated_descriptor_schema = None
 
         super(BaseCollection, self).update()
@@ -169,15 +174,19 @@ class Collection(CollectionRelationsMixin, BaseCollection):
 
     endpoint = 'collection'
 
-    #: (lazy loaded) list of samples that belong to collection
-    _samples = None
+    def __init__(self, resolwe, **model_data):
+        """Initialize attributes."""
+        self.logger = logging.getLogger(__name__)
 
-    #: (lazy loaded) list of relations that belong to collection
-    _relations = None
+        #: list of ``Sample`` objects in ``Collection`` (lazy loaded)
+        self._samples = None
+        #: list of ``Relation`` objects in ``Collection`` (lazy loaded)
+        self._relations = None
+
+        super(Collection, self).__init__(resolwe, **model_data)
 
     def update(self):
         """Clear cache and update resource fields from the server."""
-        self._data = None
         self._samples = None
         self._relations = None
 

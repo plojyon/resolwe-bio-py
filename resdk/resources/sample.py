@@ -1,6 +1,8 @@
 """Sample resource."""
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import logging
+
 from .collection import BaseCollection
 
 
@@ -64,13 +66,20 @@ class Sample(SampleUtilsMixin, BaseCollection):
 
     endpoint = 'sample'
 
-    WRITABLE_FIELDS = ('tags',) + BaseCollection.WRITABLE_FIELDS
-
-    #: (lazy loaded) list of collections  to which object belongs
-    _collections = None
+    WRITABLE_FIELDS = BaseCollection.WRITABLE_FIELDS + (
+        'descriptor_completed', 'tags',
+    )
 
     def __init__(self, resolwe, **model_data):
         """Initialize attributes."""
+        self.logger = logging.getLogger(__name__)
+
+        #: list of ``Collection``s that contain ``Sample`` (lazy loaded)
+        self._collections = None
+        #: indicate whether `descriptor` is completed
+        self.descriptor_completed = None
+        #: sample's tags
+        self.tags = None
         #: sample's tags
         self.tags = None
 
@@ -79,7 +88,6 @@ class Sample(SampleUtilsMixin, BaseCollection):
     def update(self):
         """Clear cache and update resource fields from the server."""
         self._collections = None
-        self._data = None
 
         super(Sample, self).update()
 

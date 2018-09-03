@@ -1,6 +1,8 @@
 """Process resource."""
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import logging
+
 from .base import BaseResolweResource
 
 
@@ -18,23 +20,22 @@ class DescriptorSchema(BaseResolweResource):
 
     endpoint = "descriptorschema"
 
-    WRITABLE_FIELDS = ('description',) + BaseResolweResource.WRITABLE_FIELDS
-    READ_ONLY_FIELDS = ('schema',) + BaseResolweResource.READ_ONLY_FIELDS
+    READ_ONLY_FIELDS = BaseResolweResource.READ_ONLY_FIELDS + (
+        'schema',
+    )
+    WRITABLE_FIELDS = BaseResolweResource.WRITABLE_FIELDS + (
+        'description',
+    )
 
     ALL_PERMISSIONS = ['view', 'edit', 'share', 'owner']
 
     def __init__(self, resolwe, **model_data):
         """Initialize attributes."""
-        self.data_name = None
-        """
-        the default name of data object using this process. When data object
-        is created you can assign a name to it. But if you don't, the name of
-        data object is determined from this field. The field is a expression
-        which can take values of other fields.
-        """
-        #: descriptor schema description
+        self.logger = logging.getLogger(__name__)
+
+        #: description
         self.description = None
-        #: specification of descriptor schema
+        #: schema
         self.schema = None
 
         super(DescriptorSchema, self).__init__(resolwe, **model_data)

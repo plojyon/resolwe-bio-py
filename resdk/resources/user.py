@@ -21,10 +21,19 @@ class User(BaseResource):
     endpoint = "user"
 
     WRITABLE_FIELDS = (
-        'first_name', 'last_name', 'job_title', 'company', 'department',
-        'location', 'lab', 'phone_number', 'email'
+        'company',
+        'department',
+        'email',
+        'first_name',
+        'job_title',
+        'lab',
+        'last_name',
+        'location',
+        'phone_number',
     )
-    UPDATE_PROTECTED_FIELDS = ('username',)
+    UPDATE_PROTECTED_FIELDS = (
+        'username',
+    )
 
     def __init__(self, resolwe=None, **model_data):
         """Initialize attributes."""
@@ -88,7 +97,9 @@ class Group(BaseResource):
     #: (lazy loaded) list of users in Group
     _users = None
 
-    WRITABLE_FIELDS = ('name',)
+    WRITABLE_FIELDS = (
+        'name',
+    )
 
     def __init__(self, resolwe=None, **model_data):
         """Initialize attributes."""

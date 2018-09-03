@@ -26,9 +26,11 @@ class BaseResource(object):
     query_endpoint = None
     query_method = 'GET'
 
-    WRITABLE_FIELDS = ()
+    READ_ONLY_FIELDS = (
+        'id',
+    )
     UPDATE_PROTECTED_FIELDS = ()
-    READ_ONLY_FIELDS = ('id',)
+    WRITABLE_FIELDS = ()
 
     ALL_PERMISSIONS = []  # override this in subclass
 
@@ -36,20 +38,19 @@ class BaseResource(object):
         """Verify that only a single attribute of slug, id or model_data given."""
         self._original_values = {}
 
-        #: unique identifier
-        self.id = None  # pylint: disable=invalid-name
-
         self.api = operator.attrgetter(self.endpoint)(resolwe.api)
         self.resolwe = resolwe
+        self.logger = logging.getLogger(__name__)
+
+        #: unique identifier of an object
+        self.id = None  # pylint: disable=invalid-name
 
         if model_data:
             self._update_fields(model_data)
 
-        self.logger = logging.getLogger(__name__)
-
     def fields(self):
         """Resource fields."""
-        return self.WRITABLE_FIELDS + self.UPDATE_PROTECTED_FIELDS + self.READ_ONLY_FIELDS
+        return self.READ_ONLY_FIELDS + self.UPDATE_PROTECTED_FIELDS + self.WRITABLE_FIELDS
 
     def _update_fields(self, payload):
         """Update fields of the local resource based on the server values.
@@ -165,26 +166,34 @@ class BaseResolweResource(BaseResource):
 
     _permissions = None
 
-    WRITABLE_FIELDS = ('slug', 'name')
-    UPDATE_PROTECTED_FIELDS = ('contributor', )
-    READ_ONLY_FIELDS = ('id', 'version', 'created', 'modified', 'current_user_permissions')
+    READ_ONLY_FIELDS = BaseResource.READ_ONLY_FIELDS + (
+        'created', 'current_user_permissions', 'id', 'modified', 'version',
+    )
+    WRITABLE_FIELDS = (
+        'name', 'slug',
+    )
+    UPDATE_PROTECTED_FIELDS = (
+        'contributor',
+    )
 
     def __init__(self, resolwe, **model_data):
         """Initialize attributes."""
-        #: a descriptive name of the resource
-        self.name = None
-        #: the resource version
-        self.version = None
-        #: human-readable unique identifier
-        self.slug = None
+        self.logger = logging.getLogger(__name__)
+
         #: user id of the contributor
         self.contributor = None
         #: date of creation
         self.created = None
+        #: current user permissions
+        self.current_user_permissions = None
         #: date of latest modification
         self.modified = None
-        #: permissions - (view/download/add/edit/share/owner for user/group/public)
-        self.current_user_permissions = None
+        #: name of resource
+        self.name = None
+        #: human-readable unique identifier
+        self.slug = None
+        #: resource version
+        self.version = None
 
         BaseResource.__init__(self, resolwe, **model_data)
 

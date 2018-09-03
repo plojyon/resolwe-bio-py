@@ -1,6 +1,8 @@
 """Process resource."""
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import logging
+
 from .base import BaseResolweResource
 from .utils import _print_input_line
 
@@ -19,14 +21,17 @@ class Process(BaseResolweResource):
 
     endpoint = "process"
 
-    WRITABLE_FIELDS = ('data_name', 'type', 'flow_collection', 'category',
-                       'persistence', 'priority', 'description', 'input_schema',
-                       'output_schema', 'run') + BaseResolweResource.WRITABLE_FIELDS
+    UPDATE_PROTECTED_FIELDS = BaseResolweResource.UPDATE_PROTECTED_FIELDS + (
+        'category', 'data_name', 'description', 'flow_collection', 'input_schema', 'output_schema',
+        'persistence', 'requirements', 'run', 'scheduling_class', 'type',
+    )
 
     ALL_PERMISSIONS = ['view', 'share', 'owner']
 
     def __init__(self, resolwe, **model_data):
         """Initialize attributes."""
+        self.logger = logging.getLogger(__name__)
+
         self.data_name = None
         """
         the default name of data object using this process. When data object
@@ -61,6 +66,10 @@ class Process(BaseResolweResource):
         self.output_schema = None
         #: the heart of process - here the algorithm is defined.
         self.run = None
+        #: required Docker image, amount of memory / CPU ...
+        self.requirements = None
+        #: Scheduling class
+        self.scheduling_class = None
 
         super(Process, self).__init__(resolwe, **model_data)
 

@@ -18,6 +18,7 @@ Changed
 
 Added
 -----
+* Add many missing fields to SDK resource classes
 
 Fixed
 -----
