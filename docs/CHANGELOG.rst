@@ -15,6 +15,7 @@ Changed
 * **BACKWARD INCOMPATIBLE:** Remove ``print_annotation`` methods
 * Add ``login()`` method that enables to enter your credentials interactively.
   This prevents others from seeing your password in terminal history.
+* Support inputs of type ``list`` in ``get_resource_collection``
 
 Added
 -----

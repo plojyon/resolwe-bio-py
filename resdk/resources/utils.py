@@ -233,6 +233,11 @@ def get_resource_collection(resource, fail_silently=True):
         if len(collections) == 1:
             return collections[0].id
 
+    if isinstance(resource, list):
+        collections_ids = [get_resource_collection(item) for item in resource]
+        if len(set(collections_ids)) == 1:
+            return collections_ids[0]
+
     if fail_silently:
         return None
 
