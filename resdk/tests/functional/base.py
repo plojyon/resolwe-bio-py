@@ -106,29 +106,6 @@ class BaseResdkFunctionalTest(unittest.TestCase):
 
         return reads
 
-    def get_multiplexed(self, count=1, collection=None):
-        """ Return demultiplexed reads data objects.
-
-        :param int count: number of objects to return
-        :param collection: If defined, data object will be add to given
-            collections.
-        :type collection: None, int or `~resdk.resources.Collection`
-        """
-        collections = {'collections': [collection]} if collection else {}
-        inputs = {
-            'reads': 'pool24.read1.small.qseq.bz2',
-            'reads2': 'pool24.read3.small.qseq.bz2',
-            'barcodes': 'pool24.read2.small.qseq.bz2',
-            'annotation': 'pool24.tsv',
-        }
-        inputs = {k: os.path.join(FILES_PATH, v) for k, v in inputs.items()}
-
-        multi = [
-            self.res.run('upload-multiplexed-paired', inputs, **collections)
-            for _ in range(count)
-        ]
-        return multi
-
     def get_bams(self, count=1, collection=None, species='Homo sapiens',
                  build='hg38'):
         """Return bam data objects.
