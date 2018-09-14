@@ -24,6 +24,7 @@ Changed
 Added
 -----
 * Add many missing fields to SDK resource classes
+* Add ``relations`` property to ``Sample``
 
 Fixed
 -----

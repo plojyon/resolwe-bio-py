@@ -28,7 +28,7 @@ class TestChipSeq(BaseResdkFunctionalTest):
             collection.run_bamsplit()
 
         # Run on a background relation
-        bamsplit = relation.run_bamsplit()
+        bamsplit = bam_4.sample.relations[0].run_bamsplit()
         self.assertEqual(len(bamsplit), 2)
         self.assertEqual(bamsplit[0].input['bam'], bam_3.id)
         self.assertEqual(bamsplit[1].input['bam'], bam_4.id)

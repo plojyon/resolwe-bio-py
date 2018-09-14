@@ -76,6 +76,8 @@ class Sample(SampleUtilsMixin, BaseCollection):
 
         #: list of ``Collection``s that contain ``Sample`` (lazy loaded)
         self._collections = None
+        #: list of ``Relation`` objects in ``Collection`` (lazy loaded)
+        self._relations = None
         #: indicate whether `descriptor` is completed
         self.descriptor_completed = None
         #: sample's tags
@@ -88,6 +90,7 @@ class Sample(SampleUtilsMixin, BaseCollection):
     def update(self):
         """Clear cache and update resource fields from the server."""
         self._collections = None
+        self._relations = None
 
         super(Sample, self).update()
 
@@ -115,6 +118,16 @@ class Sample(SampleUtilsMixin, BaseCollection):
                 self._collections._cache = []  # pylint: disable=protected-access
 
         return self._collections
+
+    @property
+    def relations(self):
+        """Get ``Relation`` objects for this sample."""
+        if self.id is None:
+            raise ValueError('Instance must be saved before accessing `relations` attribute.')
+        if self._relations is None:
+            self._relations = self.resolwe.relation.filter(entity=self.id)
+
+        return self._relations
 
     def update_descriptor(self, descriptor):
         """Update descriptor and descriptor_schema."""
