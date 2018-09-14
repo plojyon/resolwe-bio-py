@@ -13,6 +13,8 @@ Changed
 -------
 * **BACKWARD INCOMPATIBLE:** Disable writing processes from ReSDK
 * **BACKWARD INCOMPATIBLE:** Remove ``print_annotation`` methods
+* **BACKWARD INCOMPATIBLE:** Remove collection methods ``import_relations`` and
+  ``export_relations`` that were used to bulk import/export relations
 * Add ``login()`` method that enables to enter your credentials interactively.
   This prevents others from seeing your password in terminal history.
 * Support inputs of type ``list`` in ``get_resource_collection``
