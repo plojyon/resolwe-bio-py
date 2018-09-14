@@ -25,6 +25,7 @@ Added
 -----
 * Add many missing fields to SDK resource classes
 * Add ``relations`` property to ``Sample``
+* Add ``background`` and ``is_background`` property to ``Sample``
 
 Fixed
 -----

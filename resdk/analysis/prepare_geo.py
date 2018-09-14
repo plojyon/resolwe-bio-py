@@ -3,7 +3,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import time
 
-from resdk.resources.utils import get_resolwe, get_resource_collection, get_samples, is_background
+from resdk.resources.utils import get_resolwe, get_resource_collection, get_samples
 
 __all__ = ('prepare_geo_chipseq', 'prepare_geo_rnaseq', 'prepare_geo')
 
@@ -53,7 +53,7 @@ def prepare_geo_chipseq(resource, name=None):
     for sample in samples:
         reads.append(sample.get_reads().id)
 
-        if is_background(sample):
+        if sample.is_background:
             continue
 
         macs_list = sample.get_macs()
@@ -68,16 +68,15 @@ def prepare_geo_chipseq(resource, name=None):
 
         macs14.append(macs_list[0].id)
 
-        background = sample.get_background(fail_silently=True)
-        if background:
-            if background not in samples:
+        if sample.background:
+            if sample.background not in samples:
                 raise ValueError(
                     "Background of the sample {} cannot be found in the resource you provided: "
                     "{}!".format(sample, resource)
                 )
 
             relations.append(
-                ':'.join([sample.name, background.name])
+                ':'.join([sample.name, sample.background.name])
             )
 
         collection_ids.add(get_resource_collection(sample))

@@ -78,6 +78,10 @@ class Sample(SampleUtilsMixin, BaseCollection):
         self._collections = None
         #: list of ``Relation`` objects in ``Collection`` (lazy loaded)
         self._relations = None
+        #: background ``Sample`` of the current ``Sample``
+        self._background = None
+        #: is this sample background to any other sample?
+        self._is_background = None
         #: indicate whether `descriptor` is completed
         self.descriptor_completed = None
         #: sample's tags
@@ -91,6 +95,8 @@ class Sample(SampleUtilsMixin, BaseCollection):
         """Clear cache and update resource fields from the server."""
         self._collections = None
         self._relations = None
+        self._background = None
+        self._is_background = None
 
         super(Sample, self).update()
 
@@ -140,26 +146,157 @@ class Sample(SampleUtilsMixin, BaseCollection):
         self.logger.info('Marked Sample %s as annotated', self.id)
 
     def get_background(self, fail_silently=False, **extra_filters):
-        """Find background sample of the current one."""
-        background_relation = self.resolwe.relation.filter(
-            type='compare',
-            label='background',
-            entity=[self.id],
-            position=['sample'],
+        """Get background sample of the current one."""
+        # XXX: This method is still needed as some samples may be
+        # backgrounds in multiple collections (collection can be given
+        # as extra_filters). When sample will be restricted to only be
+        # in one collection, the logic from this function can be placed
+        # in background property and collection query parameter removed.
+        self.logger.warning('This method is deprecated and will be removed when restriction is '
+                            'made that sample can only belong to single collection.')
+
+        background_relation = list(self.resolwe.relation.filter(
+            type='background',
+            entity=self.id,
+            label='case',
             **extra_filters
-        )
+        ))
 
-        # Execute query to prevent multiple requests to api
-        background_relation = list(background_relation)
+        if len(background_relation) != 1:
+            if len(background_relation) > 1 and not fail_silently:
+                raise LookupError("Multiple backgrounds defined for sample '{}'".format(self.name))
+            elif not background_relation and not fail_silently:
+                raise LookupError("No background is defined for sample '{}'".format(self.name))
+            else:
+                return
 
-        if len(background_relation) > 1:
-            raise LookupError(
-                "More than one background is defined for sample '{}'".format(self.name)
+        for partition in background_relation[0].partitions:
+            if partition['label'] == 'background' and partition['entity'] != self.id:
+                return self.resolwe.sample.get(id=partition['entity'])
+
+    @property
+    def background(self):
+        """Get background sample of the current one."""
+        if self._background is None:
+            self._background = self.get_background(fail_silently=True)
+            if self._background is None:
+                # Cache the result = no background is found.
+                self._background = False
+
+        if self._background:
+            return self._background
+
+    @background.setter
+    def background(self, bground):
+        """Set sample background."""
+        def count_cases(entity, label):
+            """Get a tuple (relation, number_of_cases) in a specified relation.
+
+            Relation is specified by collection, type-background'entity and label.
+            """
+            relation = list(self.resolwe.relation.filter(
+                collection=collection.id,
+                type='background',
+                entity=entity.id,
+                label=label,
+            ))
+            if len(relation) > 1:
+                raise ValueError(
+                    'Multiple relations of type "background" for sample {} in ' 'collection {} '
+                    'with label {}.'.format(entity, collection, label)
+                )
+            elif len(relation) == 1:
+                cases = len([prt for prt in relation[0].partitions if prt.get('label') == 'case'])
+            else:
+                cases = 0
+
+            return (relation[0] if relation else None, cases)
+
+        if self.background == bground:
+            return
+
+        assert isinstance(bground, Sample)
+
+        # Relations are always defined on collections: it is necessary
+        # to check that both, background and case are defined in only
+        # one common collection. Actions are done on this collection.
+        common_ids = {col.id for col in self.collections} & {col.id for col in bground.collections}
+        if not common_ids:
+            raise ValueError('Background and case sample are not in the same collection.')
+        elif len(common_ids) > 1:
+            raise ValueError('Background and case sample are in multiple common collections.')
+        collection = self.resolwe.collection.get(list(common_ids)[0])
+
+        # One cannot simply assign a background to sample but needs to
+        # account also for already existing background relations they
+        # are part of. By this, 3 x 3 scenarios are possible. One
+        # dimension of scenarios is determined by the relation in which
+        # *sample* is. It can be in no background relation (0), it can
+        # be in background relation where only one sample is the case
+        # sample (1) or it can be in background relation where many
+        # case samples are involved (2). Similarly, (future, to-be)
+        # background relation can be without any existing background
+        # relation (0), in background relation with one (1) or more (2)
+        # case samples.
+
+        # Get background relation for this sample and count cases in it.
+        # If no relation is found set to 0.
+        self_relation, self_cases = count_cases(self, 'case')
+
+        # Get background relation of to-be background sample and count
+        # cases in it. If no relation is found set to 0.
+        bground_relation, bground_cases = count_cases(bground, 'background')
+
+        # 3 x 3 options reduce to 5, since some of them can be treated equally:
+        if self_cases == bground_cases == 0:
+            # Neither case nor background is in background relation.
+            # Make a new background relation.
+            collection.create_background_relation('Background', bground, [self])
+        elif self_cases == 0 and bground_cases > 0:
+            # Sample is not part of any existing background relation,
+            # but background sample is. In this cae, just add sample to
+            # alread existing background relation
+            bground_relation.add_sample(self, label='case')
+        elif self_cases == 1 and bground_cases == 0:
+            # Sample si part od already existing background relation
+            # where there is one sample and one background. New,
+            # to-be-background sample is not part of any background
+            # relation yet. Modify sample relation and replace background.
+            for partition in self_relation.partitions:
+                if partition['label'] == 'background':
+                    partition['entity'] = bground.id
+                    break
+        elif self_cases == 1 and bground_cases > 0:
+            # Sample si part od already existing background relation
+            # where there is one sample and one background. New,
+            # to-be-background sample is is similar two-member relation.
+            # Remove relaton of case sample and add it to existing
+            # relation of the background smaple.
+            self_relation.delete(force=True)
+            bground_relation.add_sample(self, label='case')
+        elif self_cases > 1:
+            raise ValueError(
+                'This sample is a case in a background relation with also other samples as cases. '
+                'If you would like to change background sample for all of them please delete '
+                'current relation and create new one with desired background.'
             )
-        elif len(background_relation) == 1:
-            for entity_obj in background_relation[0].entities:
-                if entity_obj['position'] == 'background':
-                    return self.resolwe.sample.get(id=entity_obj['entity'])
-        elif not fail_silently:
-            raise LookupError(
-                'Cannot find (background) sample for sample `{}`.'.format(self.name))
+
+        self.save()
+        self._relations = None
+        self._background = None
+        bground._is_background = True  # pylint: disable=protected-access
+
+    @property
+    def is_background(self):
+        """Return ``True`` if given sample is background to any other and ``False`` otherwise."""
+        if self._is_background is None:
+            background_relations = self.resolwe.relation.filter(
+                type='background',
+                entity=self.id,
+                label='background',
+            )
+            # we need to iterate ``background_relations`` (using len) to
+            # evaluate ResolweQuery:
+            self._is_background = len(background_relations) > 0  # pylint: disable=len-as-condition
+
+        return self._is_background

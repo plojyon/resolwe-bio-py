@@ -8,14 +8,15 @@ class TestChipSeq(BaseResdkFunctionalTest):
 
     def test_bamsplit(self):
         collection = self.res.collection.create(name='Test collection')
+        collection_2 = self.res.collection.create(name='Another collection')
 
         # pylint: disable=unbalanced-tuple-unpacking
         bam_1, bam_2 = self.get_bams(2, collection, build='hg19_dm6')
-        bam_3, bam_4, bam_5 = self.get_bams(3, build='hg19_dm6')
+        bam_3, bam_4, bam_5 = self.get_bams(3, collection_2, build='hg19_dm6')
         reads = self.get_reads()[0]
         # pylint: enable=unbalanced-tuple-unpacking
 
-        relation = collection.create_background_relation(bam_3.sample, bam_4.sample)
+        bam_4.sample.background = bam_3.sample
 
         # Run on a collection
         bamsplit = collection.run_bamsplit()
@@ -50,13 +51,16 @@ class TestChipSeq(BaseResdkFunctionalTest):
         background, bam_1, bam_2 = self.get_bams(3, collection)
         # pylint: enable=unbalanced-tuple-unpacking
 
-        collection.create_background_relation(bam_1.sample, background.sample)
-        collection.create_background_relation(bam_2.sample, background.sample)
-        group = collection.create_group_relation(samples=[bam_1.sample, background.sample])
+        bam_1.sample.background = background.sample
+        bam_2.sample.background = background.sample
+        group = collection.create_group_relation(
+            category='test', samples=[bam_1.sample, background.sample])
 
         # Just to create some confusion :)
         collection_2.add_samples(background.sample, bam_2.sample)
-        collection_2.create_background_relation(bam_2.sample, background.sample)
+        background.update()
+        bam_2.update()
+        collection_2.create_background_relation('background1', background.sample, [bam_2.sample])
 
         # Run on collection should only use samples with defined backgrounds
         macs = collection.run_macs()
@@ -136,13 +140,15 @@ class TestChipSeq(BaseResdkFunctionalTest):
         background = self.get_bams(1, collection)[0]
         # pylint: enable=unbalanced-tuple-unpacking
 
-        collection.create_background_relation(macs_1.sample, background.sample)
-        collection.create_background_relation(macs_2.sample, background.sample)
-        group = collection.create_group_relation(samples=[macs_1.sample, background.sample])
+        macs_1.sample.background = background.sample
+        macs_2.sample.background = background.sample
+        group = collection.create_group_relation('group', [macs_1.sample, background.sample])
 
         # Just to create some confusion :)
         collection_2.add_samples(background.sample, macs_2.sample)
-        collection_2.create_background_relation(macs_2.sample, background.sample)
+        background.update()
+        macs_2.update()
+        collection_2.create_background_relation('background1', background.sample, [macs_2.sample])
 
         # Run on collection should only use samples with defined backgrounds
         rose = collection.run_rose2()

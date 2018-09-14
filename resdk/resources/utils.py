@@ -254,14 +254,3 @@ def get_resolwe(*resources):
         raise TypeError('All input objects must be from the same `Resolwe` connection.')
 
     return list(resolwes)[0]
-
-
-def is_background(sample):
-    """Return ``True`` if given sample is background and ``False`` otherwise."""
-    background_relations = sample.resolwe.relation.filter(
-        type='compare',
-        label='background',
-        entity=sample.id,
-        position='background'
-    )
-    return len(background_relations) > 0

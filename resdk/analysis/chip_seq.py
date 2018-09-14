@@ -1,9 +1,7 @@
 """Chip Seq analysis."""
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-from resdk.resources.utils import (
-    get_data_id, get_resource_collection, get_samples, is_background, is_sample,
-)
+from resdk.resources.utils import get_data_id, get_resource_collection, get_samples, is_sample
 
 __all__ = ('bamsplit', 'macs', 'rose2')
 
@@ -89,7 +87,7 @@ def macs(resource, use_background=True, p_value=None):
             inputs['treatment'] = sample.get_primary_bam(fallback_to_bam=True).id
 
             if use_background:
-                if is_background(sample) and not is_sample(single_resource):
+                if sample.is_background and not is_sample(single_resource):
                     # Don't run process on the background sample,
                     # but let it fail if it is run directly on sample
                     continue
@@ -154,7 +152,7 @@ def rose2(resource, use_background=True, tss=None, stitch=None, beds=None):
                 inputs['stitch'] = stitch
 
             if use_background:
-                if is_background(sample) and not is_sample(single_resource):
+                if sample.is_background and not is_sample(single_resource):
                     # Don't run process on the background sample,
                     # but let it fail if it is run directly on sample
                     continue
