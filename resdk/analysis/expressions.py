@@ -91,7 +91,6 @@ def cuffnorm(resource, annotation, use_ercc=None):
     for sample in samples:
         relations = resolwe.relation.filter(
             type='group',
-            label='replicates',
             entity=[sample.id],
             **relation_filter
         )

@@ -17,11 +17,12 @@ class TestCollection(unittest.TestCase):
         collection.id = 1  # this is overriden when initialized
 
         # only samples
-        collection.create_group_relation(samples=[1, 2, 3])
+        collection.create_group_relation(category='replicates', samples=[1, 2, 3])
         collection.resolwe.relation.create.assert_called_with(
             collection=1,
             type='group',
-            entities=[
+            category='replicates',
+            partitions=[
                 {'entity': 1},
                 {'entity': 2},
                 {'entity': 3},
@@ -30,50 +31,41 @@ class TestCollection(unittest.TestCase):
 
         collection.resolwe.relation.create.reset_mock()
 
-        # samples with positions
-        collection.create_group_relation(samples=[1, 2, 3], positions=['first', 'second', 'third'])
+        # samples with labels
+        collection.create_group_relation(
+            category='replicates', samples=[1, 2, 3], labels=['first', 'second', 'third'])
         collection.resolwe.relation.create.assert_called_with(
             collection=1,
             type='group',
-            entities=[
-                {'position': 'first', 'entity': 1},
-                {'position': 'second', 'entity': 2},
-                {'position': 'third', 'entity': 3},
+            category='replicates',
+            partitions=[
+                {'label': 'first', 'entity': 1},
+                {'label': 'second', 'entity': 2},
+                {'label': 'third', 'entity': 3},
             ],
         )
 
         collection.resolwe.relation.create.reset_mock()
 
-        # samples with positions - length mismatch
+        # samples with labels - length mismatch
         with self.assertRaises(ValueError):
-            collection.create_group_relation(samples=[1, 2, 3], positions=['first'])
+            collection.create_group_relation(
+                category='replicates', samples=[1, 2, 3], labels=['first'])
         self.assertEqual(collection.resolwe.relation.create.call_count, 0)
 
         collection.resolwe.relation.create.reset_mock()
-
-        # with label
-        collection.create_group_relation(samples=[1, 2, 3], label='my_group')
-        collection.resolwe.relation.create.assert_called_with(
-            collection=1,
-            type='group',
-            label='my_group',
-            entities=[
-                {'entity': 1},
-                {'entity': 2},
-                {'entity': 3},
-            ],
-        )
 
     def test_create_compare(self):
         collection = Collection(id=1, resolwe=MagicMock())
         collection.id = 1  # this is overriden when initialized
 
         # only samples
-        collection.create_compare_relation(samples=[1, 2])
+        collection.create_compare_relation(category='case-control', samples=[1, 2])
         collection.resolwe.relation.create.assert_called_with(
             collection=1,
             type='compare',
-            entities=[
+            category='case-control',
+            partitions=[
                 {'entity': 1},
                 {'entity': 2},
             ],
@@ -81,48 +73,40 @@ class TestCollection(unittest.TestCase):
 
         collection.resolwe.relation.create.reset_mock()
 
-        # samples with positions
-        collection.create_compare_relation(samples=[1, 2], positions=['case', 'control'])
+        # samples with labels
+        collection.create_compare_relation(
+            category='case-control', samples=[1, 2], labels=['case', 'control'])
         collection.resolwe.relation.create.assert_called_with(
             collection=1,
             type='compare',
-            entities=[
-                {'position': 'case', 'entity': 1},
-                {'position': 'control', 'entity': 2},
+            category='case-control',
+            partitions=[
+                {'label': 'case', 'entity': 1},
+                {'label': 'control', 'entity': 2},
             ],
         )
 
         collection.resolwe.relation.create.reset_mock()
 
-        # samples with positions - length mismatch
+        # samples with labels - length mismatch
         with self.assertRaises(ValueError):
-            collection.create_compare_relation(samples=[1, 2], positions=['case'])
+            collection.create_compare_relation(
+                category='case-control', samples=[1, 2], labels=['case'])
         self.assertEqual(collection.resolwe.relation.create.call_count, 0)
 
         collection.resolwe.relation.create.reset_mock()
-
-        # with label
-        collection.create_compare_relation(samples=[1, 2], label='case-control')
-        collection.resolwe.relation.create.assert_called_with(
-            collection=1,
-            type='compare',
-            label='case-control',
-            entities=[
-                {'entity': 1},
-                {'entity': 2},
-            ],
-        )
 
     def test_create_series(self):
         collection = Collection(id=1, resolwe=MagicMock())
         collection.id = 1  # this is overriden when initialized
 
         # only samples
-        collection.create_series_relation(samples=[1, 2, 3])
+        collection.create_series_relation(category='time-series', samples=[1, 2, 3])
         collection.resolwe.relation.create.assert_called_with(
             collection=1,
             type='series',
-            entities=[
+            category='time-series',
+            partitions=[
                 {'entity': 1},
                 {'entity': 2},
                 {'entity': 3},
@@ -131,52 +115,57 @@ class TestCollection(unittest.TestCase):
 
         collection.resolwe.relation.create.reset_mock()
 
-        # samples with positions
-        collection.create_series_relation(samples=[1, 2, 3], positions=['0Hr', '2Hr', '4Hr'])
+        # samples with labels
+        collection.create_series_relation(
+            category='time-series', samples=[1, 2, 3], labels=['0Hr', '2Hr', '4Hr'])
         collection.resolwe.relation.create.assert_called_with(
             collection=1,
             type='series',
-            entities=[
-                {'position': '0Hr', 'entity': 1},
-                {'position': '2Hr', 'entity': 2},
-                {'position': '4Hr', 'entity': 3},
+            category='time-series',
+            partitions=[
+                {'label': '0Hr', 'entity': 1},
+                {'label': '2Hr', 'entity': 2},
+                {'label': '4Hr', 'entity': 3},
+            ],
+        )
+
+        # samples with positions
+        collection.create_series_relation(
+            category='time-series', samples=[1, 2, 3], positions=[10, 20, 30])
+        collection.resolwe.relation.create.assert_called_with(
+            collection=1,
+            type='series',
+            category='time-series',
+            partitions=[
+                {'position': 10, 'entity': 1},
+                {'position': 20, 'entity': 2},
+                {'position': 30, 'entity': 3},
             ],
         )
 
         collection.resolwe.relation.create.reset_mock()
 
-        # samples with positions - length mismatch
+        # samples with labels - length mismatch
         with self.assertRaises(ValueError):
-            collection.create_series_relation(samples=[1, 2], positions=['0Hr'])
+            collection.create_series_relation(
+                category='time-series', samples=[1, 2], labels=['0Hr'])
         self.assertEqual(collection.resolwe.relation.create.call_count, 0)
 
         collection.resolwe.relation.create.reset_mock()
-
-        # with label
-        collection.create_series_relation(samples=[1, 2], label='time-series')
-        collection.resolwe.relation.create.assert_called_with(
-            collection=1,
-            type='series',
-            label='time-series',
-            entities=[
-                {'entity': 1},
-                {'entity': 2},
-            ],
-        )
 
     def test_create_background(self):
         collection = Collection(id=1, resolwe=MagicMock())
         collection.id = 1  # this is overriden when initialized
 
         # only samples
-        collection.create_background_relation('sample_1', 'sample_2')
+        collection.create_background_relation('background 1', 'sample_1', ['sample_2'])
         collection.resolwe.relation.create.assert_called_with(
             collection=1,
-            type='compare',
-            label='background',
-            entities=[
-                {'position': 'sample', 'entity': 'sample_1'},
-                {'position': 'background', 'entity': 'sample_2'},
+            type='background',
+            category='background 1',
+            partitions=[
+                {'label': 'background', 'entity': 'sample_1'},
+                {'label': 'case', 'entity': 'sample_2'},
             ],
         )
 

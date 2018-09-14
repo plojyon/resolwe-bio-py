@@ -7,117 +7,93 @@ from resdk.resources.utils import get_sample_id
 
 
 class CollectionRelationsMixin(object):
-    """Shortcuts mixin for ``Collection`` class.
+    """Mixin for managing relations in ``Collection`` class."""
 
-    This is a collection of utility functions for managing relations on
-    collection.
-    """
-
-    def _create_relation(self, relation_type, samples, positions=[], label=None):
-        """Create group relation with the given samples and positions."""
+    def _create_relation(self, relation_type, category, samples, positions=[], labels=[]):
+        """Create relation."""
         if not isinstance(samples, list):
             raise ValueError("`samples` argument must be list.")
 
         if not isinstance(positions, list):
             raise ValueError("`positions` argument must be list.")
 
-        if positions:
-            if len(samples) != len(positions):
-                raise ValueError("`samples` and `positions` arguments must be of the same length.")
+        if not isinstance(labels, list):
+            raise ValueError("`labels` argument must be list.")
+
+        if positions and labels and not len(samples) == len(positions) == len(labels):
+            raise ValueError(
+                "`samples`, `positions` and `labels` arguments must be of the same length."
+            )
+        elif labels and not len(samples) == len(labels):
+            raise ValueError("`samples` and `labels` arguments must be of the same length.")
+        elif positions and not len(samples) == len(positions):
+            raise ValueError("`samples` and `positions` arguments must be of the same length.")
 
         relation_data = {
             'type': relation_type,
             'collection': self.id,
-            'entities': []
+            'category': category,
+            'partitions': []
         }
 
-        for sample, position in zip_longest(samples, positions):
-            entity_dict = {'entity': get_sample_id(sample)}
+        for sample, position, label in zip_longest(samples, positions, labels):
+            partition = {'entity': get_sample_id(sample)}
             if position:
-                entity_dict['position'] = position
+                partition['position'] = position
+            if label:
+                partition['label'] = label
 
-            relation_data['entities'].append(entity_dict)
-
-        if label:
-            relation_data['label'] = label
+            relation_data['partitions'].append(partition)
 
         return self.resolwe.relation.create(**relation_data)
 
-    def _update_relation(self, id_, relation_type, samples, positions=[], label=None,
-                         relation=None):
-        """Update existing relation."""
-        if relation is None:
-            relation = self.resolwe.relation.get(id=id_)
-
-        to_delete = copy.copy(relation.entities)
-        to_add = []
-
-        for sample, position in zip_longest(samples, positions):
-            entity_obj = {'entity': sample, 'position': position}
-            if entity_obj in relation.entities:
-                to_delete.remove(entity_obj)
-            else:
-                to_add.append(entity_obj)
-
-        if to_add:
-            relation.add_sample(*to_add)
-
-        if to_delete:
-            relation.remove_samples(*[obj['entity'] for obj in to_delete])
-
-        if label != relation.label:
-            relation.label = label
-            relation.save()
-
-    def create_group_relation(self, samples, positions=[], label=None):
+    def create_group_relation(self, category, samples, labels=[]):
         """Create group relation.
 
+        :param str category: Category of relation (i.e. ``replicates``,
+            ``clones``, ...)
         :param list samples: List of samples to include in relation.
-        :param list position: List of optional positions assigned to the
-            relations (i.e. ``first``, ``second``...). If given it shoud
-            be of the same length as ``samples``.
-        :param str label: Optional label of the relation (i.e.
-            ``replicates``)
+        :param list labels: List of labels assigned to corresponding
+            samples. If given it should be of same length as samples.
         """
-        return self._create_relation('group', samples, positions, label)
+        return self._create_relation('group', category, samples, labels=labels)
 
-    def create_compare_relation(self, samples, positions=[], label=None):
+    def create_compare_relation(self, category, samples, labels=[]):
         """Create compare relation.
 
+        :param str category: Category of relation (i.e.
+            ``case-control``, ...)
         :param list samples: List of samples to include in relation.
-        :param list position: List of optional positions assigned to the
-            relations (i.e. ``case``, ``control``...). If given it shoud
-            be of the same length as ``samples``.
-        :param str label: Optional label of the relation (i.e.
-            ``case-control``)
+        :param list labels: List of labels assigned to corresponding
+            samples. If given it should be of same length as samples.
         """
-        return self._create_relation('compare', samples, positions, label)
+        return self._create_relation('compare', category, samples, labels=labels)
 
-    def create_series_relation(self, samples, positions=[], label=None):
+    def create_series_relation(self, category, samples, positions=[], labels=[]):
         """Create series relation.
 
+        :param str category: Category of relation (i.e.
+            ``case-control``, ...)
         :param list samples: List of samples to include in relation.
-        :param list position: List of optional positions assigned to the
-            relations (i.e. ``1``, ``2``...). If given it shoud be of
-            the same length as ``samples``.
-        :param str label: Optional label of the relation (i.e.
-            ``time-series``)
+        :param list positions: List of positions assigned to
+            corresponding sample (i.e. ``10``, ``20``, ``30``). If given
+            it should be of same length as samples. Note that this
+            elements should be machine-sortable by default.
+        :param list labels: List of labels assigned to corresponding
+            samples. If given it should be of same length as samples.
         """
-        return self._create_relation('series', samples, positions, label)
+        return self._create_relation('series', category, samples, positions, labels)
 
-    def create_background_relation(self, sample, background):
-        """Create compare relation with ``background`` label.
+    def create_background_relation(self, category, background, cases):
+        """Create background relation.
 
-        Creates special compare relatio labeled with ``background`` abd
-        containing two sampes tagged as ``sample`` and ``background``.
-
-        :param sample: Sample
-        :type sample: int or `~resdk.resources.sample.Sample`
-        :param background: Background sample
-        :type background: int or `~resdk.resources.sample.Sample`
+        :param str category: Category of relation
+        :param Sample background: Background sample
+        :param Sample cases: Case samples (signals)
         """
-        return self.create_compare_relation(
-            samples=[sample, background],
-            positions=['sample', 'background'],
-            label='background'
+        return self._create_relation(
+            relation_type='background',
+            category=category,
+            samples=[background] + cases,
+            labels=['background'] + ['case'] * len(cases),
         )

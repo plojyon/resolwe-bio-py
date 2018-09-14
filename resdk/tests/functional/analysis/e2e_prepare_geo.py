@@ -33,13 +33,12 @@ class TestPrepareGeo(BaseResdkFunctionalTest):
 
         samples = [read.sample for read in reads]
 
-        collection_1.create_background_relation(samples[1], samples[0])
-        collection_1.create_background_relation(samples[2], samples[0])
+        collection_1.create_background_relation('background1', samples[0], samples[1:3])
 
         collection_2.add_samples(samples[5])
 
         # Create a relation that is not connected to a collection in use
-        relation = collection_3.create_background_relation(samples[4], samples[3])
+        relation = collection_3.create_background_relation('background1', samples[3], [samples[4]])
 
         # Run macs
         macs_1, macs_2 = collection_1.run_macs()

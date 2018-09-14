@@ -25,17 +25,22 @@ class Relation(BaseResolweResource):
 
     endpoint = 'relation'
 
-    UPDATE_PROTECTED_FIELDS = BaseResolweResource.UPDATE_PROTECTED_FIELDS + (
-        'entities', 'type',
+    READ_ONLY_FIELDS = (
+        'created', 'id', 'modified',
+    )
+    UPDATE_PROTECTED_FIELDS = (
+        'contributor', 'type',
     )
     WRITABLE_FIELDS = BaseResolweResource.WRITABLE_FIELDS + (
-        'collection', 'label',
+        'collection', 'category', 'partitions', 'unit',
     )
 
     ALL_PERMISSIONS = ['view', 'edit', 'share', 'owner']
 
     def __init__(self, resolwe, **model_data):
         """Initialize attributes."""
+        self.logger = logging.getLogger(__name__)
+
         #: collection id in which relation is
         self._collection = None
         #: (lazy loaded) collection object in which relation is
@@ -43,40 +48,26 @@ class Relation(BaseResolweResource):
         #: (lazy loaded) list of samples in the relation
         self._samples = None
 
-        #: list of entities in the relation
-        self.entities = None
+        #: list of ``RelationPartition`` objects in the ``Relation``
+        self.partitions = None
         #: type of the relation
         self.type = None
-        #: optional label of the relation
-        self.label = None
+        #: category of the relation
+        self.category = None
+        #: unit (where applicable, e.g. for serieses)
+        self.unit = None
 
         super(Relation, self).__init__(resolwe, **model_data)
 
-        #: list of the sample positions in the relation or `None` if none of the positions is set
-        if self.entities is None:
-            self.positions = []
-        else:
-            self.positions = [
-                entity_obj.get('position', None)
-                for entity_obj in self.entities  # pylint: disable=not-an-iterable
-            ]
-        if not any(self.positions):
-            self.positions = None
-
-        self.logger = logging.getLogger(__name__)
-
     @property
     def samples(self):
-        """Return list of the sample objects in the relation."""
+        """Return list of sample objects in the relation."""
         if not self._samples:
-            if self.entities is None:
+            if not self.partitions:
                 self._samples = []
             else:
-                sample_ids = [
-                    # pylint: disable=not-an-iterable
-                    entity_obj['entity'] for entity_obj in self.entities
-                ]
-                self._samples = self.resolwe.sample.filter(id__in=','.join(map(str, sample_ids)))
+                sample_ids = [partition['entity'] for partition in self.partitions]
+                self._samples = self.resolwe.sample.filter(id__in=sample_ids)
                 # Samples should be sorted, so they have same order as positions
                 # XXX: This may be slow for many samples in single collection
                 self._samples = sorted(
@@ -105,20 +96,23 @@ class Relation(BaseResolweResource):
 
         super(Relation, self).update()
 
-    def add_sample(self, sample, position=None):
-        """Add ``sample`` object to the collection."""
-        payload = [{
-            'entity': get_sample_id(sample),
-            'position': position
-        }]
-        self.api(self.id).add_entity.post(payload)
-        self.update()
+    def add_sample(self, sample, label=None, position=None):
+        """Add ``sample`` object to relation."""
+        self.partitions.append({
+            'entity': sample.id,
+            'position': position,
+            'label': label,
+        })
+        self.save()
+        self._samples = None
 
     def remove_samples(self, *samples):
-        """Remove ``sample`` objects from the collection."""
-        samples = [get_sample_id(sample) for sample in samples]
-        self.api(self.id).remove_entity.post({'ids': samples})
-        self.update()
+        """Remove ``sample`` objects from relation."""
+        sample_ids = [get_sample_id(sample) for sample in samples]
+        self.partitions = [partition for partition in self.partitions if
+                           partition['entity'] not in sample_ids]
+        self.save()
+        self._samples = None
 
     def save(self):
         """Check that collection is saved and save instance."""
@@ -130,21 +124,27 @@ class Relation(BaseResolweResource):
 
     def __repr__(self):
         """Format relation name."""
-        if self.positions:
-            pairs = [
-                '{}: {}'.format(position, sample.name)
-                for position, sample in zip(self.positions, self.samples)
-            ]
-            samples = '{{{}}}'.format(', '.join(pairs))
-        else:
-            samples = '[{}]'.format(', '.join(sample.name for sample in self.samples))
+        sample_info = []
+        for sample, partition in zip(self.samples, self.partitions):
+            name = sample.name
+            label = partition.get('label', None)
+            position = partition.get('position', None)
 
-        label = ""
-        if self.label:
-            label = "label: '{}', ".format(self.label)
+            if label and position:
+                sample_info.append('{} ({} {}): {}'.format(label, position, self.unit, name))
+            elif partition['label']:
+                sample_info.append('{}: {}'.format(label, name))
+            elif partition['position']:
+                sample_info.append('{} {}: {}'.format(position, self.unit, name))
+            else:
+                sample_info.append(name)
 
-        rep = "{} <id:{} type: '{}', {}samples: {}>".format(
-            self.__class__.__name__, self.id, self.type, label, samples
+        rep = "{} id: {}, type: '{}', category: '{}', samples: {{{}}}".format(
+            self.__class__.__name__,
+            self.id,
+            self.type,
+            self.category,
+            ', '.join(sample_info),
         )
 
         return rep.encode('utf-8') if six.PY2 else rep

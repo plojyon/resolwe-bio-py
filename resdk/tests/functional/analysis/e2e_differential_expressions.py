@@ -26,8 +26,8 @@ class TestExpressions(BaseResdkFunctionalTest):
                 cuffquant_3.sample,
                 cuffquant_4.sample,
             ],
-            positions=['control', 'control', 'case', 'case'],
-            label='case-control'
+            labels=['control', 'control', 'case', 'case'],
+            category='case-control'
         )
 
         collection_2.create_compare_relation(
@@ -37,8 +37,8 @@ class TestExpressions(BaseResdkFunctionalTest):
                 cuffquant_8.sample,
                 cuffquant_9.sample,
             ],
-            positions=['control', 'control', 'case', 'case'],
-            label='case-control'
+            labels=['control', 'control', 'case', 'case'],
+            category='case-control'
         )
 
         collection_2.create_compare_relation(
@@ -48,8 +48,8 @@ class TestExpressions(BaseResdkFunctionalTest):
                 cuffquant_10.sample,
                 cuffquant_11.sample,
             ],
-            positions=['control', 'control', 'case', 'case'],
-            label='case-control'
+            labels=['control', 'control', 'case', 'case'],
+            category='case-control-2'
         )
 
         samples = [

@@ -83,7 +83,6 @@ def cuffdiff(resource, annotation, genome=None, multi_read_correct=None, fdr=Non
 
     relations = resolwe.relation.filter(
         type='compare',
-        label='case-control',
         **relation_filter
     )
 
@@ -91,17 +90,19 @@ def cuffdiff(resource, annotation, genome=None, multi_read_correct=None, fdr=Non
     for relation in relations:
         control = []
         case = []
-        for sample, position in zip(relation.samples, relation.positions):
+        for partition in relation.partitions:
+            sample = resolwe.sample.get(partition['entity'])
+            label = partition['label']
             if sample.id not in sample_ids:
                 continue
 
-            if position == 'case':
+            if label == 'case':
                 case.append(get_data_id(sample.get_cuffquant()))
-            elif position == 'control':
+            elif label == 'control':
                 control.append(get_data_id(sample.get_cuffquant()))
             else:
                 raise ValueError(
-                    "Position different from 'case' or 'control' was found in the "
+                    "Label different from 'case' or 'control' was found in the "
                     "following relation: {}".format(relation.id)
                 )
 
@@ -124,8 +125,8 @@ def cuffdiff(resource, annotation, genome=None, multi_read_correct=None, fdr=Non
             raise ValueError("No relation containing all of the given samples was found")
         else:
             raise ValueError(
-                "No suitable relation was found (given samples all have either 'case' position "
-                "or 'control' position"
+                "No suitable relation was found (given samples all have either 'case' label "
+                "or 'control' label"
             )
 
     return cuffdiff_objects

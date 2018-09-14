@@ -16,7 +16,7 @@ class TestExpressions(BaseResdkFunctionalTest):
         bam_3 = self.get_bams(1)[0]
         annotation = self.get_gtf()
 
-        group = collection.create_group_relation(samples=[bam_1.sample])
+        group = collection.create_group_relation(category='replicates', samples=[bam_1.sample])
 
         # Run cuffquant on a collection
         cuffquants = collection.run_cuffquant(annotation=annotation)
@@ -48,11 +48,11 @@ class TestExpressions(BaseResdkFunctionalTest):
 
         group = collection.create_group_relation(
             samples=[cuffquant_1.sample, cuffquant_2.sample],
-            label='replicates'
+            category='replicates'
         )
         group1 = collection.create_group_relation(
             samples=[cuffquant_3.sample, cuffquant_4.sample],
-            label='replicates'
+            category='clones'
         )
 
         # Run cuffnorm on a collection

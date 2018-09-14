@@ -15,7 +15,7 @@ class TestAligners(BaseResdkFunctionalTest):
         reads_3 = self.get_reads(1)[0]
         genome = self.get_genome()
 
-        group = collection.create_group_relation(samples=[reads_1.sample])
+        group = collection.create_group_relation(category='test', samples=[reads_1.sample])
 
         # Run bowtie on a collection
         bams = collection.run_bowtie2(genome=genome)
@@ -51,7 +51,7 @@ class TestAligners(BaseResdkFunctionalTest):
         reads_3 = self.get_reads(1)[0]
         genome = self.get_genome()
 
-        group = collection.create_group_relation(samples=[reads_1.sample])
+        group = collection.create_group_relation(category='test', samples=[reads_1.sample])
 
         # Run hisat on a collection
         bams = collection.run_hisat2(genome=genome)

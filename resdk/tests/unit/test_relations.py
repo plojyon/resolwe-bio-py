@@ -21,12 +21,12 @@ class TestRelation(unittest.TestCase):
         sample_2 = MagicMock(id=2)
         # order in return_value is intentionally mixed to test ordering
         relation.resolwe.sample.filter = MagicMock(return_value=[sample_2, sample_1])
-        relation.entities = [
+        relation.partitions = [
             {'entity': 1, 'position': None},
             {'entity': 2, 'position': None},
         ]
         self.assertEqual(relation.samples, [sample_1, sample_2])
-        relation.resolwe.sample.filter.assert_called_with(id__in='1,2')
+        relation.resolwe.sample.filter.assert_called_with(id__in=[1, 2])
 
         # test caching
         self.assertEqual(relation.samples, [sample_1, sample_2])
@@ -70,40 +70,59 @@ class TestRelation(unittest.TestCase):
 
     def test_repr(self):
         relation = Relation(id=1, resolwe=MagicMock())
-        relation.id = 1  # this is overriden when initialized
+        relation.type = 'compare'
+        relation.unit = 'min'
+        relation.category = 'background'
 
         # `name` cannot be mocked in another way
         sample_1 = MagicMock()
         sample_1.configure_mock(name='sample_1')
         sample_2 = MagicMock()
         sample_2.configure_mock(name='sample_2')
-
-        relation.type = 'compare'
-        relation.label = None
         relation._samples = [sample_1, sample_2]
-        relation.positions = None
+
+        # Positions and labels are given
+        relation.partitions = [
+            {'id': 3, 'entity': 1, 'position': 10, 'label': 'first'},
+            {'id': 4, 'entity': 2, 'position': 20, 'label': 'second'},
+        ]
         self.assertEqual(
             str(relation),
-            "Relation <id:1 type: 'compare', samples: [sample_1, sample_2]>"
+            "Relation id: 1, type: 'compare', category: 'background', "
+            "samples: {first (10 min): sample_1, second (20 min): sample_2}"
         )
 
-        relation.type = 'compare'
-        relation.label = 'background'
-        relation._samples = [sample_1, sample_2]
-        relation.positions = None
+        # Only labels are given
+        relation.partitions = [
+            {'id': 3, 'entity': 1, 'position': None, 'label': 'first'},
+            {'id': 4, 'entity': 2, 'position': None, 'label': 'second'},
+        ]
         self.assertEqual(
             str(relation),
-            "Relation <id:1 type: 'compare', label: 'background', samples: [sample_1, sample_2]>"
+            "Relation id: 1, type: 'compare', category: 'background', "
+            "samples: {first: sample_1, second: sample_2}"
         )
 
-        relation.type = 'compare'
-        relation.label = 'background'
-        relation._samples = [sample_1, sample_2]
-        relation.positions = ['sample', 'background']
+        # Only positions are given
+        relation.partitions = [
+            {'id': 3, 'entity': 1, 'position': 10, 'label': None},
+            {'id': 4, 'entity': 2, 'position': 20, 'label': None},
+        ]
         self.assertEqual(
             str(relation),
-            "Relation <id:1 type: 'compare', label: 'background', "
-            "samples: {sample: sample_1, background: sample_2}>"
+            "Relation id: 1, type: 'compare', category: 'background', "
+            "samples: {10 min: sample_1, 20 min: sample_2}"
+        )
+
+        # Only sample names are given
+        relation.partitions = [
+            {'id': 3, 'entity': 1, 'position': None, 'label': None},
+            {'id': 4, 'entity': 2, 'position': None, 'label': None},
+        ]
+        self.assertEqual(
+            str(relation),
+            "Relation id: 1, type: 'compare', category: 'background', "
+            "samples: {sample_1, sample_2}"
         )
 
 
