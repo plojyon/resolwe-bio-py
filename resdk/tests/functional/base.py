@@ -214,3 +214,19 @@ class BaseResdkFunctionalTest(unittest.TestCase):
             expressions.append(expression)
 
         return expressions
+
+    def set_slug(self, resource, slug):
+        """Set slug of resource."""
+        resource.slug = slug
+        resource.save()
+
+    def make_public(self, resource, permissions=None):
+        """Make resource public."""
+        if permissions is None:
+            permissions = ['view']
+        resource.permissions.add_public(permissions)
+
+    def set_slug_and_make_public(self, resource, slug, permissions=None):
+        """Set slug of resource and make it public."""
+        self.set_slug(resource, slug)
+        self.make_public(resource, permissions=permissions)

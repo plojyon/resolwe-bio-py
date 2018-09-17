@@ -5,11 +5,12 @@
 Resolwe SDK for Python
 ======================
 
-Resolwe SDK for Python supports interaction with Resolwe_ server
+Resolwe SDK for Python supports interaction with `Genialis platform`_. Genialis platform is based on Resolwe_ server
 and its extension `Resolwe Bioinformatics`_. You can use it to upload
 and inspect biomedical data sets, contribute annotations and run
 analysis.
 
+.. _Genialis platform: https://app.genialis.com
 .. _Resolwe Bioinformatics: https://github.com/genialis/resolwe-bio
 .. _Resolwe: https://github.com/genialis/resolwe
 
@@ -20,11 +21,12 @@ Install from PyPI::
 
   pip install resdk
 
+.. TODO: Remove this warning when not needed anymore:
 .. warning::
 
    If you use macOS, be aware that the version of `Python shipped with the
    system doesn't support TLSv1.2`_, which is required for connecting to
-   any Resolwe server (and probably others). To solve the issue,
+   any Genialis platform server (and probably others). To solve the issue,
    install the latest version of Python 2.7 or Python 3 `via official
    installer from Python.org`_ or `with Homebrew`_.
 
@@ -41,15 +43,15 @@ If you would like to contribute to the SDK code base, follow the
 Usage example
 =============
 
-We will download the aligned reads and the corresponding index from
-the server:
+We will download a sample containing raw sequencing reads that were aligned to
+a genome:
 
-.. literalinclude:: files/usage.py
-   :lines: 1-13
+.. literalinclude:: files/index.py
+   :lines: 2-
 
-Both files (BAM and BAI) have downloaded to the working directory.
-Check them out. To learn more about the Resolwe SDK continue with
-:ref:`tutorial`.
+Multiple files (fastq, fastQC report, bam, bai...) have downloaded to the
+working directory. Check them out. To learn more about the Resolwe SDK continue
+with :doc:`tutorials`.
 
 If you have problems connecting to our server, please contact us at
 info@genialis.com.

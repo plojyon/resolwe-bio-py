@@ -89,7 +89,7 @@ index (BAM and BAI) from the server:
    resdk.start_logging()
 
    # Get sample meta-data from the server
-   sample = res.sample.get('mouse-example-chr19')
+   sample = res.sample.get('resdk-example')
 
    # Download files associated with the sample
    sample.download()

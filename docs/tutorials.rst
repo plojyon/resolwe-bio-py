@@ -1,10 +1,10 @@
+=========
 Tutorials
 =========
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
-   tutorial-upload
-   tutorial-diffexp
-   tutorial-resources
-   tutorial-running-processes
+   tutorial-basics
+   tutorial-get
+   tutorial-create

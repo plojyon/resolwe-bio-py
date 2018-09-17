@@ -1,12 +1,14 @@
-.. _tutorial:
+Genialis platform.. _tutorial:
 
 ===============
 Getting started
 ===============
 
 This tutorial is for bioinformaticians. It will help you install the ReSDK and
-explain some basic commands. We will connect to a Resolwe server, do some basic
-queries, and align raw reads to a genome.
+explain some basic commands. We will connect to a `Genialis platform`_, do some
+basic queries, and align raw reads to a genome.
+
+.. _Genialis platform: https://app.genialis.com
 
 Installation
 ============
@@ -23,7 +25,7 @@ computer. Run this command in the terminal (CMD on Windows)::
 
    If you use macOS, be aware that the version of `Python shipped with the
    system doesn't support TLSv1.2`_, which is required for connecting to
-   any Resolwe server (and probably others). To solve the issue,
+   any Genialis platform (and probably others). To solve the issue,
    install the latest version of Python 2.7 or Python 3 `via the official
    installer from Python.org`_ or `with Homebrew`_.
 
@@ -37,42 +39,43 @@ computer. Run this command in the terminal (CMD on Windows)::
 Registration
 ============
 
-The examples presented here require access to a public Resolwe server.
-You can use the public Resolwe server `Genialis Platform`_ that is
-configured for the examples in this tutorial. Some parts of the
-documentation will work for registered users only. Please
-`create an account`_ on Genialis Platform before you continue,
-and remember your username and password.
+The examples presented here require access to a public `Genialis platform`_
+that is configured for the examples in this tutorial. Some parts of the
+documentation will work for registered users only. Please `request a Demo`_
+on Genialis platform before you continue, and remember your username and
+password.
 
-.. _`Genialis Platform`: https://app.genialis.com
-.. _`create an account`: https://app.genialis.com/rna-seq/user/create_account
+.. _`Genialis platform`: https://app.genialis.com
+.. _`request a Demo`: http://genial.is/Demo-Request
 
-Query data
-==========
+Connect to Genialis platform
+============================
 
-Navigate to the directory where you want to store your data and start the Python
-interpreter by typing ``python`` into the command line. You'll recognize the
-interpreter by '>>>'. Now we can connect to the Resolwe server:
+Start the Python interpreter by typing ``python`` into the command line. You'll
+recognize the interpreter by '>>>'. Now we can connect to the Genialis platform
+server:
 
-.. literalinclude:: files/example_index.py
-   :lines: 1-7
+.. literalinclude:: files/start.py
+  :lines: 2-9
+
+.. note::
+
+  If you omit the ``login()`` line you will be logged as anonymus user.
+  Note that anonymus users do not have access to the ful set of features.
 
 .. note::
 
 	When connecting to the server through an interactive session, we suggest you
 	use the ``resdk.start_logging()`` command. This allows you to see important
-	messages (`e.g.,` warnings and errors) when executing commands.
+	messages (*e.g.* warnings and errors) when executing commands.
 
 .. note::
 
-  Entering username and password into resdk.Resolwe(...) can expose your
-  credentials to other users that have access to you terminal history. A safe
-  way to enter your credentials is to use the ``login()`` method::
+  To avoid copy-pasting of the commands, you can
+  :download:`download all the code <files/start.py>` used in this section.
 
-    res = resdk.Resolwe(url=...)
-    res.login()
-
-  In this case you will be prompted for username and password.
+Query data
+==========
 
 Before we start querying data on the server we should become familiar with what
 a data object is. Everything that is uploaded or created (via processes) on a
@@ -81,9 +84,8 @@ processing that has occurred. It stores the inputs (files, arguments,
 parameters...), the process (the algorithm) and the outputs (files, images,
 numbers...). Let's retrieve all data objects from the server:
 
-.. code-block:: python
-
-	res.data.all()
+.. literalinclude:: files/start.py
+  :lines: 11
 
 This is all of the data on the server you have permissions for. As a new
 user you can only see a small subset of all data objects. We can see the
@@ -107,71 +109,42 @@ query for all genome data objects:
 
 .. _filters: http://resdk.readthedocs.io/en/latest/ref.html#resdk.ResolweQuery
 
-.. code-block:: python
-
-	res.data.filter(type='data:genome')
+.. literalinclude:: files/start.py
+  :lines: 13
 
 There are several unrelated data objects that pass through our filter. We can
 filter the data even further, this time trying to find a genome in a FASTA
 format:
 
-.. code-block:: python
+.. literalinclude:: files/start.py
+  :lines: 15
 
-	res.data.filter(type='data:genome:fasta')
-
-We still see multiple data objects, so we shall add another filter to the query,
-based on creation date:
-
-.. code-block:: python
-
-	res.data.filter(type='data:genome:fasta', created__date='2018-02-14')
-
-This narrows our results to one genome. We want to do something with
-this genome. We will `get`_ it and store a reference to it for later:
+For future work we want to get the genome with a specific slug. We will `get`_
+it and store a reference to it for later:
 
 .. _get: http://resdk.readthedocs.io/en/latest/ref.html#resdk.ResolweQuery.get
 
-.. code-block:: python
-
-	# Get data object by id
-	genome = res.data.get(21887)
-
-or
-
-.. code-block:: python
-
-	# Get data object by slug
-	genome = res.data.get('genome_mm10_chr19')
+.. literalinclude:: files/start.py
+  :lines: 17,18
 
 We have now seen how to use filters to find and get what we want. Let's
 query and get a paired-end FASTQ data object:
 
-.. code-block:: python
-
-	# All paired-end fastq objects
-	res.data.filter(type='data:reads:fastq:paired')
-
-	# Add date filter
-	res.data.filter(type='data:reads:fastq:paired', created__date='2017-06-06')
-
-	# Get the last data object by id
-	reads = res.data.get(1487)
+.. literalinclude:: files/start.py
+  :lines: 20-24
 
 We now have ``genome`` and ``reads`` data objects. We can learn about an object
 by calling certain object attributes. We can find out who created the object:
 
-.. code-block:: python
-
-	reads.contributor
-
+.. literalinclude:: files/start.py
+  :lines: 26
 
 and inspect the list of files it contains:
 
-.. code-block:: python
+.. literalinclude:: files/start.py
+  :lines: 28
 
-	reads.output
-
-These and other data object attributes are described `here`_.
+These and many other data object attributes/methods are described `here`_.
 
 .. _here: http://resdk.readthedocs.io/en/latest/ref.html#resdk.resources.Data
 
@@ -179,58 +152,47 @@ Run alignment
 =============
 
 A common analysis in bioinformatics is to align sequencing reads to a reference
-genome. This is done by running a certain *process*. A process uses an algorithm
-or a sequence of algorithms to turn given inputs into outputs. Here we will only
-test the HISAT2 alignment process, but many more processes are available (see
-the `Process catalog`_). This process automatically creates a BAM alignment
-file, BAI index, a file with unmapped reads, and a stats file.
+genome. This is done by running a certain *process*. A process uses an
+algorithm or a sequence of algorithms to turn given inputs into outputs. Here
+we will only test the HISAT2 alignment process, but many more processes are
+available (see the `Process catalog`_). This process automatically creates a
+BAM alignment file and BAI index, along with some other files.
 
 .. _Process catalog: http://resolwe-bio.readthedocs.io/en/latest/catalog.html
 
 Let's run HISAT2 on our reads, using our genome:
 
-.. code-block:: python
+.. literalinclude:: files/start.py
+  :lines: 30-36
 
-	bam = reads.run_hisat2(genome)
-
-The processing may take some time. Note that we have stored the reference to the
-alignment object in a ``bam`` variable. We can check the `status`_ of the
-process to determine if the processing has finished:
+This might seem like a complicated statement, but note thet we only run a
+process with specific slug and required inputs. The processing may take some
+time. Note that we have stored the reference to the alignment object in a
+``bam`` variable. We can check the `status`_ of the process to determine if
+the processing has finished:
 
 .. _status: http://resdk.readthedocs.io/en/latest/ref.html#resdk.resources.Data.status
 
-.. code-block:: python
+.. literalinclude:: files/start.py
+  :lines: 38
 
-	# Get the latest meta data from the server
-	bam.update()
+Status ``OK`` indicates that processing has finished successfully. If the
+status is not ``OK`` yet, run the ``bam.update()`` and ``bam.status`` commands
+again in few minutes. We can inspect our newly created data object:
 
-	# Print the status
-	bam.status
-
-Status ``OK`` indicates that processing has finished successfully. If the status
-is not ``OK`` yet, run the ``bam.update()`` and ``bam.status`` commands again in
-few minutes. We can inspect our newly created data object:
-
-.. code-block:: python
-
-	bam
+.. literalinclude:: files/start.py
+  :lines: 40-42
 
 As with any other data object, it has its own *id*, *slug*, and *name*. We can
 explore the process inputs and outputs:
 
-.. code-block:: python
-
-	# Process inputs
-	bam.input
-
-	# Process outputs
-	bam.output
+.. literalinclude:: files/start.py
+  :lines: 44-48
 
 Download the outputs to your local disk:
 
-.. code-block:: python
-
-	bam.download()
+.. literalinclude:: files/start.py
+  :lines: 50
 
 We have come to the end of Getting started. You now know some basic ReSDK
 concepts and commands. Yet, we have only scratched the surface. By continuing
