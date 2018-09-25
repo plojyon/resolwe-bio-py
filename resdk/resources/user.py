@@ -120,7 +120,7 @@ class Group(BaseResource):
         if self.id is None:
             raise ValueError('Instance must be saved before accessing `users` attribute.')
         if self._users is None:
-            self._users = self.resolwe.user.filter(group=self.id)
+            self._users = self.resolwe.user.filter(groups=self.id)
 
         return self._users
 
