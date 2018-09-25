@@ -11,6 +11,7 @@ Unreleased
 
 Changed
 -------
+* **BACKWARD INCOMPATIBLE:** Remove ``sequp`` script
 
 Added
 -----

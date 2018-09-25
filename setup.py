@@ -43,7 +43,6 @@ setup(
     install_requires=(
         'requests>=2.6.0',
         'slumber>=0.7.1',
-        'appdirs>=1.4.0',
         'six>=1.10.0',
         'pyyaml>=3.11',
         'wrapt>=1.10.8',
@@ -72,7 +71,6 @@ setup(
 
     entry_points={
         'console_scripts': [
-            'resolwe-sequp = resdk.scripts:sequp',
             'resolwe-upload-reads = resdk.scripts:upload_reads',
         ],
     },
