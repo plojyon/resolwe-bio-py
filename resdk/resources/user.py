@@ -4,6 +4,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import six
 
 from .base import BaseResource
+from .utils import get_user_id
 
 
 class User(BaseResource):
@@ -123,6 +124,22 @@ class Group(BaseResource):
             self._users = self.resolwe.user.filter(groups=self.id)
 
         return self._users
+
+    def add_users(self, *users):
+        """Add users to group."""
+        if self.id is None:
+            raise ValueError('Instance must be saved before adding `users` attribute.')
+        user_ids = [get_user_id(user) for user in users]
+        self.resolwe.api.group(self.id).add_users.post({'user_ids': user_ids})
+        self._users = None
+
+    def remove_users(self, *users):
+        """Remove users from group."""
+        if self.id is None:
+            raise ValueError('Instance must be saved before adding `users` attribute.')
+        user_ids = [get_user_id(user) for user in users]
+        self.resolwe.api.group(self.id).remove_users.post({'user_ids': user_ids})
+        self._users = None
 
     def __repr__(self):
         """Format resource name."""

@@ -16,6 +16,7 @@ Changed
 
 Added
 -----
+* Add ``add_users`` and ``remove_users`` method to Group resource
 
 Fixed
 -----

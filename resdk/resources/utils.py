@@ -142,6 +142,11 @@ def get_relation_id(relation):
     return relation.id if type(relation).__name__ == 'Relation' else relation
 
 
+def get_user_id(user):
+    """Return id attribute of the object if it is relation, otherwise return given value."""
+    return user.id if type(user).__name__ == 'User' else user
+
+
 def is_collection(collection):
     """Return ``True`` if passed object is Collection and ``False`` otherwise."""
     return type(collection).__name__ == 'Collection'
