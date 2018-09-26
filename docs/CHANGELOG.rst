@@ -21,6 +21,8 @@ Added
 * Add ``Resolwe.data_usage`` method. It displays number of samples, data
   objects and sum of data object sizes for currently logged-in user. For admin
   users, it displays data for all users.
+* Add the support for using ``file`` and ``file_temp`` dictionary syntax
+  when uploading remote (URL, FTP) files in Resolwe upload processes
 
 Fixed
 -----

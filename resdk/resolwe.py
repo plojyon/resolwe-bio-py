@@ -140,6 +140,9 @@ class Resolwe(object):
 
         :rtype: dict
         """
+        if isinstance(path, dict) and 'file' in path and 'file_temp' in path:
+            return path
+
         url_regex = r'^(https?|ftp)://[-A-Za-z0-9\+&@#/%?=~_|!:,.;]*[-A-Za-z0-9\+&@#/%=~_|]$'
         if re.match(url_regex, path):
             file_name = path.split('/')[-1].split('#')[0].split('?')[0]
