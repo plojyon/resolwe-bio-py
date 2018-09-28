@@ -98,7 +98,7 @@ Both files (BAM and BAI) have downloaded to the working directory.
 Check them out. To learn more about the Resolwe SDK continue with
 `Getting started`_.
 
-.. _Getting started: http://resdk.readthedocs.io/en/latest/tutorial.html
+.. _Getting started: http://resdk.readthedocs.io/en/latest/tutorials.html
 
 If you do not have access to the Resolwe server, contact us at
 info@genialis.com.
