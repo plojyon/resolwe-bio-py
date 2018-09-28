@@ -67,7 +67,7 @@ class Sample(SampleUtilsMixin, BaseCollection):
     endpoint = 'sample'
 
     WRITABLE_FIELDS = BaseCollection.WRITABLE_FIELDS + (
-        'descriptor_completed', 'tags',
+        'descriptor_completed',
     )
 
     def __init__(self, resolwe, **model_data):
@@ -84,10 +84,6 @@ class Sample(SampleUtilsMixin, BaseCollection):
         self._is_background = None
         #: indicate whether `descriptor` is completed
         self.descriptor_completed = None
-        #: sample's tags
-        self.tags = None
-        #: sample's tags
-        self.tags = None
 
         super(Sample, self).__init__(resolwe, **model_data)
 

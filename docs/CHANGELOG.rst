@@ -13,6 +13,7 @@ Changed
 -------
 * **BACKWARD INCOMPATIBLE:** Remove ``sequp`` script
 * **BACKWARD INCOMPATIBLE:** Remove ``data_upload`` directory
+* Move ``tags`` attribute from ``Sample`` to ``BaseCollection``
 
 Added
 -----

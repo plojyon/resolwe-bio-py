@@ -25,7 +25,7 @@ class BaseCollection(BaseResolweResource):
     """
 
     WRITABLE_FIELDS = BaseResolweResource.WRITABLE_FIELDS + (
-        'description', 'descriptor', 'descriptor_schema', 'settings',
+        'description', 'descriptor', 'descriptor_schema', 'settings', 'tags',
     )
 
     ALL_PERMISSIONS = ['view', 'download', 'add', 'edit', 'share', 'owner']
@@ -47,6 +47,8 @@ class BaseCollection(BaseResolweResource):
         self.descriptor = None
         #: settings
         self.settings = None
+        #: tags
+        self.tags = None
 
         super(BaseCollection, self).__init__(resolwe, **model_data)
 
