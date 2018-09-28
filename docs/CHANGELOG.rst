@@ -17,6 +17,7 @@ Changed
 Added
 -----
 * Add ``add_users`` and ``remove_users`` method to Group resource
+* Add ``is_active`` field to ``Process`` resource
 
 Fixed
 -----

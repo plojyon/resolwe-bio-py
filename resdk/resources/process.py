@@ -22,8 +22,8 @@ class Process(BaseResolweResource):
     endpoint = "process"
 
     UPDATE_PROTECTED_FIELDS = BaseResolweResource.UPDATE_PROTECTED_FIELDS + (
-        'category', 'data_name', 'description', 'flow_collection', 'input_schema', 'output_schema',
-        'persistence', 'requirements', 'run', 'scheduling_class', 'type',
+        'category', 'data_name', 'description', 'flow_collection', 'input_schema', 'is_active',
+        'output_schema', 'persistence', 'requirements', 'run', 'scheduling_class', 'type',
     )
 
     ALL_PERMISSIONS = ['view', 'share', 'owner']
@@ -70,6 +70,8 @@ class Process(BaseResolweResource):
         self.requirements = None
         #: Scheduling class
         self.scheduling_class = None
+        #: Boolean stating wether process is active
+        self.is_active = None
 
         super(Process, self).__init__(resolwe, **model_data)
 
