@@ -55,6 +55,10 @@ class Data(BaseResolweResource):
         self._hydrated_descriptor_schema = None
         #: ``Sample`` containing ``Data`` object (lazy loaded)
         self._sample = None
+        #: ``ResolweQuery`` containing parent ``Data`` objects (lazy loaded)
+        self._parents = None
+        #: ``ResolweQuery`` containing child ``Data`` objects (lazy loaded)
+        self._children = None
 
         #: Flattened dict of inputs and outputs, where keys are dit separated paths to values
         self.annotation = {}
@@ -114,6 +118,8 @@ class Data(BaseResolweResource):
         self._sample = None
         self._collections = None
         self._hydrated_descriptor_schema = None
+        self._parents = None
+        self._children = None
 
         super(Data, self).update()
 
@@ -213,6 +219,26 @@ class Data(BaseResolweResource):
         self._descriptor_schema = get_descriptor_schema_id(dschema)
         # Save descriptor schema if already hydrated, otherwise it will be rerived in getter
         self._hydrated_descriptor_schema = dschema if is_descriptor_schema(dschema) else None
+
+    @property
+    def parents(self):
+        """Get parents of this Data object."""
+        if self.id is None:
+            raise ValueError('Instance must be saved before accessing `parents` attribute.')
+        if self._parents is None:
+            self._parents = self.resolwe.data.filter(children=self.id)
+
+        return self._parents
+
+    @property
+    def children(self):
+        """Get children of this Data object."""
+        if self.id is None:
+            raise ValueError('Instance must be saved before accessing `children` attribute.')
+        if self._children is None:
+            self._children = self.resolwe.data.filter(parents=self.id)
+
+        return self._children
 
     def _files_dirs(self, field_type, file_name=None, field_name=None):
         """Get list of downloadable fields."""

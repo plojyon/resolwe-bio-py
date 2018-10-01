@@ -168,6 +168,34 @@ class TestData(unittest.TestCase):
         self.assertEqual(data.descriptor_schema.slug, 'test-schema')
         # pylint: enable=no-member
 
+    def test_parents(self):
+        # Data with no id should fail.
+        data = Data(id=None, resolwe=MagicMock())
+        with six.assertRaisesRegex(self, ValueError, 'Instance must be saved *'):
+            data.parents  # pylint: disable=pointless-statement
+
+        # Core functionality should be checked with e2e tests.
+
+        # Check that cache is cleared at update.
+        data = Data(id=42, resolwe=MagicMock())
+        data._parents = 'foo'
+        data.update()
+        self.assertEqual(data._parents, None)
+
+    def test_children(self):
+        # Data with no id should fail.
+        data = Data(id=None, resolwe=MagicMock())
+        with six.assertRaisesRegex(self, ValueError, 'Instance must be saved *'):
+            data.children  # pylint: disable=pointless-statement
+
+        # Core functionality should be checked with e2e tests.
+
+        # Check that cache is cleared at update.
+        data = Data(id=42, resolwe=MagicMock())
+        data._children = 'foo'
+        data.update()
+        self.assertEqual(data._children, None)
+
     def test_files(self):
         data = Data(id=123, resolwe=MagicMock())
         data._get_dir_files = MagicMock(
