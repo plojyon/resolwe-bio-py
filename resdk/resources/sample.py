@@ -41,7 +41,7 @@ class SampleUtilsMixin(object):
 
     def get_macs(self):
         """Return list of ``bed`` objects on the sample."""
-        return self.data.filter(type='data:chipseq:macs14')
+        return self.data.filter(type='data:chipseq:callpeak:macs14')
 
     def get_cuffquant(self):
         """Return ``cuffquant`` object on the sample."""
