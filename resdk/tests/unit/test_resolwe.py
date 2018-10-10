@@ -91,6 +91,19 @@ class TestResolwe(unittest.TestCase):
         self.assertEqual(resolwe_querry_mock.call_count, 10)
         self.assertEqual(log_mock.getLogger.call_count, 1)
 
+    @patch('resdk.resolwe.requests.get')
+    def test_validate_url(self, requests_get_mock):
+        resolwe = MagicMock(spec=Resolwe)
+
+        message = 'Server url must start with .*'
+        with six.assertRaisesRegex(self, ValueError, message):
+            Resolwe._validate_url(resolwe, 'starts.without.http')
+
+        requests_get_mock.side_effect = requests.exceptions.ConnectionError()
+        message = "The site can't be reached: .*"
+        with six.assertRaisesRegex(self, ValueError, message):
+            Resolwe._validate_url(resolwe, 'http://invalid.url')
+
     @patch('resdk.resolwe.ResolweAPI')
     @patch('resdk.resolwe.ResAuth')
     @patch('resdk.resolwe.Resolwe', spec=Resolwe)
@@ -111,8 +124,9 @@ class TestResolwe(unittest.TestCase):
         rep = Resolwe.__repr__(resolwe_mock)
         self.assertEqual(rep, 'Resolwe <url: www.abc.com>')
 
+    @patch('resdk.resolwe.requests')
     @patch('resdk.resolwe.ResAuth')
-    def test_env_variables(self, resauth_mock):
+    def test_env_variables(self, resauth_mock, requests_mock):
         # Ensure environmental variables are not set.
         os.environ.pop('RESOLWE_HOST_URL', None)
         os.environ.pop('RESOLWE_API_USERNAME', None)

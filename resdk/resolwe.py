@@ -69,6 +69,8 @@ class Resolwe(object):
             # Try to get URL from environmental variable, otherwise fallback to default.
             url = os.environ.get('RESOLWE_HOST_URL', DEFAULT_URL)
 
+        self._validate_url(url)
+
         if username is None:
             username = os.environ.get('RESOLWE_API_USERNAME', None)
 
@@ -90,6 +92,15 @@ class Resolwe(object):
         self.mapping = ResolweQuery(self, Mapping)
 
         self.logger = logging.getLogger(__name__)
+
+    def _validate_url(self, url):
+        if not re.match(r'https?://', url):
+            raise ValueError("Server url must start with http(s)://")
+
+        try:
+            requests.get(url)
+        except requests.exceptions.ConnectionError:
+            raise ValueError("The site can't be reached: {}".format(url))
 
     def _login(self, username=None, password=None):
         self.auth = ResAuth(username, password, self.url)
