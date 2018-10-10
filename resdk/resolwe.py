@@ -68,9 +68,6 @@ class Resolwe(object):
         if url is None:
             # Try to get URL from environmental variable, otherwise fallback to default.
             url = os.environ.get('RESOLWE_HOST_URL', DEFAULT_URL)
-            # TODO: Remove this
-            if 'RESOLWE_HOST_URL' not in os.environ:
-                url = os.environ.get('RESOLWE_API_HOST', url)
 
         if username is None:
             username = os.environ.get('RESOLWE_API_USERNAME', None)
