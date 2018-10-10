@@ -13,6 +13,8 @@ Changed
 -------
 * **BACKWARD INCOMPATIBLE:** Remove ``sequp`` script
 * **BACKWARD INCOMPATIBLE:** Remove ``data_upload`` directory
+* **BACKWARD INCOMPATIBLE:** Remove ``replicates`` input in ``cuffnorm``
+  analysis
 * Move ``tags`` attribute from ``Sample`` to ``BaseCollection``
 
 Added

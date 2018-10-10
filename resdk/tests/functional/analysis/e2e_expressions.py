@@ -47,12 +47,14 @@ class TestExpressions(BaseResdkFunctionalTest):
         annotation = self.get_gtf()
 
         group = collection.create_group_relation(
-            samples=[cuffquant_1.sample, cuffquant_2.sample],
-            category='replicates'
-        )
-        group1 = collection.create_group_relation(
-            samples=[cuffquant_3.sample, cuffquant_4.sample],
-            category='clones'
+            samples=[
+                cuffquant_1.sample,
+                cuffquant_2.sample,
+                cuffquant_3.sample,
+                cuffquant_4.sample,
+            ],
+            labels=['1', '1', '2', '2'],
+            category='replicates',
         )
 
         # Run cuffnorm on a collection
@@ -62,13 +64,11 @@ class TestExpressions(BaseResdkFunctionalTest):
             [cuffquant_1.id, cuffquant_2.id, cuffquant_3.id, cuffquant_4.id]
         )
         self.assertEqual(cuffnorm.input['annotation'], annotation.id)
-        self.assertEqual(cuffnorm.input['replicates'], ['0', '0', '1', '1'])
 
         # Run cuffnorm on two groups of replicates in collection
-        cuffnorm = expressions.cuffnorm([group1, group], annotation=annotation)
+        cuffnorm = expressions.cuffnorm(group, annotation=annotation)
         self.assertEqual(
             cuffnorm.input['cuffquant'],
-            [cuffquant_3.id, cuffquant_4.id, cuffquant_1.id, cuffquant_2.id]
+            [cuffquant_1.id, cuffquant_2.id, cuffquant_3.id, cuffquant_4.id]
         )
         self.assertEqual(cuffnorm.input['annotation'], annotation.id)
-        self.assertEqual(cuffnorm.input['replicates'], ['0', '0', '1', '1'])

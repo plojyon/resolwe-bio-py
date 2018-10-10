@@ -86,30 +86,8 @@ def cuffnorm(resource, annotation, use_ercc=None):
 
     cuffquants = [get_data_id(sample.get_cuffquant()) for sample in samples]
 
-    replicates = []
-    replicates_ids = {}
-    for sample in samples:
-        relations = resolwe.relation.filter(
-            type='group',
-            entity=[sample.id],
-            **relation_filter
-        )
-
-        if len(relations) == 1:
-            relation = relations[0]
-        else:
-            raise LookupError(
-                "Cannot determine unique group relation with label `replicates` for the "
-                "following sample: {}".format(sample.name)
-            )
-
-        if relation.id not in replicates_ids:
-            replicates_ids[relation.id] = str(len(replicates_ids))
-        replicates.append(replicates_ids[relation.id])
-
     inputs = {
         'cuffquant': cuffquants,
-        'replicates': replicates,
         'annotation': get_data_id(annotation),
     }
 
