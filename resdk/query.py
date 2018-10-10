@@ -207,9 +207,6 @@ class ResolweQuery(object):
             # 'sample' is called 'entity' in the backend.
             key = key.replace('sample', 'entity')
 
-            if isinstance(value, list):
-                value = ','.join(map(str, value))
-
             if self.resource.query_method == 'GET':
                 self._filters[key].append(value)
             elif self.resource.query_method == 'POST':
