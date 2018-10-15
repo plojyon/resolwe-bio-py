@@ -10,7 +10,6 @@ Resolwe
 """
 from __future__ import absolute_import, division, print_function
 
-import copy
 import getpass
 import logging
 import ntpath
@@ -19,6 +18,7 @@ import re
 import uuid
 
 import requests
+import six
 import slumber
 # Needed because we mock requests in test_resolwe.py
 from requests.exceptions import ConnectionError  # pylint: disable=redefined-builtin
@@ -29,7 +29,7 @@ from .exceptions import ValidationError, handle_http_exception
 from .query import ResolweQuery
 from .resources import Collection, Data, DescriptorSchema, Group, Process, Relation, Sample, User
 from .resources.kb import Feature, Mapping
-from .resources.utils import get_collection_id, get_data_id, iterate_fields
+from .resources.utils import get_collection_id, get_data_id, is_data, iterate_fields
 
 DEFAULT_URL = 'http://localhost:8000'
 
@@ -173,7 +173,19 @@ class Resolwe(object):
         * uploading files in ``basic:file:`` and ``list:basic:file:``
           fields
         """
-        inputs = copy.deepcopy(inputs)  # leave original intact
+        def deep_copy(current):
+            """Copy inputs."""
+            if isinstance(current, dict):
+                return {key: deep_copy(val) for key, val in six.iteritems(current)}
+            elif isinstance(current, list):
+                return [deep_copy(val) for val in current]
+            elif is_data(current):
+                return current.id
+            else:
+                return current
+
+        # leave original intact
+        inputs = deep_copy(inputs)
 
         try:
             for schema, fields in iterate_fields(inputs, process.input_schema):

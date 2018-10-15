@@ -297,22 +297,15 @@ class TestRun(unittest.TestCase):
                     input={"src": "/path/to/file1",
                            "src_list": ["/path/to/file2", "/path/to/file3"]})
 
-    @patch('resdk.resolwe.copy')
     @patch('resdk.resolwe.Resolwe', spec=True)
-    def test_dehydrate_data(self, resolwe_mock, copy_mock):
+    def test_dehydrate_data(self, resolwe_mock):
         data_obj = Data(id=1, resolwe=MagicMock())
         data_obj.id = 1  # this is overriden when initialized
         process = self.process_mock
 
-        # I appears it is not possible to deepcopy MagicMocks so we just patch
-        # the deepcopy functionality:
-        copy_mock.deepcopy = MagicMock(return_value={"genome": data_obj})
         result = Resolwe._process_inputs(resolwe_mock, {"genome": data_obj}, process)
         self.assertEqual(result, {'genome': 1})
 
-        # I appears it is not possible to deepcopy MagicMocks so we just patch
-        # the deepcopy functionality:
-        copy_mock.deepcopy = MagicMock(return_value={"reads": data_obj})
         result = Resolwe._process_inputs(resolwe_mock, {"reads": [data_obj]}, process)
         self.assertEqual(result, {'reads': [1]})
 
