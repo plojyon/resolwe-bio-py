@@ -98,7 +98,7 @@ class Resolwe(object):
             raise ValueError("Server url must start with http(s)://")
 
         try:
-            requests.get(url)
+            requests.get(urljoin(url, '/api/'))
         except requests.exceptions.ConnectionError:
             raise ValueError("The site can't be reached: {}".format(url))
 
