@@ -5,9 +5,9 @@ Change Log
 All notable changes to this project are documented in this file.
 
 
-==========
-Unreleased
-==========
+==================
+7.0.0 - 2018-10-15
+==================
 
 Changed
 -------
@@ -16,6 +16,8 @@ Changed
 * **BACKWARD INCOMPATIBLE:** Remove ``replicates`` input in ``cuffnorm``
   analysis
 * Move ``tags`` attribute from ``Sample`` to ``BaseCollection``
+* Major refactoring of documentation tutorials, including automatic testing
+  of tutorial scripts
 
 Added
 -----
@@ -23,9 +25,6 @@ Added
 * Add ``is_active`` field to ``Process`` resource
 * Add ``parents`` and ``children`` property to ``Data``
 * Add url validation in ``Resolwe`` constructor
-
-Fixed
------
 
 
 ==================
