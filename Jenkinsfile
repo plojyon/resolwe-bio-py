@@ -2,7 +2,7 @@ throttle(["resolwe_bio_py"]) {
 
     // NOTE: Tests could hang unexpectedly and never release the Jenkins executor. Thus we set a
     // general timeout for tests' execution.
-    timeout(time: 15, unit: "MINUTES") {
+    timeout(time: 20, unit: "MINUTES") {
 
         node {
             def workspace_dir = pwd()
@@ -141,7 +141,7 @@ throttle(["resolwe_bio_py"]) {
                                     // NOTE: End-to-End tests could hang unexpectedly and lock the
                                     // resource indefinitely thus we have to set a timeout on their
                                     // execution time.
-                                    timeout(time: 10, unit: "MINUTES") {
+                                    timeout(time: 15, unit: "MINUTES") {
                                         sh "tox -e py36-e2e-resdk ${tox_extra_args}"
                                     }
                                 }
