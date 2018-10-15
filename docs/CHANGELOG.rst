@@ -11,6 +11,8 @@ Unreleased
 
 Changed
 -------
+* **BACKWARD INCOMPATIBLE:** Rename argument ``file_type`` to ``field_name``
+  in ``BaseCollection.download`` method
 
 Added
 -----

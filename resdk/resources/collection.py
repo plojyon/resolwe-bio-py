@@ -128,7 +128,7 @@ class BaseCollection(BaseResolweResource):
 
         return file_list
 
-    def download(self, file_name=None, file_type=None, download_dir=None):
+    def download(self, file_name=None, field_name=None, download_dir=None):
         """Download output files of associated Data objects.
 
         Download files from the Resolwe server to the download
@@ -136,8 +136,8 @@ class BaseCollection(BaseResolweResource):
 
         :param file_name: name of file
         :type file_name: string
-        :param file_type: data object type
-        :type file_type: string
+        :param field_name: field name
+        :type field_name: string
         :param download_dir: download path
         :type download_dir: string
         :rtype: None
@@ -152,11 +152,11 @@ class BaseCollection(BaseResolweResource):
         """
         files = []
 
-        if file_type and not isinstance(file_type, six.string_types):
-            raise ValueError("Invalid argument value `file_type`.")
+        if field_name and not isinstance(field_name, six.string_types):
+            raise ValueError("Invalid argument value `field_name`.")
 
         for data in self.data:
-            data_files = data.files(file_name, file_type)
+            data_files = data.files(file_name, field_name)
             files.extend('{}/{}'.format(data.id, file_name) for file_name in data_files)
 
         self.resolwe._download_files(files, download_dir)  # pylint: disable=protected-access
