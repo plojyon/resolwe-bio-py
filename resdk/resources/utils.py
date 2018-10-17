@@ -191,10 +191,12 @@ def get_samples(resource):
     """Get the list of samples from given resources.
 
     Get the list of samples with:
-    * use recursion if given resource is a list
-    * return the resource if it is already the sample
-    * call ResolweQuery object named `samples` (if exists) and return
-      the result
+
+        * use recursion if given resource is a list
+        * return the resource if it is already the sample
+        * call ResolweQuery object named `samples` (if exists) and return
+          the result
+
     """
     error_msg = ("Resource should be sample, have `samples` query, be list of multiple "
                  "resources or be data object with not empty `sample` property.")

@@ -10,6 +10,9 @@ Resource classes
 .. autoclass:: resdk.resources.base.BaseResource
    :members:
 
+.. autoclass:: resdk.resources.base.BaseResolweResource
+   :members:
+
 .. autoclass:: resdk.resources.Data
    :members:
 
@@ -28,8 +31,16 @@ Resource classes
 .. autoclass:: resdk.resources.Process
    :members:
 
+.. autoclass:: resdk.resources.DescriptorSchema
+   :members:
+
 .. autoclass:: resdk.resources.User
    :members:
+
+.. autoclass:: resdk.resources.Group
+   :members:
+
+.. automodule:: resdk.resources.kb
 
 Permissions
 ===========
@@ -47,8 +58,7 @@ Utility functions
 =================
 
 .. automodule:: resdk.resources.utils
-   :members: iterate_fields, iterate_schema, find_field, fill_spaces,
-       get_collection_id, get_data_id, get_sample_id, get_process_id
+   :members:
 
 """
 

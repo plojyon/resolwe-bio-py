@@ -1,12 +1,5 @@
 """.. Ignore pydocstyle D400.
 
-=========
-Resources
-=========
-
-Resource classes
-================
-
 .. autoclass:: resdk.resources.kb.Feature
    :members:
 

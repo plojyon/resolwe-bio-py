@@ -17,6 +17,7 @@ Changed
 
 Added
 -----
+* Add missing resource classes in the Reference section of documentation
 
 Fixed
 -----
