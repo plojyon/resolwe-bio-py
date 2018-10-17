@@ -17,52 +17,6 @@ from resdk.resources.sample import Sample
 
 class TestData(unittest.TestCase):
 
-    @patch('resdk.resources.data.Data', spec=True, annotation={})
-    def test_update_fields(self, data_mock):
-        payload = {
-            'id': 42,
-            'slug': 'foo',
-            'process_input_schema': [
-                {
-                    'name': "x",
-                    'type': "basic:integer:",
-                    'label': "Input X",
-                },
-                {
-                    'name': "group_input",
-                    'group': [
-                        {
-                            'name': "y1",
-                            'type': "basic:string:",
-                            'label': "Input Y1",
-                        },
-                    ],
-                }
-            ],
-            'input': {
-                'x': 123,
-                'group_input': {
-                    'y1': 'bar',
-                },
-            },
-        }
-        Data._update_fields(data_mock, payload)
-        expected = {
-            'input.x': {
-                'name': 'x',
-                'type': 'basic:integer:',
-                'label': 'Input X',
-                'value': 123
-            },
-            'input.group_input.y1': {
-                'name': 'y1',
-                'type': 'basic:string:',
-                'label': 'Input Y1',
-                'value': 'bar'
-            }
-        }
-        self.assertEqual(data_mock.annotation, expected)
-
     def test_no_sample(self):
         data = Data(id=1, resolwe=MagicMock())
 
@@ -201,15 +155,20 @@ class TestData(unittest.TestCase):
         data._get_dir_files = MagicMock(
             side_effect=[['first_dir/file1.txt'], ['fastq_dir/file2.txt']])
 
-        data.annotation = {
-            'output.list': {'value': [{'file': "element.gz"}], 'type': 'list:basic:file:'},
-            'output.dir_list': {'value': [{'dir': "first_dir"}], 'type': 'list:basic:dir:'},
-            'output.fastq': {'value': {'file': "file.fastq.gz"}, 'type': 'basic:file:fastq'},
-            'output.fastq_archive': {'value': {'file': "archive.gz"}, 'type': 'basic:file:'},
-            'output.fastq_dir': {'value': {'dir': "fastq_dir"}, 'type': 'basic:dir:'},
-            'input.fastq_url': {'value': {'file': "blah"}, 'type': 'basic:url:'},
-            'input.blah': {'value': "blah.gz", 'type': 'basic:file:'}
+        data.output = {
+            'list': [{'file': "element.gz"}],
+            'dir_list': [{'dir': "first_dir"}],
+            'fastq': {'file': "file.fastq.gz"},
+            'fastq_archive': {'file': "archive.gz"},
+            'fastq_dir': {'dir': "fastq_dir"},
         }
+        data.process_output_schema = [
+            {'name': 'list', 'label': 'List', 'type': 'list:basic:file:'},
+            {'name': 'dir_list', 'label': 'Dir_list', 'type': 'list:basic:dir:'},
+            {'name': 'fastq', 'label': 'Fastq', 'type': 'basic:file:fastq:'},
+            {'name': 'fastq_archive', 'label': 'Fastq_archive', 'type': 'basic:file:'},
+            {'name': 'fastq_dir', 'label': 'Fastq_dir', 'type': 'basic:dir:'},
+        ]
 
         file_list = data.files()
         six.assertCountEqual(self, file_list, [
@@ -224,10 +183,12 @@ class TestData(unittest.TestCase):
         file_list = data.files(field_name='output.fastq')
         self.assertEqual(file_list, ['file.fastq.gz'])
 
-        data.annotation = {
-            'output.list': {'value': [{'no_file_field_here': "element.gz"}],
-                            'type': 'list:basic:file:'},
+        data.output = {
+            'list': [{'no_file_field_here': "element.gz"}],
         }
+        data.process_output_schema = [
+            {'name': 'list', 'label': 'List', 'type': 'list:basic:file:'},
+        ]
         with six.assertRaisesRegex(self, KeyError, "does not contain 'file' key."):
             data.files()
 
@@ -273,8 +234,14 @@ class TestData(unittest.TestCase):
     @patch('resdk.resources.data.Data', spec=True)
     def test_add_output(self, data_mock):
         data_mock.configure_mock(
-            annotation={'output.fastq': {'type': 'basic:file:', 'value': {'file': 'reads.fq'}},
-                        'output.fasta': {'type': 'basic:file:', 'value': {'file': 'genome.fa'}}}
+            output={
+                'fastq': {'file': 'reads.fq'},
+                'fasta': {'file': 'genome.fa'},
+            },
+            process_output_schema=[
+                {'type': 'basic:file:', 'name': 'fastq', 'label': 'FASTQ'},
+                {'type': 'basic:file:', 'name': 'fasta', 'label': 'FASTA'},
+            ],
         )
 
         files_list = Data._files_dirs(data_mock, 'file', field_name="output.fastq")

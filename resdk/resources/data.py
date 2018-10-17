@@ -5,6 +5,7 @@ import json
 import logging
 
 import requests
+import six
 from six.moves.urllib.parse import urljoin  # pylint: disable=wrong-import-order
 
 from resdk.constants import CHUNK_SIZE
@@ -59,9 +60,6 @@ class Data(BaseResolweResource):
         self._parents = None
         #: ``ResolweQuery`` containing child ``Data`` objects (lazy loaded)
         self._children = None
-
-        #: Flattened dict of inputs and outputs, where keys are dit separated paths to values
-        self.annotation = {}
 
         #: specification of inputs
         self.process_input_schema = None
@@ -122,25 +120,6 @@ class Data(BaseResolweResource):
         self._children = None
 
         super(Data, self).update()
-
-    def _update_fields(self, payload):
-        """Update the Data object with new data.
-
-        :param dict payload: Data resource fields
-        :rtype: None
-
-        """
-        BaseResolweResource._update_fields(self, payload)
-
-        if 'input' in payload and 'process_input_schema' in payload:
-            self.annotation.update(
-                flatten_field(payload['input'], payload['process_input_schema'], 'input')
-            )
-
-        if 'output' in payload and 'process_output_schema' in payload:
-            self.annotation.update(
-                flatten_field(payload['output'], payload['process_output_schema'], 'output')
-            )
 
     @property
     def collections(self):
@@ -257,7 +236,8 @@ class Data(BaseResolweResource):
         if field_name and not field_name.startswith('output.'):
             field_name = 'output.{}'.format(field_name)
 
-        for ann_field_name, ann in self.annotation.items():
+        flattened = flatten_field(self.output, self.process_output_schema, 'output')
+        for ann_field_name, ann in six.iteritems(flattened):
             if (ann_field_name.startswith('output')
                     and (field_name is None or field_name == ann_field_name)
                     and ann['value'] is not None):

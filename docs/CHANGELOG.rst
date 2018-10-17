@@ -13,6 +13,7 @@ Changed
 -------
 * **BACKWARD INCOMPATIBLE:** Rename argument ``file_type`` to ``field_name``
   in ``BaseCollection.download`` method
+* **BACKWARD INCOMPATIBLE:** Remove ``Data.annotation`` attribute
 
 Added
 -----
