@@ -80,17 +80,6 @@ class Resolwe(object):
         self.url = url
         self._login(username=username, password=password)
 
-        self.data = ResolweQuery(self, Data)
-        self.collection = ResolweQuery(self, Collection)
-        self.sample = ResolweQuery(self, Sample)
-        self.relation = ResolweQuery(self, Relation)
-        self.process = ResolweQuery(self, Process)
-        self.descriptor_schema = ResolweQuery(self, DescriptorSchema)
-        self.user = ResolweQuery(self, User, slug_field='username')
-        self.group = ResolweQuery(self, Group, slug_field='name')
-        self.feature = ResolweQuery(self, Feature)
-        self.mapping = ResolweQuery(self, Mapping)
-
         self.logger = logging.getLogger(__name__)
 
     def _validate_url(self, url):
@@ -102,9 +91,25 @@ class Resolwe(object):
         except requests.exceptions.ConnectionError:
             raise ValueError("The site can't be reached: {}".format(url))
 
+    def _initialize_queries(self):
+        """Initialize ResolweQuery's."""
+        # pylint: disable=attribute-defined-outside-init
+        self.data = ResolweQuery(self, Data)
+        self.collection = ResolweQuery(self, Collection)
+        self.sample = ResolweQuery(self, Sample)
+        self.relation = ResolweQuery(self, Relation)
+        self.process = ResolweQuery(self, Process)
+        self.descriptor_schema = ResolweQuery(self, DescriptorSchema)
+        self.user = ResolweQuery(self, User, slug_field='username')
+        self.group = ResolweQuery(self, Group, slug_field='name')
+        self.feature = ResolweQuery(self, Feature)
+        self.mapping = ResolweQuery(self, Mapping)
+        # pylint: enable=attribute-defined-outside-init
+
     def _login(self, username=None, password=None):
         self.auth = ResAuth(username, password, self.url)
         self.api = ResolweAPI(urljoin(self.url, '/api/'), self.auth, append_slash=False)
+        self._initialize_queries()
 
     def login(self, username=None, password=None):
         """Interactive login.

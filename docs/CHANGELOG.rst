@@ -29,6 +29,11 @@ Fixed
   ``data:reads:fastq`` is returned. If any other of the ``fastq`` objects is
   required, user can provide additional ``filter`` arguments and limits search
   to one result.
+* Recreate resource queries (e.g. ``Resolwe.data``, ``Resolwe.relation``, ...)
+  at each login. Previously it could happen that e.g. ``Resolwe.data`` listed
+  only public data while ``Resolwe.data.all()`` displayed all objects with view
+  permission. This behaviour is now unified: user can see all objects for which
+  he has view permission.
 
 
 ==================

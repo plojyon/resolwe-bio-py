@@ -78,17 +78,12 @@ class TestResolweResource(unittest.TestCase):
 class TestResolwe(unittest.TestCase):
 
     @patch('resdk.resolwe.logging')
-    @patch('resdk.resolwe.ResolweQuery')
     @patch('resdk.resolwe.ResolweAPI')
     @patch('resdk.resolwe.slumber')
     @patch('resdk.resolwe.ResAuth')
     @patch('resdk.resolwe.Resolwe', spec=Resolwe)
-    def test_init(self, resolwe_mock, resauth_mock, slumber_mock, resolwe_api_mock,
-                  resolwe_querry_mock, log_mock):
+    def test_init(self, resolwe_mock, resauth_mock, slumber_mock, resolwe_api_mock, log_mock):
         Resolwe.__init__(resolwe_mock, 'a', 'b', 'http://some/url')
-        # There are ten instances of ResolweQuery in init: data, process, sample, relations,
-        # collection, descriptorschema, user, gorup, feature and mapping.
-        self.assertEqual(resolwe_querry_mock.call_count, 10)
         self.assertEqual(log_mock.getLogger.call_count, 1)
 
     @patch('resdk.resolwe.requests.get')
