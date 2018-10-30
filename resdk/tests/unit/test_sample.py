@@ -11,6 +11,17 @@ from resdk.resources.descriptor import DescriptorSchema
 from resdk.resources.sample import Sample
 
 
+class TestSampleUtilsMixin(unittest.TestCase):
+
+    def test_get_reads(self):
+        sample = Sample(resolwe=MagicMock(), id=42)
+        data1 = MagicMock(process_type='data:reads:fastq:single', id=1)
+        data2 = MagicMock(process_type='data:reads:fastq:single:cutadapt', id=2)
+        sample.data.filter = MagicMock(return_value=[data2, data1])
+
+        self.assertEqual(sample.get_reads(), data2)
+
+
 class TestSample(unittest.TestCase):
 
     def test_descriptor_schema(self):

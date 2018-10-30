@@ -21,6 +21,11 @@ Added
 
 Fixed
 -----
+* Handle samples with multiple ``fastq`` objects in ``get_reads`` method. By
+  default the latest of all data whose ``process_type`` starts with
+  ``data:reads:fastq`` is returned. If any other of the ``fastq`` objects is
+  required, user can provide additional ``filter`` arguments and limits search
+  to one result.
 
 
 ==================

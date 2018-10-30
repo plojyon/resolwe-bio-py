@@ -15,9 +15,28 @@ class SampleUtilsMixin(object):
 
     """
 
-    def get_reads(self):
-        """Return ``fastq`` object on the sample."""
-        return self.data.get(type='data:reads:fastq')
+    def get_reads(self, **filters):
+        """Return the latest ``fastq`` object in sample.
+
+        If there are multiple ``fastq`` objects in sample (trimmed,
+        filtered, subsampled...), return the latest one. If any other of
+        the ``fastq`` objects is required, one can provide additional
+        ``filter`` arguments and limits search to one result.
+        """
+        kwargs = {
+            'process_type': 'data:reads:fastq',
+            'ordering': '-id',
+        }
+        kwargs.update(filters)
+
+        reads = self.data.filter(**kwargs)
+        # TODO: In future, implement method ``last()`` on ResolweQuery
+        # and return the ResolweQuery object.
+
+        if not reads:
+            raise LookupError('Reads not found on sample {}.'.format(self))
+        else:
+            return reads[0]
 
     def get_bam(self):
         """Return ``bam`` object on the sample."""
