@@ -5,9 +5,9 @@ Change Log
 All notable changes to this project are documented in this file.
 
 
-==========
-Unreleased
-==========
+==================
+8.0.0 - 2018-11-20
+==================
 
 Changed
 -------
@@ -33,9 +33,9 @@ Fixed
   to one result.
 * Recreate resource queries (e.g. ``Resolwe.data``, ``Resolwe.relation``, ...)
   at each login. Previously it could happen that e.g. ``Resolwe.data`` listed
-  only public data while ``Resolwe.data.all()`` displayed all objects with view
-  permission. This behaviour is now unified: user can see all objects for which
-  he has view permission.
+  only public data while ``Resolwe.data.all()`` displayed all objects with
+  view permission. This behaviour is now unified: user can see all objects for
+  which he has view permission.
 
 
 ==================
