@@ -11,6 +11,7 @@ Unreleased
 
 Changed
 -------
+* Make contributor attribute a User object
 
 Added
 -----

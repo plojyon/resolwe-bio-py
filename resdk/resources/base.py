@@ -172,16 +172,14 @@ class BaseResolweResource(BaseResource):
     WRITABLE_FIELDS = (
         'name', 'slug',
     )
-    UPDATE_PROTECTED_FIELDS = (
-        'contributor',
-    )
 
     def __init__(self, resolwe, **model_data):
         """Initialize attributes."""
         self.logger = logging.getLogger(__name__)
 
-        #: user id of the contributor
-        self.contributor = None
+        #: User object of the contributor (lazy loaded)
+        self._contributor = None
+
         #: date of creation
         self.created = None
         #: current user permissions
@@ -210,6 +208,31 @@ class BaseResolweResource(BaseResource):
             )
 
         return self._permissions
+
+    @property
+    def contributor(self):
+        """Get contributor."""
+        if self.id is None:
+            raise ValueError('Instance must be saved before accessing `contributor` attribute.')
+        if self._contributor is None:
+            contributor_data = self._original_values.get('contributor', {})
+            try:
+                self._contributor = self.resolwe.user.get(id=contributor_data.get('id'))
+            except LookupError:
+                from . import User
+                # Normal user has only access to his user instance on user
+                # endpoint. Instead of returning None for all other
+                # contributors, data that is received in response is used to
+                # populate User resource.
+                self._contributor = User(
+                    self.resolwe,
+                    id=contributor_data.get('id'),
+                    username=contributor_data.get('username'),
+                    first_name=contributor_data.get('first_name'),
+                    last_name=contributor_data.get('last_name'),
+                )
+
+        return self._contributor
 
     def update(self):
         """Clear permissions cache and update the object."""

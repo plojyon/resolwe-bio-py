@@ -28,8 +28,8 @@ class Relation(BaseResolweResource):
     READ_ONLY_FIELDS = (
         'created', 'id', 'modified',
     )
-    UPDATE_PROTECTED_FIELDS = (
-        'contributor', 'type',
+    UPDATE_PROTECTED_FIELDS = BaseResolweResource.UPDATE_PROTECTED_FIELDS + (
+        'type',
     )
     WRITABLE_FIELDS = BaseResolweResource.WRITABLE_FIELDS + (
         'collection', 'category', 'partitions', 'unit',
