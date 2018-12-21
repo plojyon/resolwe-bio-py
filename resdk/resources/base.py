@@ -146,7 +146,8 @@ class BaseResource(object):
 
     def __eq__(self, obj):
         """Evaluate if objects are the same."""
-        if self.__class__ == obj.__class__ and self.id == obj.id:
+        if (self.__class__ == obj.__class__ and self.resolwe.url == obj.resolwe.url
+                and self.id == obj.id):
             return True
         else:
             return False
