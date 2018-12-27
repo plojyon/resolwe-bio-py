@@ -46,6 +46,8 @@ setup(
         'six>=1.10.0',
         'pyyaml>=3.11',
         'wrapt>=1.10.8',
+        'pytz>=2018.4',
+        'tzlocal>=1.5.1',
     ),
     extras_require={
         'docs': [

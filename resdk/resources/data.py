@@ -12,7 +12,9 @@ from resdk.constants import CHUNK_SIZE
 
 from .base import BaseResolweResource
 from .descriptor import DescriptorSchema
-from .utils import flatten_field, get_descriptor_schema_id, is_descriptor_schema
+from .utils import (
+    flatten_field, get_descriptor_schema_id, is_descriptor_schema, parse_resolwe_datetime,
+)
 
 
 class Data(BaseResolweResource):
@@ -30,10 +32,10 @@ class Data(BaseResolweResource):
     endpoint = 'data'
 
     READ_ONLY_FIELDS = BaseResolweResource.READ_ONLY_FIELDS + (
-        'checksum', 'descriptor_dirty', 'finished', 'process_cores', 'process_error',
-        'process_info', 'process_input_schema', 'process_memory', 'process_name',
-        'process_output_schema', 'process_progress', 'process_rc', 'process_slug', 'process_type',
-        'process_warning', 'output', 'size', 'started', 'status',
+        'checksum', 'descriptor_dirty', 'process_cores', 'process_error', 'process_info',
+        'process_input_schema', 'process_memory', 'process_name', 'process_output_schema',
+        'process_progress', 'process_rc', 'process_slug', 'process_type', 'process_warning',
+        'output', 'size', 'status',
     )
     UPDATE_PROTECTED_FIELDS = BaseResolweResource.UPDATE_PROTECTED_FIELDS + (
         'input', 'process',
@@ -73,10 +75,6 @@ class Data(BaseResolweResource):
         self.descriptor = None
         #: The ID of the process used in this data object
         self.process = None
-        #: start time of the process in data object
-        self.started = None
-        #: finish time of the process in data object
-        self.finished = None
         #: checksum field calculated on inputs
         self.checksum = None
         #: process status - Possible values: Uploading(UP), Resolving(RE),
@@ -200,6 +198,20 @@ class Data(BaseResolweResource):
         self._descriptor_schema = get_descriptor_schema_id(dschema)
         # Save descriptor schema if already hydrated, otherwise it will be rerived in getter
         self._hydrated_descriptor_schema = dschema if is_descriptor_schema(dschema) else None
+
+    @property
+    def started(self):
+        """Start time."""
+        if not self.id:
+            raise ValueError('Instance must be saved before acessing `started` attribute.')
+        return parse_resolwe_datetime(self._original_values['started'])
+
+    @property
+    def finished(self):
+        """Finish time."""
+        if not self.id:
+            raise ValueError('Instance must be saved before acessing `finished` attribute.')
+        return parse_resolwe_datetime(self._original_values['finished'])
 
     @property
     def parents(self):

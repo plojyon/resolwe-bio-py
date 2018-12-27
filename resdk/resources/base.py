@@ -8,6 +8,7 @@ import operator
 import six
 
 from .permissions import PermissionsManager
+from .utils import parse_resolwe_datetime
 
 
 class BaseResource(object):
@@ -168,7 +169,7 @@ class BaseResolweResource(BaseResource):
     _permissions = None
 
     READ_ONLY_FIELDS = BaseResource.READ_ONLY_FIELDS + (
-        'created', 'current_user_permissions', 'id', 'modified', 'version',
+        'current_user_permissions', 'id', 'version',
     )
     WRITABLE_FIELDS = (
         'name', 'slug',
@@ -181,12 +182,8 @@ class BaseResolweResource(BaseResource):
         #: User object of the contributor (lazy loaded)
         self._contributor = None
 
-        #: date of creation
-        self.created = None
         #: current user permissions
         self.current_user_permissions = None
-        #: date of latest modification
-        self.modified = None
         #: name of resource
         self.name = None
         #: human-readable unique identifier
@@ -234,6 +231,20 @@ class BaseResolweResource(BaseResource):
                 )
 
         return self._contributor
+
+    @property
+    def created(self):
+        """Creation time."""
+        if not self.id:
+            raise ValueError('Instance must be saved before acessing `created` attribute.')
+        return parse_resolwe_datetime(self._original_values['created'])
+
+    @property
+    def modified(self):
+        """Modification time."""
+        if not self.id:
+            raise ValueError('Instance must be saved before acessing `modified` attribute.')
+        return parse_resolwe_datetime(self._original_values['modified'])
 
     def update(self):
         """Clear permissions cache and update the object."""

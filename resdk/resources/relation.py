@@ -25,9 +25,6 @@ class Relation(BaseResolweResource):
 
     endpoint = 'relation'
 
-    READ_ONLY_FIELDS = (
-        'created', 'id', 'modified',
-    )
     UPDATE_PROTECTED_FIELDS = BaseResolweResource.UPDATE_PROTECTED_FIELDS + (
         'type',
     )

@@ -12,6 +12,8 @@ Unreleased
 Changed
 -------
 * Make contributor attribute a User object
+* Cast date-time attributes to datetime objects. This means, for example,
+  that ``created`` attribute is now Python datetime object instead of string.
 
 Added
 -----

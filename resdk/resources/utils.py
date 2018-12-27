@@ -1,6 +1,13 @@
 """Resource utility functions."""
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+from datetime import datetime
+
+import pytz
+import tzlocal
+
+from resdk.constants import RESOLWE_DATETIME_FORMAT
+
 
 def iterate_fields(fields, schema):
     """Recursively iterate over all DictField sub-fields.
@@ -261,3 +268,18 @@ def get_resolwe(*resources):
         raise TypeError('All input objects must be from the same `Resolwe` connection.')
 
     return list(resolwes)[0]
+
+
+def parse_resolwe_datetime(dtime):
+    """Convert string representation of time to local datetime.datetime object."""
+    if dtime:
+        # Get naive (=time-zone unaware) version of UTC time:
+        utc_naive = datetime.strptime(dtime[:-6], RESOLWE_DATETIME_FORMAT)
+        # Localize the time so it includes UTC timezone info:
+        utc_aware = pytz.utc.localize(utc_naive)
+        # Get name local time zone:
+        local_tz = tzlocal.get_localzone()
+        # Present time in the local time zone
+        local_time = utc_aware.astimezone(local_tz)
+
+        return local_time

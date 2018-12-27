@@ -5,6 +5,7 @@ Unit tests for resdk/resources/utils.py file.
 
 import unittest
 
+import pytz
 import six
 from mock import MagicMock, call, patch
 
@@ -12,7 +13,7 @@ from resdk.resources import Collection, Data, Process, Relation, Sample
 from resdk.resources.utils import (
     _print_input_line, fill_spaces, find_field, flatten_field, get_collection_id, get_data_id,
     get_process_id, get_relation_id, get_resolwe, get_resource_collection, get_sample_id,
-    get_samples, iterate_fields, iterate_schema,
+    get_samples, iterate_fields, iterate_schema, parse_resolwe_datetime,
 )
 
 PROCESS_OUTPUT_SCHEMA = [
@@ -312,6 +313,19 @@ class TestUtils(unittest.TestCase):
         sample = Sample(id=1, resolwe=MagicMock())
         with self.assertRaises(TypeError):
             get_resolwe(relation, sample)
+
+    @patch('resdk.resources.utils.tzlocal')
+    def test_parse_resolwe_datetime(self, tzlocal_mock):
+        tzlocal_mock.get_localzone.return_value = pytz.timezone('US/Hawaii')
+        dtime = parse_resolwe_datetime('2018-06-01T16:12:34.123456+02:00')
+        self.assertEqual(dtime.year, 2018)
+        self.assertEqual(dtime.month, 6)
+        self.assertEqual(dtime.day, 1)
+        self.assertEqual(dtime.hour, 6)
+        self.assertEqual(dtime.minute, 12)
+        self.assertEqual(dtime.second, 34)
+        self.assertEqual(dtime.microsecond, 123456)
+        self.assertEqual(dtime.tzinfo.zone, 'US/Hawaii')
 
 
 if __name__ == '__main__':
