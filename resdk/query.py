@@ -319,13 +319,6 @@ class ResolweQuery(object):
 
         return resource
 
-    def post(self, data):
-        """Post data to this endpoint.
-
-        :param dict data: Data dictionary to post
-        """
-        return self.api.post(data)  # pylint: disable=no-member
-
     def filter(self, **filters):
         """Return clone of current query with added given filters."""
         new_query = self._clone()

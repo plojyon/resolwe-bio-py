@@ -217,12 +217,6 @@ class TestResolweQuery(unittest.TestCase):
         with self.assertRaises(LookupError):
             ResolweQuery.get(query, 1)
 
-    def test_post(self):
-        query = MagicMock(spec=ResolweQuery)
-
-        ResolweQuery.post(query, {'id': 2, 'name': 'Test object'})
-        query.api.post.assert_called_once_with({'id': 2, 'name': 'Test object'})
-
     def test_filter(self):
         new_query = MagicMock(spec=ResolweQuery)
         query = MagicMock(spec=ResolweQuery, **{'_clone.return_value': new_query})
