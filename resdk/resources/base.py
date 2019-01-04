@@ -26,6 +26,7 @@ class BaseResource(object):
     endpoint = None
     query_endpoint = None
     query_method = 'GET'
+    full_search_paramater = None
 
     READ_ONLY_FIELDS = (
         'id',

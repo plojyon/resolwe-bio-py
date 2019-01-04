@@ -30,6 +30,7 @@ class Data(BaseResolweResource):
     """
 
     endpoint = 'data'
+    full_search_paramater = 'text'
 
     READ_ONLY_FIELDS = BaseResolweResource.READ_ONLY_FIELDS + (
         'checksum', 'descriptor_dirty', 'process_cores', 'process_error', 'process_info',

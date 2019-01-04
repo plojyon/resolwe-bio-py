@@ -18,6 +18,8 @@ Changed
 
 Added
 -----
+* Implement full text search method in ``ResolweQuery`` for ``Data``,
+  ``Sample`` and ``Collection`` resources
 
 Fixed
 -----

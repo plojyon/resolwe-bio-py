@@ -331,6 +331,13 @@ class ResolweQuery(object):
         """
         return self._clone()
 
-    def search(self):
+    def search(self, text):
         """Full text search."""
-        raise NotImplementedError()
+        if not self.resource.full_search_paramater:
+            raise NotImplementedError()
+
+        new_query = self._clone()
+        # pylint: disable=protected-access
+        new_query._add_filter({self.resource.full_search_paramater: text})
+        # pylint: enable=protected-access
+        return new_query

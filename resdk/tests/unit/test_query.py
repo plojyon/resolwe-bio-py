@@ -229,11 +229,26 @@ class TestResolweQuery(unittest.TestCase):
         result = ResolweQuery.all(query)
         self.assertEqual(result, new_query)
 
-    def test_search(self):
-        query = MagicMock(spec=ResolweQuery)
+    def test_search_undefined(self):
+        resolwe = MagicMock()
+        resource = MagicMock(full_search_paramater=None, query_endpoint='endpoint')
+        query = ResolweQuery(resolwe, resource)
 
+        # If ``full_search_paramater`` is not defined, raise NotImplemented error.
         with self.assertRaises(NotImplementedError):
-            ResolweQuery.search(query)
+            query.search('foo bar')
+
+    def test_search(self):
+        resolwe = MagicMock()
+        resource = MagicMock(full_search_paramater='text', query_endpoint='endpoint',
+                             query_method='GET')
+        query = ResolweQuery(resolwe, resource)
+
+        new_query = query.search('foobar')
+        self.assertEqual(
+            list(new_query._filters.items()),
+            list({'text': ['foobar']}.items()),
+        )
 
 
 if __name__ == '__main__':

@@ -24,6 +24,8 @@ class BaseCollection(BaseResolweResource):
 
     """
 
+    full_search_paramater = 'text'
+
     WRITABLE_FIELDS = BaseResolweResource.WRITABLE_FIELDS + (
         'description', 'descriptor', 'descriptor_schema', 'settings', 'tags',
     )
