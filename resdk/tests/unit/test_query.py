@@ -17,11 +17,6 @@ class TestResolweQuery(unittest.TestCase):
         resolwe = MagicMock()
         resource = MagicMock(endpoint='resolwe_endpoint', query_endpoint=None, query_method='GET')
 
-        query = ResolweQuery(resolwe, resource, 'endpoint')
-        self.assertEqual(query.resolwe, resolwe)
-        self.assertEqual(query.resource, resource)
-        self.assertEqual(query.endpoint, 'endpoint')
-
         query = ResolweQuery(resolwe, resource)
         self.assertEqual(query.resolwe, resolwe)
         self.assertEqual(query.resource, resource)
@@ -29,11 +24,6 @@ class TestResolweQuery(unittest.TestCase):
 
         resource = MagicMock(endpoint='resolwe_endpoint', query_endpoint='query_endpoint',
                              query_method='GET')
-
-        query = ResolweQuery(resolwe, resource, 'endpoint')
-        self.assertEqual(query.resolwe, resolwe)
-        self.assertEqual(query.resource, resource)
-        self.assertEqual(query.endpoint, 'endpoint')
 
         query = ResolweQuery(resolwe, resource)
         self.assertEqual(query.resolwe, resolwe)
@@ -109,8 +99,14 @@ class TestResolweQuery(unittest.TestCase):
         self.assertEqual(len(query), 3)
 
     def test_clone(self):
-        query = MagicMock(spec=ResolweQuery, _cache=[1, 2, 3], _filters=defaultdict(list),
-                          _limit=2, _offset=3, endpoint='endpoint')
+        query = MagicMock(
+            spec=ResolweQuery,
+            resource=MagicMock(query_endpoint='foo'),
+            _cache=[1, 2, 3],
+            _filters=defaultdict(list),
+            _limit=2,
+            _offset=3,
+        )
 
         new_query = ResolweQuery._clone(query)
         self.assertEqual(new_query._cache, None)  # cache shouldnt be copied

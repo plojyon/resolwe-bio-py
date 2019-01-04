@@ -96,48 +96,31 @@ class ResolweQuery(object):
             * slug (=, __in=)
             * id (=, __in=)
 
-    Example usage:
-
-    .. code-block:: python
-
-        # Get a list of data objects with status set to OK.
-        res.data.filter(status='OK')
-
-        # Get a list of sample objects that contain data object 42 and
-        # were contributed by contributor with ID 1
-
-        res.collection.filter(data=42, contributor=1)
-
     """
 
     _cache = None
     _count = None  # number of objects in current query (without applied limit and offset)
     _limit = None
     _offset = None
-    _filters = collections.defaultdict(list)
+    _filters = None
 
     resolwe = None
     resource = None
+    slug_field = None
     endpoint = None
     api = None
     logger = None
 
-    def __init__(self, resolwe, resource, endpoint=None, slug_field='slug'):
+    def __init__(self, resolwe, resource, slug_field='slug'):
         """Initialize attributes."""
         self.resolwe = resolwe
         self.resource = resource
-
         self.slug_field = slug_field
-
-        # Determine the endpoint to use.
-        if endpoint is not None:
-            self.endpoint = endpoint
-        elif resource.query_endpoint is not None:
-            self.endpoint = resource.query_endpoint
-        else:
-            self.endpoint = resource.endpoint
-
+        self.endpoint = resource.query_endpoint or resource.endpoint
         self.api = operator.attrgetter(self.endpoint)(resolwe.api)
+
+        self._filters = collections.defaultdict(list)
+
         self.logger = logging.getLogger(__name__)
 
     def __getitem__(self, index):
@@ -195,14 +178,14 @@ class ResolweQuery(object):
     def _clone(self):
         """Return copy of current object with empty cache."""
         # pylint: disable=protected-access
-        new_obj = ResolweQuery(self.resolwe, self.resource, self.endpoint)
+        new_obj = ResolweQuery(self.resolwe, self.resource)
         new_obj._filters = copy.deepcopy(self._filters)
         new_obj._limit = self._limit
         new_obj._offset = self._offset
         return new_obj
 
     def _add_filter(self, filter_):
-        """Add filter parameter."""
+        """Add filtering parameters."""
         for key, value in filter_.items():
             # 'sample' is called 'entity' in the backend.
             key = key.replace('sample', 'entity')
@@ -233,7 +216,8 @@ class ResolweQuery(object):
     def _fetch(self):
         """Make request to the server and populate cache."""
         if self._cache is not None:
-            return  # already fetched
+            # Already fetched.
+            return
 
         filters = self._compose_filters()
         if self.resource.query_method == 'GET':
