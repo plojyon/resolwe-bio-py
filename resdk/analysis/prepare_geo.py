@@ -43,8 +43,7 @@ def prepare_geo_chipseq(resource, name=None):
 
     """
     reads = []
-    macs14 = []
-    relations = []
+    macs = []
 
     samples = get_samples(resource)
     resolwe = get_resolwe(*samples)
@@ -58,15 +57,11 @@ def prepare_geo_chipseq(resource, name=None):
 
         macs_list = sample.get_macs()
         if not macs_list:
-            raise ValueError(
-                "Sample {} has no `macs14` data object!".format(sample)
-            )
+            raise ValueError("Sample {} has no `macs` data object!".format(sample))
         elif len(macs_list) != 1:
-            raise ValueError(
-                "Sample {} has more than one `macs14` data objects!".format(sample)
-            )
+            raise ValueError("Sample {} has more than one `macs` data objects!".format(sample))
 
-        macs14.append(macs_list[0].id)
+        macs.append(macs_list[0].id)
 
         if sample.background:
             if sample.background not in samples:
@@ -75,18 +70,13 @@ def prepare_geo_chipseq(resource, name=None):
                     "{}!".format(sample, resource)
                 )
 
-            relations.append(
-                ':'.join([sample.name, sample.background.name])
-            )
-
         collection_ids.add(get_resource_collection(sample))
 
     auto_name, collection = get_name_collection(collection_ids, resolwe)
 
     inputs = {
         'reads': reads,
-        'macs14': macs14,
-        'relations': relations,
+        'macs': macs,
         'name': name or auto_name,
     }
     geo = resolwe.get_or_run(slug='prepare-geo-chipseq', input=inputs)

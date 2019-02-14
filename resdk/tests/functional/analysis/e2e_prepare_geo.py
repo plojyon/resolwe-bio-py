@@ -45,21 +45,14 @@ class TestPrepareGeo(BaseResdkFunctionalTest):
         macs_3 = relation.run_macs()[0]
         macs_4 = samples[5].run_macs(use_background=False)[0]
 
-        relations = [
-            "{}:{}".format(samples[1].name, samples[0].name),
-            "{}:{}".format(samples[2].name, samples[0].name),
-            "{}:{}".format(samples[4].name, samples[3].name)
-        ]
-
         reads_id = [read.id for read in reads]
         macs_id = [macs_1.id, macs_2.id, macs_3.id, macs_4.id]
 
         # Run on collection
         prepare_geo_chipseq = collection_1.run_prepare_geo_chipseq()
         self.assertEqual(prepare_geo_chipseq.input['reads'], reads_id[:3])
-        self.assertEqual(prepare_geo_chipseq.input['macs14'], macs_id[:2])
+        self.assertEqual(prepare_geo_chipseq.input['macs'], macs_id[:2])
         self.assertEqual(prepare_geo_chipseq.input['name'], collection_1.name)
-        self.assertEqual(prepare_geo_chipseq.input['relations'], relations[:2])
 
         # Second run with same parameters should return same objects
         prepare_geo_chipseq_2 = collection_1.run_prepare_geo_chipseq()
@@ -72,27 +65,24 @@ class TestPrepareGeo(BaseResdkFunctionalTest):
         # Run on samples that are in two different collections
         prepare_geo_chipseq = prepare_geo.prepare_geo_chipseq(samples[:3] + [samples[5]])
         self.assertEqual(prepare_geo_chipseq.input['reads'], reads_id[:3] + [reads_id[5]])
-        self.assertEqual(prepare_geo_chipseq.input['macs14'], macs_id[:2] + [macs_id[3]])
-        self.assertEqual(prepare_geo_chipseq.input['relations'], relations[:2])
+        self.assertEqual(prepare_geo_chipseq.input['macs'], macs_id[:2] + [macs_id[3]])
 
         # Run on all samples
         prepare_geo_chipseq = prepare_geo.prepare_geo_chipseq(samples)
         self.assertEqual(prepare_geo_chipseq.input['reads'], reads_id)
-        self.assertEqual(prepare_geo_chipseq.input['macs14'], macs_id)
-        self.assertEqual(prepare_geo_chipseq.input['relations'], relations)
+        self.assertEqual(prepare_geo_chipseq.input['macs'], macs_id)
 
         # Run only on samples that are not in a collection
         prepare_geo_chipseq = prepare_geo.prepare_geo_chipseq(samples[3:5])
         self.assertEqual(prepare_geo_chipseq.input['reads'], reads_id[3:5])
-        self.assertEqual(prepare_geo_chipseq.input['macs14'], [macs_id[2]])
-        self.assertEqual(prepare_geo_chipseq.input['relations'], [relations[2]])
+        self.assertEqual(prepare_geo_chipseq.input['macs'], [macs_id[2]])
 
-        # Run on a sample that has two macs14 data objects
+        # Run on a sample that has two macs data objects
         samples[1].add_data(macs_2)
         with self.assertRaises(ValueError):
             collection_1.run_prepare_geo_chipseq()
 
-        # Run on a sample that has no macs14 data object
+        # Run on a sample that has no macs data object
         samples[1].remove_data(macs_2)
         samples[1].remove_data(macs_1)
         with self.assertRaises(ValueError):
