@@ -5,9 +5,9 @@ Change Log
 All notable changes to this project are documented in this file.
 
 
-==========
-Unreleased
-==========
+==================
+9.0.0 - 2019-02-19
+==================
 
 Changed
 -------
@@ -15,14 +15,12 @@ Changed
 * Make contributor attribute a User object
 * Cast date-time attributes to datetime objects. This means, for example,
   that ``created`` attribute is now Python datetime object instead of string.
+* Update prepare_geo_chipseq analysis to reflect process chnages
 
 Added
 -----
 * Implement full text search method in ``ResolweQuery`` for ``Data``,
   ``Sample`` and ``Collection`` resources
-
-Fixed
------
 
 
 ==================
