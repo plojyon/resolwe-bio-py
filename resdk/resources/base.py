@@ -122,7 +122,13 @@ class BaseResource(object):
             self._update_fields(response)
 
     def delete(self, force=False):
-        """Delete the resource object from the server."""
+        """Delete the resource object from the server.
+
+        :param bool force: Do not trigger confirmation prompt. WARNING: Be
+            sure that you really know what you are doing as deleted objects
+            are not recoverable.
+
+        """
         if force is not True:
             user_input = six.moves.input('Do you really want to delete {}?[yN] '.format(self))
 

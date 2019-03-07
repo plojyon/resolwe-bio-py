@@ -17,6 +17,8 @@ import operator
 
 import six
 
+import resdk
+
 
 class ResolweQuery(object):
     """Query resource endpoints.
@@ -309,17 +311,35 @@ class ResolweQuery(object):
         new_query._add_filter(filters)  # pylint: disable=protected-access
         return new_query
 
-    def delete(self, force=False):
-        """Delete objects in current query."""
+    def delete(self, force=False, delete_content=False):
+        """Delete objects in current query.
+
+        :param bool force: Do not trigger confirmation prompt. WARNING: Be
+            sure that you really know what you are doing as deleted objects
+            are not recoverable.
+        :param bool delete_content: Also delete all the objects that the
+            current object contains.
+
+        """
+        kwargs = {}
+        if delete_content:
+            if not issubclass(self.resource, resdk.resources.collection.BaseCollection):
+                raise TypeError("Parameter delete_content is only available for sample and "
+                                "collection endpoint.")
+            kwargs['delete_content'] = True
+            message = "Do you really want to delete {} objects(s) and all of their content?[yN]"
+        else:
+            message = 'Do you really want to delete {} object(s)?[yN] '
+
         if force is not True:
-            user_input = six.moves.input(
-                'Do you really want to delete {} object(s)?[yN] '.format(self.count()))
+            user_input = six.moves.input(message.format(self.count()))
             if user_input.strip().lower() != 'y':
                 return
 
+        kwargs['force'] = True
         # TODO: Use bulk delete when supported on backend
         for obj in self:
-            obj.delete(force=True)
+            obj.delete(**kwargs)
 
         self.clear_cache()
 

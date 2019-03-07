@@ -163,6 +163,31 @@ class BaseCollection(BaseResolweResource):
 
         self.resolwe._download_files(files, download_dir)  # pylint: disable=protected-access
 
+    def delete(self, force=False, delete_content=False):  # pylint: disable=arguments-differ
+        """Delete the resource object from the server.
+
+        :param bool force: Do not trigger confirmation prompt. WARNING: Be
+            sure that you really know what you are doing as deleted objects
+            are not recoverable.
+        :param bool delete_content: Also delete all the objects that the
+            current object contains.
+
+        """
+        kwargs = {}
+        if delete_content:
+            kwargs['delete_content'] = True
+            message = "Do you really want to delete {} and all of it's content?"
+        else:
+            message = "Do you really want to delete {}?"
+
+        if force is not True:
+            user_input = six.moves.input(message.format(self))
+
+            if user_input.strip().lower() != 'y':
+                return
+
+        self.api(self.id).delete(**kwargs)
+
 
 class Collection(CollectionRelationsMixin, BaseCollection):
     """Resolwe Collection resource.

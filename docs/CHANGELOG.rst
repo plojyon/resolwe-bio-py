@@ -26,6 +26,9 @@ Added
 -----
 * Implement full text search method in ``ResolweQuery`` for ``Data``,
   ``Sample`` and ``Collection`` resources
+* Support ``delete_content`` parameter in ``delete()`` method for Samples and
+  Collections. This enables one to also delete all of the Data / Samples
+  in a given Sample / Collection
 
 
 ==================
