@@ -1,11 +1,10 @@
-# include meta data
+# Include meta data.
 include LICENSE
-include README.rst
-# include documentation and files needed by documentation
-recursive-include docs *.py *.rst
-recursive-include docs/images *.jpg *.png
-# include tests and files needed by tests
-include .pylintrc tox.ini
+# Include documentation and files needed by documentation.
+recursive-include docs docs/images *.py *.rst *.jpg *.png
+# Include tests and files needed by tests.
+include .pylintrc
 include pyproject.toml
+include tox.ini
 recursive-include resdk/tests *.py
 recursive-include resdk/tests/files *
