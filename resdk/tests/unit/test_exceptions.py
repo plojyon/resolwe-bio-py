@@ -5,7 +5,6 @@ Unit tests for resdk/exceptions.py file.
 
 import unittest
 
-import six
 from mock import MagicMock
 from slumber.exceptions import SlumberHttpBaseException
 
@@ -22,5 +21,5 @@ class ExceptionsTestCase(unittest.TestCase):
         func.assert_called_once_with(40, 2, operation='add')
 
         func.side_effect = SlumberHttpBaseException(content='error message')
-        with six.assertRaisesRegex(self, ResolweServerError, 'error message'):
+        with self.assertRaisesRegex(ResolweServerError, 'error message'):
             wrapped()

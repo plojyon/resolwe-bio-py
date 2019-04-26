@@ -1,13 +1,11 @@
 """Permissions manager class."""
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 import copy
 from collections import defaultdict
 
 from .utils import is_group, is_user
 
 
-class PermissionsManager(object):
+class PermissionsManager:
     """Helper class to manage permissions of the :class:`BaseResource`."""
 
     #: (lazy loaded) list of permissons on current object

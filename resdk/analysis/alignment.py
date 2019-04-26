@@ -1,6 +1,4 @@
 """Alignment analysis."""
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 from resdk.resources.utils import get_data_id, get_samples
 
 __all__ = ('bowtie2', 'hisat2')

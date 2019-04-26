@@ -1,17 +1,13 @@
 """Constants and abstract classes."""
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 import copy
 import logging
 import operator
-
-import six
 
 from .permissions import PermissionsManager
 from .utils import parse_resolwe_datetime
 
 
-class BaseResource(object):
+class BaseResource:
     """Abstract resource.
 
     One and only one of the identifiers (slug, id or model_data)
@@ -82,7 +78,7 @@ class BaseResource(object):
         if isinstance(obj, list):
             return [self._dehydrate_resources(element) for element in obj]
         if isinstance(obj, dict):
-            return {key: self._dehydrate_resources(value) for key, value in six.iteritems(obj)}
+            return {key: self._dehydrate_resources(value) for key, value in obj.items()}
         return obj
 
     def save(self):
@@ -130,7 +126,7 @@ class BaseResource(object):
 
         """
         if force is not True:
-            user_input = six.moves.input('Do you really want to delete {}?[yN] '.format(self))
+            user_input = input('Do you really want to delete {}?[yN] '.format(self))
 
             if user_input.strip().lower() != 'y':
                 return
@@ -150,7 +146,7 @@ class BaseResource(object):
                 and value != self._original_values[name]):
             raise ValueError("Can not change read only field {}".format(name))
 
-        super(BaseResource, self).__setattr__(name, value)
+        super().__setattr__(name, value)
 
     def __eq__(self, obj):
         """Evaluate if objects are the same."""
@@ -257,11 +253,10 @@ class BaseResolweResource(BaseResource):
         """Clear permissions cache and update the object."""
         self.permissions.clear_cache()
 
-        super(BaseResolweResource, self).update()
+        super().update()
 
     def __repr__(self):
         """Format resource name."""
-        rep = "{} <id: {}, slug: '{}', name: '{}'>".format(
+        return "{} <id: {}, slug: '{}', name: '{}'>".format(
             self.__class__.__name__, self.id, self.slug, self.name
         )
-        return rep.encode('utf-8') if six.PY2 else rep

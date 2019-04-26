@@ -8,21 +8,18 @@ Resolwe
    :members:
 
 """
-from __future__ import absolute_import, division, print_function
-
 import getpass
 import logging
 import ntpath
 import os
 import re
 import uuid
+from urllib.parse import urljoin
 
 import requests
-import six
 import slumber
 # Needed because we mock requests in test_resolwe.py
 from requests.exceptions import ConnectionError  # pylint: disable=redefined-builtin
-from six.moves.urllib.parse import urljoin  # pylint: disable=wrong-import-order
 
 from .constants import CHUNK_SIZE
 from .exceptions import ValidationError, handle_http_exception
@@ -39,7 +36,7 @@ class ResolweResource(slumber.Resource):
 
     def __getattribute__(self, item):
         """Return class attribute and wrapp request methods in exception handler."""
-        attr = super(ResolweResource, self).__getattribute__(item)
+        attr = super().__getattribute__(item)
         if item in ['get', 'options', 'head', 'post', 'patch', 'put', 'delete']:
             return handle_http_exception(attr)
         return attr
@@ -51,7 +48,7 @@ class ResolweAPI(slumber.API):
     resource_class = ResolweResource
 
 
-class Resolwe(object):
+class Resolwe:
     """Connect to a Resolwe server.
 
     :param username: user's username
@@ -184,7 +181,7 @@ class Resolwe(object):
         def deep_copy(current):
             """Copy inputs."""
             if isinstance(current, dict):
-                return {key: deep_copy(val) for key, val in six.iteritems(current)}
+                return {key: deep_copy(val) for key, val in current.items()}
             elif isinstance(current, list):
                 return [deep_copy(val) for val in current]
             elif is_data(current):

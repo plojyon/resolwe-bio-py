@@ -2,8 +2,6 @@
 Unit tests for resdk/resources/relation.py file.
 """
 # pylint: disable=missing-docstring, protected-access
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 import unittest
 
 from mock import MagicMock, patch

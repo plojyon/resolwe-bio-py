@@ -43,12 +43,12 @@ setup(
     install_requires=(
         'requests>=2.6.0',
         'slumber>=0.7.1',
-        'six>=1.10.0',
         'pyyaml>=3.11',
         'wrapt>=1.10.8',
         'pytz>=2018.4',
         'tzlocal>=1.5.1',
     ),
+    python_requires='>=3.6',
     extras_require={
         'docs': [
             'sphinx>=1.4.1',
@@ -90,11 +90,7 @@ setup(
         'Operating System :: OS Independent',
 
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
     ],
 

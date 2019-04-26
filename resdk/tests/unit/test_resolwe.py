@@ -8,7 +8,6 @@ import os
 import unittest
 
 import requests
-import six
 from mock import MagicMock, mock_open, patch
 from slumber.exceptions import SlumberHttpBaseException
 
@@ -91,12 +90,12 @@ class TestResolwe(unittest.TestCase):
         resolwe = MagicMock(spec=Resolwe)
 
         message = 'Server url must start with .*'
-        with six.assertRaisesRegex(self, ValueError, message):
+        with self.assertRaisesRegex(ValueError, message):
             Resolwe._validate_url(resolwe, 'starts.without.http')
 
         requests_get_mock.side_effect = requests.exceptions.ConnectionError()
         message = "The site can't be reached: .*"
-        with six.assertRaisesRegex(self, ValueError, message):
+        with self.assertRaisesRegex(ValueError, message):
             Resolwe._validate_url(resolwe, 'http://invalid.url')
 
     @patch('resdk.resolwe.ResolweAPI')
@@ -151,7 +150,7 @@ class TestProcessFileField(unittest.TestCase):
         os_mock.configure_mock(**{'path.isfile.return_value': False})
 
         message = r"File .* not found."
-        with six.assertRaisesRegex(self, ValueError, message):
+        with self.assertRaisesRegex(ValueError, message):
             Resolwe._process_file_field(resolwe_mock, "/bad/path/to/file")
         self.assertEqual(resolwe_mock._upload_file.call_count, 0)
 
@@ -163,7 +162,7 @@ class TestProcessFileField(unittest.TestCase):
         resolwe_mock._upload_file = MagicMock(return_value=None)
 
         message = r'Upload failed for .*'
-        with six.assertRaisesRegex(self, Exception, message):
+        with self.assertRaisesRegex(Exception, message):
             Resolwe._process_file_field(resolwe_mock, "/good/path/to/file")
         self.assertEqual(resolwe_mock._upload_file.call_count, 1)
 
@@ -259,9 +258,9 @@ class TestRun(unittest.TestCase):
     def test_bad_descriptor_input(self, resolwe_mock):
         # Raise error is only one of deswcriptor/descriptor_schema is given:
         message = "Set both or neither descriptor and descriptor_schema."
-        with six.assertRaisesRegex(self, ValueError, message):
+        with self.assertRaisesRegex(ValueError, message):
             Resolwe.run(resolwe_mock, descriptor="a")
-        with six.assertRaisesRegex(self, ValueError, message):
+        with self.assertRaisesRegex(ValueError, message):
             Resolwe.run(resolwe_mock, descriptor_schema="a")
 
     @patch('resdk.resolwe.os')
@@ -273,7 +272,7 @@ class TestRun(unittest.TestCase):
 
         resolwe_mock._upload_file = MagicMock(return_value=None)
         message = r'Field .* not in process .* input schema.'
-        with six.assertRaisesRegex(self, ValidationError, message):
+        with self.assertRaisesRegex(ValidationError, message):
             Resolwe._process_inputs(resolwe_mock, {"bad_key": "/good/path/to/file"}, process)
 
     @patch('resdk.resolwe.Data')
@@ -401,7 +400,7 @@ class TestDownload(unittest.TestCase):
         os_mock.path.isdir.return_value = False
 
         message = "Download directory does not exist: .*"
-        with six.assertRaisesRegex(self, ValueError, message):
+        with self.assertRaisesRegex(ValueError, message):
             Resolwe._download_files(resolwe_mock, self.file_list)
 
     @patch('resdk.resolwe.os')
@@ -425,7 +424,7 @@ class TestDownload(unittest.TestCase):
         response = {'raise_for_status.side_effect': Exception("abc")}
         requests_mock.get.return_value = MagicMock(ok=False, **response)
 
-        with six.assertRaisesRegex(self, Exception, "abc"):
+        with self.assertRaisesRegex(Exception, "abc"):
             Resolwe._download_files(resolwe_mock, self.file_list[:1])
         self.assertEqual(resolwe_mock.logger.info.call_count, 2)
 
@@ -463,8 +462,8 @@ class TestResAuth(unittest.TestCase):
     def test_bad_url(self, requests_mock):
         requests_mock.post = MagicMock(side_effect=[requests.exceptions.ConnectionError()])
 
-        with six.assertRaisesRegex(self, ValueError,
-                                   'Server not accessible on www.abc.com. Wrong url?'):
+        with self.assertRaisesRegex(ValueError,
+                                    'Server not accessible on www.abc.com. Wrong url?'):
             ResAuth.__init__(self.auth_mock, username='usr', password='pwd', url='www.abc.com')
 
     @patch('resdk.resolwe.requests')
@@ -472,7 +471,7 @@ class TestResAuth(unittest.TestCase):
         requests_mock.post = MagicMock(return_value=MagicMock(status_code=400))
 
         message = r'Response HTTP status code .* Invalid credentials?'
-        with six.assertRaisesRegex(self, ValueError, message):
+        with self.assertRaisesRegex(ValueError, message):
             ResAuth.__init__(self.auth_mock, username='usr', password='pwd', url='www.abc.com')
 
     @patch('resdk.resolwe.requests')
@@ -481,7 +480,7 @@ class TestResAuth(unittest.TestCase):
         requests_mock.post = MagicMock(return_value=post_mock)
 
         message = 'Missing sessionid or csrftoken. Invalid credentials?'
-        with six.assertRaisesRegex(self, Exception, message):
+        with self.assertRaisesRegex(Exception, message):
             ResAuth.__init__(self.auth_mock, username='usr', password='pwd', url='www.abc.com')
 
     @patch('resdk.resolwe.requests')

@@ -1,6 +1,4 @@
 """Patch ReSDK resources with analysis methods."""
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 from resdk.analysis.alignment import bowtie2, hisat2
 from resdk.analysis.chip_seq import bamsplit, macs, rose2
 from resdk.analysis.differential_expressions import cuffdiff

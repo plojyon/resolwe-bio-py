@@ -123,7 +123,7 @@ class TestSample(unittest.TestCase):
     def test_update_descriptor(self, sample_mock):
         sample_mock.configure_mock(id=42, api=MagicMock())
         Sample.update_descriptor(sample_mock, {'field': 'value'})
-        sample_mock.api(42).patch.assert_called_once_with({u'descriptor': {'field': 'value'}})
+        sample_mock.api(42).patch.assert_called_once_with({'descriptor': {'field': 'value'}})
 
     @patch('resdk.resources.sample.Sample', spec=True)
     def test_confirm_is_annotated(self, sample_mock):

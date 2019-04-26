@@ -6,7 +6,6 @@ Unit tests for resdk/resources/utils.py file.
 import unittest
 
 import pytz
-import six
 from mock import MagicMock, call, patch
 
 from resdk.resources import Collection, Data, Process, Relation, Sample
@@ -85,7 +84,7 @@ class TestUtils(unittest.TestCase):
             })
         ]
 
-        six.assertCountEqual(self, result, expected)
+        self.assertCountEqual(result, expected)
 
     def test_iterate_fields_modif(self):
         """
@@ -191,11 +190,11 @@ class TestUtils(unittest.TestCase):
     def test_print_input_line(self, print_mock):
         _print_input_line(PROCESS_OUTPUT_SCHEMA, 0)
         calls = [
-            call(u'- fastq     [basic:file:]   - Reads file'),
-            call(u'- bases     [basic:string:] - Number of bases'),
-            call(u'- options - Options'),
-            call(u'    - id   [basic:string:]  - ID'),
-            call(u'    - k    [basic:integer:] - k-mer size')]
+            call('- fastq     [basic:file:]   - Reads file'),
+            call('- bases     [basic:string:] - Number of bases'),
+            call('- options - Options'),
+            call('    - id   [basic:string:]  - ID'),
+            call('    - k    [basic:integer:] - k-mer size')]
 
         self.assertEqual(print_mock.mock_calls, calls)
 

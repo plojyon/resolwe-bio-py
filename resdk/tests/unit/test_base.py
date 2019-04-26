@@ -5,7 +5,6 @@ Unit tests for resdk/resolwe.py file.
 
 import unittest
 
-import six
 import slumber
 from mock import MagicMock, call, patch
 
@@ -38,7 +37,7 @@ class TestBaseResolweResource(unittest.TestCase):
         base_resource.read_only_scalar = None
 
         message = 'Can not change read only field read_only_scalar'
-        with six.assertRaisesRegex(self, ValueError, message):
+        with self.assertRaisesRegex(ValueError, message):
             base_resource.read_only_scalar = 42
 
         base_resource.writable_scalar = '42'
@@ -118,7 +117,7 @@ class TestBaseMethods(unittest.TestCase):
         base_mock.read_only_dict = {'change': 'change-not-allowed'}
 
         message = 'Not allowed to change read only fields read_only_dict'
-        with six.assertRaisesRegex(self, ValueError, message):
+        with self.assertRaisesRegex(ValueError, message):
             BaseResolweResource.save(base_mock)
 
     @patch('resdk.resources.base.BaseResolweResource', spec=True)
@@ -174,7 +173,7 @@ class TestBaseMethods(unittest.TestCase):
         base_mock.read_only_dict['change'] = 'change-not-allowed'
 
         message = 'Not allowed to change read only fields read_only_dict'
-        with six.assertRaisesRegex(self, ValueError, message):
+        with self.assertRaisesRegex(ValueError, message):
             BaseResolweResource.save(base_mock)
 
     @patch('resdk.resources.base.BaseResolweResource', spec=True)
@@ -195,7 +194,7 @@ class TestBaseMethods(unittest.TestCase):
         base_mock.update_protected_dict['change'] = 'change-not-allowed'
 
         message = 'Not allowed to change read only fields update_protected_dict'
-        with six.assertRaisesRegex(self, ValueError, message):
+        with self.assertRaisesRegex(ValueError, message):
             BaseResolweResource.save(base_mock)
 
         base_mock.UPDATE_PROTECTED_FIELDS = ('id', 'update_protected_dict')

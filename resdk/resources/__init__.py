@@ -61,7 +61,6 @@ Utility functions
    :members:
 
 """
-
 from .collection import Collection
 from .data import Data
 from .descriptor import DescriptorSchema

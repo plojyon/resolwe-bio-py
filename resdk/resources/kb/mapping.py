@@ -1,6 +1,4 @@
 """KB mapping resource."""
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 from ..base import BaseResource
 
 
@@ -33,7 +31,7 @@ class Mapping(BaseResource):
         #: Target feature species
         self.target_species = None
 
-        super(Mapping, self).__init__(resolwe, **model_data)
+        super().__init__(resolwe, **model_data)
 
     def __repr__(self):
         """Format mapping representation."""

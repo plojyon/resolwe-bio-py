@@ -1,6 +1,4 @@
 """KB feature resource."""
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 from ..base import BaseResource
 
 
@@ -40,7 +38,7 @@ class Feature(BaseResource):
         #: Feature subtype (tRNA, protein coding, rRNA, ...)
         self.sub_type = None
 
-        super(Feature, self).__init__(resolwe, **model_data)
+        super().__init__(resolwe, **model_data)
 
     def __repr__(self):
         """Format feature representation."""

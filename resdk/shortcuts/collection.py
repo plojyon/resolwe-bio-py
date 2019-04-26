@@ -1,12 +1,10 @@
 """ReSDK Resolwe shortcuts."""
-from __future__ import absolute_import, division, print_function, unicode_literals
-
-from six.moves import zip_longest
+from itertools import zip_longest
 
 from resdk.resources.utils import get_sample_id
 
 
-class CollectionRelationsMixin(object):
+class CollectionRelationsMixin:
     """Mixin for managing relations in ``Collection`` class."""
 
     def _create_relation(self, relation_type, category, samples, positions=[], labels=[]):

@@ -1,12 +1,9 @@
 """Data resource."""
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 import json
 import logging
+from urllib.parse import urljoin
 
 import requests
-import six
-from six.moves.urllib.parse import urljoin  # pylint: disable=wrong-import-order
 
 from resdk.constants import CHUNK_SIZE
 
@@ -108,7 +105,7 @@ class Data(BaseResolweResource):
         #: size
         self.size = None
 
-        super(Data, self).__init__(resolwe, **model_data)
+        super().__init__(resolwe, **model_data)
 
     def update(self):
         """Clear cache and update resource fields from the server."""
@@ -118,7 +115,7 @@ class Data(BaseResolweResource):
         self._parents = None
         self._children = None
 
-        super(Data, self).update()
+        super().update()
 
     @property
     def collections(self):
@@ -250,7 +247,7 @@ class Data(BaseResolweResource):
             field_name = 'output.{}'.format(field_name)
 
         flattened = flatten_field(self.output, self.process_output_schema, 'output')
-        for ann_field_name, ann in six.iteritems(flattened):
+        for ann_field_name, ann in flattened.items():
             if (ann_field_name.startswith('output')
                     and (field_name is None or field_name == ann_field_name)
                     and ann['value'] is not None):

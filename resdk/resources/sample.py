@@ -1,12 +1,10 @@
 """Sample resource."""
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 import logging
 
 from .collection import BaseCollection
 
 
-class SampleUtilsMixin(object):
+class SampleUtilsMixin:
     """Mixin with utility functions for `~resdk.resources.sample.Sample` resource.
 
     This mixin includes handy methods for common tasks like getting
@@ -104,7 +102,7 @@ class Sample(SampleUtilsMixin, BaseCollection):
         #: indicate whether `descriptor` is completed
         self.descriptor_completed = None
 
-        super(Sample, self).__init__(resolwe, **model_data)
+        super().__init__(resolwe, **model_data)
 
     def update(self):
         """Clear cache and update resource fields from the server."""
@@ -113,7 +111,7 @@ class Sample(SampleUtilsMixin, BaseCollection):
         self._background = None
         self._is_background = None
 
-        super(Sample, self).update()
+        super().update()
 
     @property
     def data(self):

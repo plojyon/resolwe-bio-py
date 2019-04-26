@@ -1,6 +1,4 @@
 """Plot analysis."""
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 from operator import xor
 
 from resdk.resources.utils import (

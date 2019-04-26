@@ -1,9 +1,5 @@
 """Collection resources."""
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 import logging
-
-import six
 
 from resdk.shortcuts.collection import CollectionRelationsMixin
 
@@ -52,7 +48,7 @@ class BaseCollection(BaseResolweResource):
         #: tags
         self.tags = None
 
-        super(BaseCollection, self).__init__(resolwe, **model_data)
+        super().__init__(resolwe, **model_data)
 
     @property
     def data(self):
@@ -94,7 +90,7 @@ class BaseCollection(BaseResolweResource):
         self._data = None
         self._hydrated_descriptor_schema = None
 
-        super(BaseCollection, self).update()
+        super().update()
 
     def _clear_data_cache(self):
         """Clear data cache."""
@@ -154,7 +150,7 @@ class BaseCollection(BaseResolweResource):
         """
         files = []
 
-        if field_name and not isinstance(field_name, six.string_types):
+        if field_name and not isinstance(field_name, str):
             raise ValueError("Invalid argument value `field_name`.")
 
         for data in self.data:
@@ -181,7 +177,7 @@ class BaseCollection(BaseResolweResource):
             message = "Do you really want to delete {}?"
 
         if force is not True:
-            user_input = six.moves.input(message.format(self))
+            user_input = input(message.format(self))
 
             if user_input.strip().lower() != 'y':
                 return
@@ -212,14 +208,14 @@ class Collection(CollectionRelationsMixin, BaseCollection):
         #: list of ``Relation`` objects in ``Collection`` (lazy loaded)
         self._relations = None
 
-        super(Collection, self).__init__(resolwe, **model_data)
+        super().__init__(resolwe, **model_data)
 
     def update(self):
         """Clear cache and update resource fields from the server."""
         self._samples = None
         self._relations = None
 
-        super(Collection, self).update()
+        super().update()
 
     @property
     def data(self):

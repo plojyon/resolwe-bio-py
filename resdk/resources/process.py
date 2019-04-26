@@ -1,6 +1,4 @@
 """Process resource."""
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 import logging
 
 from .base import BaseResolweResource
@@ -73,7 +71,7 @@ class Process(BaseResolweResource):
         #: Boolean stating wether process is active
         self.is_active = None
 
-        super(Process, self).__init__(resolwe, **model_data)
+        super().__init__(resolwe, **model_data)
 
     def print_inputs(self):
         """Pretty print input_schema."""

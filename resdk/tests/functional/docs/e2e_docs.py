@@ -1,6 +1,4 @@
 # pylint: disable=missing-docstring
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 import os
 import shutil
 import sys
@@ -131,7 +129,7 @@ class TestIndex(BaseResdkDocsFunctionalTest):
     def setUp(self):
         self.res = resdk.Resolwe(ADMIN_USERNAME, ADMIN_PASSWORD, URL)
         self.reads = self.upload_reads(self.res)
-        super(TestIndex, self).setUp()
+        super().setUp()
 
     def test_index(self):
         """Test example code used in ``README.rst`` and ``index.rst``."""
@@ -152,7 +150,7 @@ class TestStart(BaseResdkDocsFunctionalTest):
 
         # Set permissions for running processes:
         self.allow_run_process(self.res, 'alignment-hisat2')
-        super(TestStart, self).setUp()
+        super().setUp()
 
     def test_start(self):
         """Test getting started."""
@@ -171,7 +169,7 @@ class TestTutorialGet(BaseResdkDocsFunctionalTest):
         self.res = resdk.Resolwe(ADMIN_USERNAME, ADMIN_PASSWORD, URL)
 
         self.reads = self.upload_reads(self.res)
-        super(TestTutorialGet, self).setUp()
+        super().setUp()
 
     def test_tutorial_get(self):
         """Test tutorial-get."""
@@ -201,7 +199,7 @@ class TestTutorialCreate(BaseResdkDocsFunctionalTest):
         # Set permissions for using descriptor_schemas:
         self.allow_use_descriptor_schema(self.res, 'reads')
         self.allow_use_descriptor_schema(self.res, 'sample')
-        super(TestTutorialCreate, self).setUp()
+        super().setUp()
 
     def test_tutorial_create(self):
         """Test tutorial-create."""

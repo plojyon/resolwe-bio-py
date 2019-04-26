@@ -5,7 +5,6 @@ Unit tests for resdk/resources/collection.py file.
 
 import unittest
 
-import six
 from mock import MagicMock, patch
 
 from resdk.resources.collection import BaseCollection, Collection
@@ -32,7 +31,7 @@ class TestBaseCollection(unittest.TestCase):
         collection_mock.configure_mock(data=[1, 2], resolwe=MagicMock(api=api_mock))
 
         types = BaseCollection.data_types(collection_mock)
-        self.assertEqual(types, [u'data:reads:fastq:single:'])
+        self.assertEqual(types, ['data:reads:fastq:single:'])
 
     @patch('resdk.resources.collection.BaseCollection', spec=True)
     def test_files(self, collection_mock):
@@ -48,20 +47,20 @@ class TestBaseCollectionDownload(unittest.TestCase):
     def test_field_name(self, collection_mock):
         collection_mock.configure_mock(data=[DATA0, DATA2], resolwe=MagicMock())
         BaseCollection.download(collection_mock, field_name='output.exp')
-        flist = [u'2/outfile.exp']
+        flist = ['2/outfile.exp']
         collection_mock.resolwe._download_files.assert_called_once_with(flist, None)
 
         # Check if ok to also provide ``output_field`` that does not start with 'output'
         collection_mock.reset_mock()
         collection_mock.configure_mock(data=[DATA1, DATA0], resolwe=MagicMock())
         BaseCollection.download(collection_mock, field_name='fastq')
-        flist = [u'1/reads.fq', u'1/arch.gz']
+        flist = ['1/reads.fq', '1/arch.gz']
         collection_mock.resolwe._download_files.assert_called_once_with(flist, None)
 
     @patch('resdk.resources.collection.BaseCollection', spec=True)
     def test_bad_field_name(self, collection_mock):
         message = "Invalid argument value `field_name`."
-        with six.assertRaisesRegex(self, ValueError, message):
+        with self.assertRaisesRegex(ValueError, message):
             BaseCollection.download(collection_mock, field_name=123)
 
 

@@ -1,6 +1,4 @@
 # pylint: disable=missing-docstring
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 from resdk.analysis import differential_expressions
 from resdk.tests.functional.base import BaseResdkFunctionalTest
 

@@ -69,8 +69,6 @@ only when they are caught and not re-raised."
 import logging
 import sys
 
-from six import string_types
-
 LEVEL_MAP = {"DEBUG": logging.DEBUG,
              "INFO": logging.INFO,
              "WARNING": logging.WARNING,
@@ -123,7 +121,7 @@ def _configure_handler(handler, is_on=None, level=None):
             raise ValueError("Wrong type of 'is_on' parameter: only True/False/None posssible.")
 
     if level is not None:
-        if isinstance(level, string_types) and level.upper() in LEVEL_MAP.keys():
+        if isinstance(level, str) and level.upper() in LEVEL_MAP.keys():
             handler.setLevel(LEVEL_MAP[level.upper()])
         elif isinstance(level, int) and level >= 0 and level <= 50:
             handler.setLevel(level)

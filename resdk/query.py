@@ -8,19 +8,15 @@ Resolwe Query
    :members:
 
 """
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 import collections
 import copy
 import logging
 import operator
 
-import six
-
 import resdk
 
 
-class ResolweQuery(object):
+class ResolweQuery:
     """Query resource endpoints.
 
     A Resolwe instance (for example "res") has several endpoints:
@@ -128,7 +124,7 @@ class ResolweQuery(object):
     def __getitem__(self, index):
         """Retrieve an item or slice from the set of results."""
         # pylint: disable=protected-access
-        if not isinstance(index, (slice,) + six.integer_types):
+        if not isinstance(index, (slice, int)):
             raise TypeError
         if ((not isinstance(index, slice) and index < 0)
                 or (isinstance(index, slice) and index.start is not None and index.start < 0)
@@ -169,9 +165,9 @@ class ResolweQuery(object):
         """Return string representation of the current object."""
         self._fetch()
         rep = '[{}]'.format(
-            ',\n '.join(str(obj).decode('utf-8') if six.PY2 else str(obj) for obj in self._cache)
+            ',\n '.join(str(obj) for obj in self._cache)
         )
-        return rep.encode('utf-8') if six.PY2 else rep
+        return rep
 
     def __len__(self):
         """Return length of results of current query."""
@@ -332,7 +328,7 @@ class ResolweQuery(object):
             message = 'Do you really want to delete {} object(s)?[yN] '
 
         if force is not True:
-            user_input = six.moves.input(message.format(self.count()))
+            user_input = input(message.format(self.count()))
             if user_input.strip().lower() != 'y':
                 return
 

@@ -2,11 +2,8 @@
 Unit tests for resdk/resources/data.py file.
 """
 # pylint: disable=missing-docstring, protected-access
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 import unittest
 
-import six
 from mock import MagicMock, patch
 
 from resdk.resources.collection import Collection
@@ -125,7 +122,7 @@ class TestData(unittest.TestCase):
     def test_parents(self):
         # Data with no id should fail.
         data = Data(id=None, resolwe=MagicMock())
-        with six.assertRaisesRegex(self, ValueError, 'Instance must be saved *'):
+        with self.assertRaisesRegex(ValueError, 'Instance must be saved *'):
             data.parents  # pylint: disable=pointless-statement
 
         # Core functionality should be checked with e2e tests.
@@ -139,7 +136,7 @@ class TestData(unittest.TestCase):
     def test_children(self):
         # Data with no id should fail.
         data = Data(id=None, resolwe=MagicMock())
-        with six.assertRaisesRegex(self, ValueError, 'Instance must be saved *'):
+        with self.assertRaisesRegex(ValueError, 'Instance must be saved *'):
             data.children  # pylint: disable=pointless-statement
 
         # Core functionality should be checked with e2e tests.
@@ -171,7 +168,7 @@ class TestData(unittest.TestCase):
         ]
 
         file_list = data.files()
-        six.assertCountEqual(self, file_list, [
+        self.assertCountEqual(file_list, [
             'element.gz',
             'archive.gz',
             'file.fastq.gz',
@@ -189,11 +186,11 @@ class TestData(unittest.TestCase):
         data.process_output_schema = [
             {'name': 'list', 'label': 'List', 'type': 'list:basic:file:'},
         ]
-        with six.assertRaisesRegex(self, KeyError, "does not contain 'file' key."):
+        with self.assertRaisesRegex(KeyError, "does not contain 'file' key."):
             data.files()
 
         data = Data(resolwe=MagicMock(), id=None)
-        with six.assertRaisesRegex(self, ValueError, "must be saved before"):
+        with self.assertRaisesRegex(ValueError, "must be saved before"):
             data.files()
 
     @patch('resdk.resources.data.requests')
@@ -212,7 +209,7 @@ class TestData(unittest.TestCase):
     @patch('resdk.resources.data.Data', spec=True)
     def test_download_fail(self, data_mock):
         message = "Only one of file_name or field_name may be given."
-        with six.assertRaisesRegex(self, ValueError, message):
+        with self.assertRaisesRegex(ValueError, message):
             Data.download(data_mock, file_name="a", field_name="b")
 
     @patch('resdk.resources.data.Data', spec=True)

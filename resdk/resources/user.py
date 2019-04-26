@@ -1,8 +1,4 @@
 """Process resource."""
-from __future__ import absolute_import, division, print_function, unicode_literals
-
-import six
-
 from .base import BaseResource
 from .utils import get_user_id
 
@@ -59,7 +55,7 @@ class User(BaseResource):
         # user's username
         self.username = None
 
-        super(User, self).__init__(resolwe, **model_data)
+        super().__init__(resolwe, **model_data)
 
     def get_name(self):
         """Return user's name."""
@@ -70,15 +66,13 @@ class User(BaseResource):
 
     def __repr__(self):
         """Format resource name."""
-        rep = "{} <id: {}, name: '{}', username: '{}', email: '{}'>".format(
+        return "{} <id: {}, name: '{}', username: '{}', email: '{}'>".format(
             self.__class__.__name__,
             self.id,
             self.get_name(),
             self.username,
             self.email,
         )
-
-        return rep if six.PY3 else rep.encode("utf-8")
 
 
 class Group(BaseResource):
@@ -107,13 +101,13 @@ class Group(BaseResource):
         #: group's name
         self.name = None
 
-        super(Group, self).__init__(resolwe, **model_data)
+        super().__init__(resolwe, **model_data)
 
     def update(self):
         """Clear cache and update resource fields from the server."""
         self._users = None
 
-        super(Group, self).update()
+        super().update()
 
     @property
     def users(self):

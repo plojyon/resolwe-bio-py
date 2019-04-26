@@ -1,9 +1,5 @@
 """Relation resource."""
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 import logging
-
-import six
 
 from resdk.exceptions import ValidationError
 
@@ -54,7 +50,7 @@ class Relation(BaseResolweResource):
         #: unit (where applicable, e.g. for serieses)
         self.unit = None
 
-        super(Relation, self).__init__(resolwe, **model_data)
+        super().__init__(resolwe, **model_data)
 
     @property
     def samples(self):
@@ -91,7 +87,7 @@ class Relation(BaseResolweResource):
         self._samples = None
         self._hydrated_collection = None
 
-        super(Relation, self).update()
+        super().update()
 
     def add_sample(self, sample, label=None, position=None):
         """Add ``sample`` object to relation."""
@@ -117,7 +113,7 @@ class Relation(BaseResolweResource):
             # `save` fails in an ugly way if collection is not set
             raise ValidationError('`collection` attribute is required.')
 
-        super(Relation, self).save()
+        super().save()
 
     def __repr__(self):
         """Format relation name."""
@@ -136,12 +132,10 @@ class Relation(BaseResolweResource):
             else:
                 sample_info.append(name)
 
-        rep = "{} id: {}, type: '{}', category: '{}', samples: {{{}}}".format(
+        return "{} id: {}, type: '{}', category: '{}', samples: {{{}}}".format(
             self.__class__.__name__,
             self.id,
             self.type,
             self.category,
             ', '.join(sample_info),
         )
-
-        return rep.encode('utf-8') if six.PY2 else rep
