@@ -57,7 +57,7 @@ setuptools.setup(
             'pydocstyle>=1.0.0',
             'pylint~=1.8.0',
             'pytest-cov',
-            'readme_renderer',
+            'twine',
         ],
     },
     entry_points={

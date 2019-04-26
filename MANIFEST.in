@@ -6,5 +6,6 @@ recursive-include docs *.py *.rst
 recursive-include docs/images *.jpg *.png
 # include tests and files needed by tests
 include .pylintrc tox.ini
+include pyproject.toml
 recursive-include resdk/tests *.py
 recursive-include resdk/tests/files *
