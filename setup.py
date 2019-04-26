@@ -19,7 +19,7 @@ with open(os.path.join(base_dir, 'resdk', '__about__.py')) as fh:
 
 setuptools.setup(
     name=about['__title__'],
-    version=about['__version__'],
+    use_scm_version=True,
     description=about['__summary__'],
     long_description=long_description,
     long_description_content_type='text/x-rst',
@@ -57,6 +57,7 @@ setuptools.setup(
             'pydocstyle~=3.0.0',
             'pylint~=2.3.1',
             'pytest-cov',
+            'setuptools_scm',
             'twine',
         ],
     },

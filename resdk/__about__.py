@@ -1,4 +1,5 @@
 """Central place for package metadata."""
+from pkg_resources import DistributionNotFound, get_distribution
 
 # NOTE: We use __title__ instead of simply __name__ since the latter would
 #       interfere with a global variable __name__ denoting object's name.
@@ -6,9 +7,11 @@ __title__ = 'resdk'
 __summary__ = 'Resolwe SDK for Python'
 __url__ = 'https://github.com/genialis/resolwe-bio-py'
 
-# Semantic versioning is used. For more information see:
-# https://packaging.python.org/en/latest/distributing/#semantic-versioning-preferred
-__version__ = '9.1.0a1'
+try:
+    __version__ = get_distribution(__title__).version
+except DistributionNotFound:
+    # Package is not (yet) installed.
+    pass
 
 __author__ = 'Genialis, Inc.'
 __email__ = 'dev-team@genialis.com'
