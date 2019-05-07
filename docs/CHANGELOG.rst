@@ -5,9 +5,25 @@ Change Log
 All notable changes to this project are documented in this file.
 
 
-==========
-Unreleased
-==========
+===================
+10.0.0 - 2019-05-08
+===================
+
+Changed
+-------
+* **BACKWARD INCOMPATIBLE:** Remove support for Python 2
+* Remove tests for old Python3 versions: Python 3.4 and 3.5
+* Filtering is now updated with latest changes in Resolwe. A lot of
+  inconsistencies are fixed and error messages should be more clear now.
+
+Added
+-----
+* Add ``delete_content`` parameter to ``Collection.delete()`` and
+  ``Sample.delete()`` methods. This not only deletes given
+  Samples / Collections but also contained Data / Samples.
+* Add support for Python 3.7
+* In addition to data and sample statistics ``Resolwe.data_usage`` method
+  now also reports collection statistics.
 
 
 ==================
