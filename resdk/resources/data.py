@@ -215,7 +215,11 @@ class Data(BaseResolweResource):
         if self.id is None:
             raise ValueError('Instance must be saved before accessing `parents` attribute.')
         if self._parents is None:
-            self._parents = self.resolwe.data.filter(children=self.id)
+            ids = [item['id'] for item in self.resolwe.api.data(self.id).parents.get(fields='id')]
+            if not ids:
+                return
+            # Resolwe querry must be returned:
+            self._parents = self.resolwe.data.filter(id__in=ids)
 
         return self._parents
 
@@ -225,7 +229,11 @@ class Data(BaseResolweResource):
         if self.id is None:
             raise ValueError('Instance must be saved before accessing `children` attribute.')
         if self._children is None:
-            self._children = self.resolwe.data.filter(parents=self.id)
+            ids = [item['id'] for item in self.resolwe.api.data(self.id).children.get(fields='id')]
+            if not ids:
+                return
+            # Resolwe querry must be returned:
+            self._children = self.resolwe.data.filter(id__in=ids)
 
         return self._children
 

@@ -9,6 +9,10 @@ All notable changes to this project are documented in this file.
 Unreleased
 ==========
 
+Changed
+-------
+* Sync ``Data.parents`` and ``Data.children`` with backend changes
+
 
 ===================
 10.0.0 - 2019-05-08
