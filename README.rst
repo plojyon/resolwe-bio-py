@@ -57,7 +57,7 @@ Install from PyPI::
 If you use macOS, be aware that the version of `Python shipped with the
 system doesn't support TLSv1.2`_, which is required for connecting to
 any ``genialis.com`` server (and probably others). To solve the issue,
-install the latest version of Python 2.7 or Python 3 `via official
+install the latest version of Python 3.6+ `via official
 installer from Python.org`_ or `with Homebrew`_.
 
 .. _`Python shipped with the system doesn't support TLSv1.2`:

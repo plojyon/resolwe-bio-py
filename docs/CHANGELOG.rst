@@ -16,6 +16,7 @@ Changed
 Fix
 ---
 * Replace obsolete workflow in tutorial with a newer one
+* Remove Python 2 references from docs
 
 
 ===================

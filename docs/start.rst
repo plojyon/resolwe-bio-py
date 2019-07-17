@@ -26,7 +26,7 @@ computer. Run this command in the terminal (CMD on Windows)::
    If you use macOS, be aware that the version of `Python shipped with the
    system doesn't support TLSv1.2`_, which is required for connecting to
    any Genialis platform (and probably others). To solve the issue,
-   install the latest version of Python 2.7 or Python 3 `via the official
+   install the latest version of Python 3.6+ `via the official
    installer from Python.org`_ or `with Homebrew`_.
 
 .. _`Python shipped with the system doesn't support TLSv1.2`:
