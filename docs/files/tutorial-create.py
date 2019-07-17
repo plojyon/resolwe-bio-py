@@ -88,18 +88,13 @@ alignment.output
 
 # Run a workflow
 workflow = res.run(
-    slug='workflow-bbduk-star-featurecounts-single',
+    slug='workflow-bbduk-star-htseq',
     input={
-        'preprocessing': {
-            'reads': reads
-        },
-        'alignment': {
-            'genome': res.data.get('resdk-example-genome-index')
-        },
-        'quantification': {
-            'annotation': res.data.get('resdk-example-annotation')
-        },
-    },
+        'reads': reads,
+        'star_index': res.data.get('resdk-example-genome-index'),
+        'annotation': res.data.get('resdk-example-annotation'),
+        'stranded': 'reverse',
+    }
 )
 
 # See steps (=ID's) of data produced by this workflow

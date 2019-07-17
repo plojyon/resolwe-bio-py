@@ -188,10 +188,10 @@ sequence is so commonly used that one wants to simplify it's execution. This
 can be done by using so called "workflow". Workflows are special processes that
 run a stack of processes. On the outside, they look exactly the same as a
 normal process and have a process slug, inputs, outputs... For example, we
-can run workflow "BBDuk - STAR - featureCounts" on our reads:
+can run workflow "BBDuk - STAR - HTSeq-count" on our reads:
 
 .. literalinclude:: files/tutorial-create.py
-   :lines: 89-106
+   :lines: 89-101
 
 Solving problems
 ================
@@ -204,4 +204,4 @@ exceedingly useful for debugging. Also, you can inspect the info, warning and
 error logs.
 
 .. literalinclude:: files/tutorial-create.py
-   :lines: 108-121
+   :lines: 103-116

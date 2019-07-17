@@ -158,7 +158,7 @@ class TestStart(BaseResdkDocsFunctionalTest):
             'start.py',
             replace_lines=[
                 (4, "res = resdk.Resolwe(url='{}')\n".format(URL)),
-                (5, "res.login('{}', '{}')\n".format(USER_PASSWORD, USER_PASSWORD)),
+                (5, "res.login('{}', '{}')\n".format(USER_USERNAME, USER_PASSWORD)),
             ],
         )
 
@@ -177,7 +177,7 @@ class TestTutorialGet(BaseResdkDocsFunctionalTest):
             'tutorial-get.py',
             replace_lines=[
                 (4, "res = resdk.Resolwe(url='{}')\n".format(URL)),
-                (5, "res.login('{}', '{}')\n".format(USER_PASSWORD, USER_PASSWORD)),
+                (5, "res.login('{}', '{}')\n".format(USER_USERNAME, USER_PASSWORD)),
             ],
         )
 
@@ -195,7 +195,7 @@ class TestTutorialCreate(BaseResdkDocsFunctionalTest):
         # Set permissions for running processes:
         self.allow_run_process(self.res, 'upload-fastq-single')
         self.allow_run_process(self.res, 'alignment-hisat2')
-        self.allow_run_process(self.res, 'workflow-bbduk-star-featurecounts-single')
+        self.allow_run_process(self.res, 'workflow-bbduk-star-htseq')
         # Set permissions for using descriptor_schemas:
         self.allow_use_descriptor_schema(self.res, 'reads')
         self.allow_use_descriptor_schema(self.res, 'sample')
@@ -207,16 +207,16 @@ class TestTutorialCreate(BaseResdkDocsFunctionalTest):
             'tutorial-create.py',
             replace_lines=[
                 (3, "res = resdk.Resolwe(url='{}')\n".format(URL)),
-                (4, "res.login('{}', '{}')\n".format(USER_PASSWORD, USER_PASSWORD)),
+                (4, "res.login('{}', '{}')\n".format(USER_USERNAME, USER_PASSWORD)),
                 (18, "        'src': '{}'\n".format(
                     os.path.join(TEST_FILES_DIR, 'reads.fastq.gz'))),
 
-                # Dat object is not finished, so something like this
-                # (111, "foo = res.data.get('{}').stdout()\n".format(self.reads_slug)),
+                # Data object is not finished, so something like this
+                # (106, "foo = res.data.get('{}').stdout()\n".format(self.reads_slug)),
                 # is replaced with an empty line. There is now way to perform
                 # download if data objects are still processing and/or have not
                 # produced any stdout.txt. So just write an empty line:
-                (111, "\n"),
+                (106, "\n"),
             ],
         )
 

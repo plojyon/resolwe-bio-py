@@ -13,6 +13,10 @@ Changed
 -------
 * Sync ``Data.parents`` and ``Data.children`` with backend changes
 
+Fix
+---
+* Replace obsolete workflow in tutorial with a newer one
+
 
 ===================
 10.0.0 - 2019-05-08
