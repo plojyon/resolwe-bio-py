@@ -71,15 +71,12 @@ throttle(["resolwe_bio_py"]) {
                     def change_author = env.CHANGE_AUTHOR
                     def trusted_authors = [
                         "dblenkus",
-                        "kostko",
-                        "JenkoB",
                         "jkokosar",
                         "JureZmrzlikar",
                         "mstajdohar",
-                        "tjanez",
                         "jvrakor",
                         "mzganec",
-                        "tristanbrown"
+                        "acopar",
                     ]
                     if (change_author != null && ! trusted_authors.contains(change_author)) {
                         // NOTE: The change_author variable equals null if a branch from the main
