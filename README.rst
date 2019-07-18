@@ -8,8 +8,8 @@ Resolwe SDK for Python
     :target: https://travis-ci.org/genialis/resolwe-bio-py
     :alt: Build Status
 
-.. |build-e2e| image:: https://ci.genialis.com/buildStatus/icon?job=genialis-github/resolwe-bio-py/master
-    :target: https://ci.genialis.com/job/genialis-github/job/resolwe-bio-py/job/master/
+.. |build-e2e| image:: https://public.ci.genialis.io/buildStatus/icon/resolwe-bio-py/master
+    :target: https://ci.genialis.io/blue/organizations/jenkins/resolwe-bio-py/activity
     :alt: Build (End-to-End) Status
 
 .. |coverage| image:: https://img.shields.io/codecov/c/github/genialis/resolwe-bio-py/master.svg
