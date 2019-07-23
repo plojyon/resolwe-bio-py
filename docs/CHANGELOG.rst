@@ -13,6 +13,17 @@ Changed
 -------
 * **BACKWARD INCOMPATIBLE:** Remove scripts folder. This removes
   ``resolwe-upload-reads`` command line utility.
+* **BACKWARD INCOMPATIBLE:** Remove analysis folder. This removes many
+  methods that could be run on multiple resources::
+
+    - ``bamsplit``, ``macs``, ``rose2``
+    - ``cuffdiff``
+    - ``cuffquant``, ``cuffnorm``
+    - ``bamplot``, ``bamliquidator``
+    - ``prepare_geo``, ``prepare_geo_chipseq``, ``prepare_geo_rnaseq``
+
+  These methods are not needed anymore as most of the functionality that
+  they provide can be handled by relations in UI.
 
 
 ===================
