@@ -61,11 +61,6 @@ setuptools.setup(
             'twine',
         ],
     },
-    entry_points={
-        'console_scripts': [
-            'resolwe-upload-reads = resdk.scripts:upload_reads',
-        ],
-    },
     test_suite='resdk.tests.unit',
     classifiers=[
         'Development Status :: 5 - Production/Stable',

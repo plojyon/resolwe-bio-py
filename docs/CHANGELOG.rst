@@ -5,6 +5,16 @@ Change Log
 All notable changes to this project are documented in this file.
 
 
+==========
+Unreleased
+==========
+
+Changed
+-------
+* **BACKWARD INCOMPATIBLE:** Remove scripts folder. This removes
+  ``resolwe-upload-reads`` command line utility.
+
+
 ===================
 10.1.0 - 2019-07-18
 ===================
