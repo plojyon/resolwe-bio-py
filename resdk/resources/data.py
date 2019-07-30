@@ -307,3 +307,12 @@ class Data(BaseResolweResource):
                 output += chunk
 
         return output.decode("utf-8")
+
+    @assert_object_exists
+    def duplicate(self):
+        """Duplicate (make copy of) ``data`` object.
+
+        :return: Duplicated data object
+        """
+        duplicated = self.api().duplicate.post({'ids': [self.id]})
+        return self.__class__(resolwe=self.resolwe, **duplicated[0])

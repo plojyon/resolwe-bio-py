@@ -225,3 +225,18 @@ class Sample(SampleUtilsMixin, BaseCollection):
             self._is_background = len(background_relations) > 0  # pylint: disable=len-as-condition
 
         return self._is_background
+
+    @assert_object_exists
+    def duplicate(self, inherit_collection=False):
+        """Duplicate (make copy of) ``sample`` object.
+
+        :param inherit_collection: If ``True`` then duplicated samples
+            (and their data) will be added to collection of the original
+            sample.
+        :return: Duplicated sample
+        """
+        duplicated = self.api().duplicate.post({
+            'ids': [self.id],
+            'inherit_collection': inherit_collection
+        })
+        return self.__class__(resolwe=self.resolwe, **duplicated[0])

@@ -185,3 +185,12 @@ class Collection(CollectionRelationsMixin, BaseCollection):
             self._relations = self.resolwe.relation.filter(collection=self.id)
 
         return self._relations
+
+    @assert_object_exists
+    def duplicate(self):
+        """Duplicate (make copy of) ``collection`` object.
+
+        :return: Duplicated collection
+        """
+        duplicated = self.api().duplicate.post({'ids': [self.id]})
+        return self.__class__(resolwe=self.resolwe, **duplicated[0])

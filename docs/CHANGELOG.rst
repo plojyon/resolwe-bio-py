@@ -5,6 +5,15 @@ Change Log
 All notable changes to this project are documented in this file.
 
 
+==========
+Unreleased
+==========
+
+Added
+-----
+- Add duplicate method to collection, sample and data resources
+
+
 ===================
 11.0.1 - 2019-08-19
 ===================
