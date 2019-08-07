@@ -10,9 +10,9 @@ from mock import MagicMock, call, patch
 
 from resdk.resources import Collection, Data, Process, Relation, Sample
 from resdk.resources.utils import (
-    _print_input_line, fill_spaces, find_field, flatten_field, get_collection_id, get_data_id,
-    get_process_id, get_relation_id, get_resolwe, get_resource_collection, get_sample_id,
-    get_samples, iterate_fields, iterate_schema, parse_resolwe_datetime,
+    _print_input_line, fill_spaces, flatten_field, get_collection_id, get_data_id,
+    get_process_id, get_relation_id, get_sample_id,
+    iterate_fields, iterate_schema, parse_resolwe_datetime,
 )
 
 PROCESS_OUTPUT_SCHEMA = [
@@ -98,13 +98,6 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(OUTPUT['bases'], "76")
         # Fix the OUTPUT to previous state:
         OUTPUT['bases'] = "75"
-
-    def test_find_field(self):
-        result = find_field(PROCESS_OUTPUT_SCHEMA, 'fastq')
-
-        expected = {'type': 'basic:file:', 'name': 'fastq', 'label': 'Reads file'}
-
-        self.assertEqual(result, expected)
 
     def test_iterate_schema(self):
         result1 = list(iterate_schema(OUTPUT, PROCESS_OUTPUT_SCHEMA, 'my_path'))
@@ -232,86 +225,6 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(get_relation_id(relation), 1)
 
         self.assertEqual(get_relation_id(2), 2)
-
-    def test_get_samples(self):
-        collection = Collection(id=1, resolwe=MagicMock())
-        collection._samples = ['sample_1', 'sample_2']
-        self.assertEqual(get_samples(collection), ['sample_1', 'sample_2'])
-
-        collection_1 = Collection(id=1, resolwe=MagicMock())
-        collection_1._samples = ['sample_1']
-        collection_2 = Collection(id=2, resolwe=MagicMock())
-        collection_2._samples = ['sample_2']
-        self.assertEqual(get_samples([collection_1, collection_2]), ['sample_1', 'sample_2'])
-
-        data = Data(id=1, resolwe=MagicMock())
-        data.api(data.id).get = MagicMock(return_value={'entities': [7]})
-        data.resolwe.sample.get = MagicMock(return_value='sample_1')
-        self.assertEqual(get_samples(data), ['sample_1'])
-
-        data1 = Data(id=1, resolwe=MagicMock())
-        data1.api(data.id).get = MagicMock(return_value={'entities': [7]})
-        data1.resolwe.sample.get = MagicMock(return_value='sample1')
-
-        data2 = Data(id=2, resolwe=MagicMock())
-        data2.api(data.id).get = MagicMock(return_value={'entities': [8]})
-        data2.resolwe.sample.get = MagicMock(return_value='sample2')
-        self.assertEqual(get_samples([data1, data2]), ['sample1', 'sample2'])
-
-        data = Data(id=1, resolwe=MagicMock(**{'sample.get.return_value': None}))
-        data._sample = None
-        with self.assertRaises(TypeError):
-            get_samples(data)
-
-        sample = Sample(id=1, resolwe=MagicMock())
-        self.assertEqual(get_samples(sample), [sample])
-
-        sample_1 = Sample(id=1, resolwe=MagicMock())
-        sample_2 = Sample(id=3, resolwe=MagicMock())
-        self.assertEqual(get_samples([sample_1, sample_2]), [sample_1, sample_2])
-
-    def test_get_resource_collection(self):
-        collection = Collection(id=1, resolwe=MagicMock())
-        collection.id = 1  # this is overriden when initialized
-        self.assertEqual(get_resource_collection(collection), 1)
-
-        relation = Relation(id=1, resolwe=MagicMock())
-        relation._hydrated_collection = Collection(id=2, resolwe=MagicMock())
-        relation._hydrated_collection.id = 2  # this is overriden when initialized
-        self.assertEqual(get_resource_collection(relation), 2)
-
-        data = Data(id=1, resolwe=MagicMock())
-        data._collections = [Collection(id=3, resolwe=MagicMock())]
-        data._collections[0].id = 3  # this is overriden when initialized
-        self.assertEqual(get_resource_collection(data), 3)
-
-        sample = Sample(id=1, resolwe=MagicMock())
-        sample._collections = [Collection(id=4, resolwe=MagicMock())]
-        sample._collections[0].id = 4  # this is overriden when initialized
-        self.assertEqual(get_resource_collection(sample), 4)
-
-        sample = Sample(id=1, resolwe=MagicMock())
-        sample._collections = [
-            Collection(id=5, resolwe=MagicMock()),
-            Collection(id=6, resolwe=MagicMock())
-        ]
-        sample._collections[0].id = 5  # this is overriden when initialized
-        sample._collections[1].id = 6  # this is overriden when initialized
-        self.assertEqual(get_resource_collection(sample), None)
-        with self.assertRaises(LookupError):
-            get_resource_collection(sample, fail_silently=False)
-
-    def test_get_resolwe(self):
-        # same resolwe object
-        resolwe_mock = MagicMock()
-        relation = Relation(id=1, resolwe=resolwe_mock)
-        sample = Sample(id=1, resolwe=resolwe_mock)
-        self.assertEqual(get_resolwe(relation, sample), resolwe_mock)
-
-        relation = Relation(id=1, resolwe=MagicMock())
-        sample = Sample(id=1, resolwe=MagicMock())
-        with self.assertRaises(TypeError):
-            get_resolwe(relation, sample)
 
     @patch('resdk.resources.utils.tzlocal')
     def test_parse_resolwe_datetime(self, tzlocal_mock):

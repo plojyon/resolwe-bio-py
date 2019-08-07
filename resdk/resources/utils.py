@@ -25,20 +25,6 @@ def iterate_fields(fields, schema):
             yield (schema_dict[field_id], fields)
 
 
-def find_field(schema, field_name):
-    """Find field in schema by field name.
-
-    :param schema: Schema instance (e.g. input_schema)
-    :type schema: dict
-    :param field_name: Field name
-    :type field_name: string
-
-    """
-    for field in schema:
-        if field['name'] == field_name:
-            return field
-
-
 def iterate_schema(fields, schema, path=None):
     """Recursively iterate over all schema sub-fields.
 
@@ -190,82 +176,6 @@ def is_user(user):
 def is_group(group):
     """Return ``True`` if passed object is Group and ``False`` otherwise."""
     return type(group).__name__ == 'Group'
-
-
-def get_samples(resource):
-    """Get the list of samples from given resources.
-
-    Get the list of samples with:
-
-        * use recursion if given resource is a list
-        * return the resource if it is already the sample
-        * call ResolweQuery object named `samples` (if exists) and return
-          the result
-
-    """
-    error_msg = ("Resource should be sample, have `samples` query, be list of multiple "
-                 "resources or be data object with not empty `sample` property.")
-    if isinstance(resource, list):
-        samples = []
-        for res in resource:
-            samples.extend(get_samples(res))
-        return samples
-
-    elif is_data(resource):
-        if not resource.sample:
-            raise TypeError(error_msg)
-
-        return [resource.sample]
-
-    elif is_sample(resource):
-        return [resource]
-
-    elif hasattr(resource, 'samples'):
-        return resource.samples
-
-    else:
-        raise TypeError(error_msg)
-
-
-def get_resource_collection(resource, fail_silently=True):
-    """Get id of the collection to which resource belongs.
-
-    If resource does not belong to any collection or collection cannot
-    be determined uniquely, ``None`` is returned of ``LookupError`` is
-    raised (if ``fail_silently`` is set to ``True``).
-    """
-    if is_collection(resource):
-        return resource.id
-
-    elif hasattr(resource, 'collection'):
-        return resource.collection.id
-
-    elif hasattr(resource, 'collections'):
-        collections = resource.collections
-        if len(collections) == 1:
-            return collections[0].id
-
-    if isinstance(resource, list):
-        collections_ids = [get_resource_collection(item) for item in resource]
-        if len(set(collections_ids)) == 1:
-            return collections_ids[0]
-
-    if fail_silently:
-        return None
-
-    raise LookupError('Collection id cannot be determined uniquely.')
-
-
-def get_resolwe(*resources):
-    """Return resolwe object used in given resources.
-
-    Raise an error if there is more than one.
-    """
-    resolwes = {res_obj.resolwe for res_obj in resources}
-    if len(resolwes) != 1:
-        raise TypeError('All input objects must be from the same `Resolwe` connection.')
-
-    return list(resolwes)[0]
 
 
 def parse_resolwe_datetime(dtime):

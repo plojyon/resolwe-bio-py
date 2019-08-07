@@ -24,6 +24,9 @@ Changed
 
   These methods are not needed anymore as most of the functionality that
   they provide can be handled by relations in UI.
+* **BACKWARD INCOMPATIBLE:** The following utilty functions were removed as
+  they were not used anymore: ``find_field``, ``get_samples``,
+  ``get_resource_collection`` and ``get_resolwe``
 
 
 ===================
