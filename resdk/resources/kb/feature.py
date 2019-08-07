@@ -9,12 +9,9 @@ class Feature(BaseResource):
     query_endpoint = 'kb.feature.search'
     query_method = 'POST'
 
-    WRITABLE_FIELDS = BaseResource.WRITABLE_FIELDS + (
-        'aliases', 'description', 'feature_id', 'full_name', 'name', 'species', 'source',
+    READ_ONLY_FIELDS = BaseResource.READ_ONLY_FIELDS + (
+        'aliases', 'description', 'feature_id', 'full_name', 'name', 'source', 'species',
         'sub_type', 'type',
-    )
-    UPDATE_PROTECTED_FIELDS = BaseResource.WRITABLE_FIELDS + (
-        'feature_id', 'source',
     )
 
     def __init__(self, resolwe, **model_data):
@@ -33,10 +30,10 @@ class Feature(BaseResource):
         self.source = None
         #: Species
         self.species = None
-        #: Feature type (gene, transcript, exon, ...)
-        self.type = None
         #: Feature subtype (tRNA, protein coding, rRNA, ...)
         self.sub_type = None
+        #: Feature type (gene, transcript, exon, ...)
+        self.type = None
 
         super().__init__(resolwe, **model_data)
 

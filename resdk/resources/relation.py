@@ -4,14 +4,12 @@ import logging
 from resdk.exceptions import ValidationError
 
 from .base import BaseResolweResource
-from .utils import get_collection_id, get_sample_id, is_collection
+from .collection import Collection
+from .utils import get_sample_id
 
 
 class Relation(BaseResolweResource):
     """Resolwe Relation resource.
-
-    One and only one of the identifiers (slug, id or model_data)
-    should be given.
 
     :param resolwe: Resolwe instance
     :type resolwe: Resolwe object
@@ -34,11 +32,9 @@ class Relation(BaseResolweResource):
         """Initialize attributes."""
         self.logger = logging.getLogger(__name__)
 
-        #: collection id in which relation is
+        #: Collection in which relation is
         self._collection = None
-        #: (lazy loaded) collection object in which relation is
-        self._hydrated_collection = None
-        #: (lazy loaded) list of samples in the relation
+        #: List of samples in the relation
         self._samples = None
 
         #: list of ``RelationPartition`` objects in the ``Relation``
@@ -71,21 +67,20 @@ class Relation(BaseResolweResource):
     @property
     def collection(self):
         """Return collection object to which relation belongs."""
-        if not self._hydrated_collection:
-            self._hydrated_collection = self.resolwe.collection.get(self._collection)
-        return self._hydrated_collection
+        if not self._collection:
+            self._collection = self.resolwe.collection.get(
+                self._original_values.get('colection', None)
+            )
+        return self._collection
 
     @collection.setter
-    def collection(self, collection):
+    def collection(self, payload):
         """Set collection to which relation belongs."""
-        self._collection = get_collection_id(collection)
-        # Save collection if already hydrated, othervise it will be rerived in getter
-        self._hydrated_collection = collection if is_collection(collection) else None
+        self._resource_setter(payload, Collection, '_collection')
 
     def update(self):
         """Clear cache and update resource fields from the server."""
         self._samples = None
-        self._hydrated_collection = None
 
         super().update()
 

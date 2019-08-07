@@ -304,21 +304,21 @@ class TestRun(unittest.TestCase):
         self.assertEqual(result, {'reads': [1]})
 
     @patch('resdk.resolwe.Resolwe', spec=True)
-    def test_dehydrate_collections(self, resolwe_mock):
-        resolwe_mock.configure_mock(
-            **{'_get_process.return_value': MagicMock(spec=Process, slug='some:prc:slug:'),
-               '_process_inputs.return_value': {}}
+    def test_dehydrate_collection(self, resolwe_mock):
+        resolwe_mock._get_process.return_value = Process(resolwe=MagicMock(), slug='process-slug')
+        resolwe_mock._process_inputs.return_value = {}
+        resolwe_mock.api = MagicMock(**{'data.post.return_value': {}})
+
+        Resolwe.run(
+            self=resolwe_mock,
+            slug='process-slug',
+            collection=Collection(id=1, resolwe=MagicMock()),
         )
-        resolwe_mock.collection = MagicMock()
-        resolwe_mock.api = MagicMock(**{'process.get.return_value': self.process_mock,
-                                        'data.post.return_value': {}})
-
-        collection = Collection(id=1, resolwe=MagicMock())
-        collection.id = 1  # this is overriden when initialized
-
-        Resolwe.run(resolwe_mock, collections=[collection])
-        resolwe_mock.api.data.post.assert_called_once_with(
-            {'process': 'some:prc:slug:', 'input': {}, 'collections': [1]})
+        resolwe_mock.api.data.post.assert_called_once_with({
+            'process': {'slug': 'process-slug'},
+            'input': {},
+            'collection': {'id': 1},
+        })
 
     @patch('resdk.resolwe.Data')
     @patch('resdk.resolwe.os')
@@ -333,7 +333,7 @@ class TestRun(unittest.TestCase):
                            data_name="some_name",
                            descriptor="descriptor",
                            descriptor_schema="descriptor_schema",
-                           collections=[1, 2, 3])
+                           collection=1)
         # Confirm that no files to upload in input:
         self.assertEqual(resolwe_mock._upload_file.call_count, 0)
         data_mock.assert_called_with(data='some_data', resolwe=resolwe_mock)

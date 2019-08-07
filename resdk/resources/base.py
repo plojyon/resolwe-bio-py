@@ -23,6 +23,8 @@ class BaseResource:
     query_endpoint = None
     query_method = 'GET'
     full_search_paramater = None
+    delete_warning_single = "Do you really want to delete {}?[yN]"
+    delete_warning_bulk = "Do you really want to delete {} objects?[yN]"
 
     READ_ONLY_FIELDS = (
         'id',
@@ -33,7 +35,7 @@ class BaseResource:
     ALL_PERMISSIONS = []  # override this in subclass
 
     def __init__(self, resolwe, **model_data):
-        """Verify that only a single attribute of slug, id or model_data given."""
+        """Initialize attributes."""
         self._original_values = {}
 
         self.api = operator.attrgetter(self.endpoint)(resolwe.api)
@@ -51,11 +53,7 @@ class BaseResource:
         return self.READ_ONLY_FIELDS + self.UPDATE_PROTECTED_FIELDS + self.WRITABLE_FIELDS
 
     def _update_fields(self, payload):
-        """Update fields of the local resource based on the server values.
-
-        :param dict payload: Resource field values
-
-        """
+        """Update fields of the local resource based on the server values."""
         self._original_values = copy.deepcopy(payload)
         for field_name in self.fields():
             setattr(self, field_name, payload.get(field_name, None))
@@ -72,20 +70,32 @@ class BaseResource:
         from .process import Process
 
         if isinstance(obj, DescriptorSchema) or isinstance(obj, Process):
-            return obj.slug
+            # Slug can only be given at create requests (id not present yet)
+            if not self.id:
+                return {'slug': obj.slug}
+
+            return {'id': obj.id}
         if isinstance(obj, BaseResource):
-            return obj.id
+            return {'id': obj.id}
         if isinstance(obj, list):
             return [self._dehydrate_resources(element) for element in obj]
         if isinstance(obj, dict):
             return {key: self._dehydrate_resources(value) for key, value in obj.items()}
+
         return obj
 
     def save(self):
         """Save resource to the server."""
         def field_changed(field_name):
             """Check if local field value is different from the server."""
-            return getattr(self, field_name) != self._original_values.get(field_name, None)
+            original_value = self._original_values.get(field_name, None)
+            current_value = getattr(self, field_name, None)
+
+            if isinstance(current_value, BaseResource) and original_value:
+                # TODO: Check that current and original are instances of the same resource class
+                return current_value.id != original_value.get('id', None)
+            else:
+                return current_value != original_value
 
         def assert_fields_unchanged(field_names):
             """Assert that fields in ``field_names`` were not changed."""
@@ -126,7 +136,7 @@ class BaseResource:
 
         """
         if force is not True:
-            user_input = input('Do you really want to delete {}?[yN] '.format(self))
+            user_input = input(self.delete_warning_single.format(self))
 
             if user_input.strip().lower() != 'y':
                 return
@@ -174,7 +184,7 @@ class BaseResolweResource(BaseResource):
     READ_ONLY_FIELDS = BaseResource.READ_ONLY_FIELDS + (
         'current_user_permissions', 'id', 'version',
     )
-    WRITABLE_FIELDS = (
+    WRITABLE_FIELDS = BaseResource.WRITABLE_FIELDS + (
         'name', 'slug',
     )
 
@@ -184,7 +194,6 @@ class BaseResolweResource(BaseResource):
 
         #: User object of the contributor (lazy loaded)
         self._contributor = None
-
         #: current user permissions
         self.current_user_permissions = None
         #: name of resource
@@ -198,7 +207,7 @@ class BaseResolweResource(BaseResource):
 
     @property
     def permissions(self):
-        """TODO."""
+        """Permissions."""
         if not self.id:
             raise ValueError('Instance must be saved before accessing `permissions` attribute.')
         if not self._permissions:
@@ -212,7 +221,7 @@ class BaseResolweResource(BaseResource):
 
     @property
     def contributor(self):
-        """Get contributor."""
+        """Contributor."""
         if self.id is None:
             raise ValueError('Instance must be saved before accessing `contributor` attribute.')
         if self._contributor is None:
@@ -239,14 +248,14 @@ class BaseResolweResource(BaseResource):
     def created(self):
         """Creation time."""
         if not self.id:
-            raise ValueError('Instance must be saved before acessing `created` attribute.')
+            raise ValueError('Instance must be saved before accessing `created` attribute.')
         return parse_resolwe_datetime(self._original_values['created'])
 
     @property
     def modified(self):
         """Modification time."""
         if not self.id:
-            raise ValueError('Instance must be saved before acessing `modified` attribute.')
+            raise ValueError('Instance must be saved before accessing `modified` attribute.')
         return parse_resolwe_datetime(self._original_values['modified'])
 
     def update(self):
@@ -260,3 +269,22 @@ class BaseResolweResource(BaseResource):
         return "{} <id: {}, slug: '{}', name: '{}'>".format(
             self.__class__.__name__, self.id, self.slug, self.name
         )
+
+    def _resource_setter(self, payload, resource, field):
+        """Set ``resource`` with ``payload`` on ``field``."""
+        if isinstance(payload, resource):
+            setattr(self, field, payload)
+        elif isinstance(payload, dict):
+            setattr(self, field, resource(resolwe=self.resolwe, **payload))
+        elif isinstance(payload, int):
+            # Create instance to get access to instance.api which is
+            # creeated at instance creation.
+            instance = resource(resolwe=self.resolwe, id=payload)
+            setattr(self, field, instance.api.get(id=payload))
+        elif isinstance(payload, str):
+            # Create instance to get access to instance.api which is
+            # creeated at instance creation.
+            instance = resource(resolwe=self.resolwe, slug=payload)
+            setattr(self, field, instance.api.get(slug=payload))
+        else:
+            setattr(self, field, payload)

@@ -229,7 +229,7 @@ class Resolwe:
         return inputs
 
     def run(self, slug=None, input={}, descriptor=None,  # pylint: disable=redefined-builtin
-            descriptor_schema=None, collections=[], data_name=''):
+            descriptor_schema=None, collection=None, data_name=''):
         """Run process and return the corresponding Data object.
 
         1. Upload files referenced in inputs
@@ -245,7 +245,7 @@ class Resolwe:
         :param dict input: Input values
         :param dict descriptor: Descriptor values
         :param str descriptor_schema: A valid descriptor schema slug
-        :param list collections: Id's of collections into which data object should be included
+        :param list collection: Collection into which data object should be included
         :param str data_name: Default name of data object
 
         :return: data object that was just created
@@ -255,28 +255,20 @@ class Resolwe:
             raise ValueError("Set both or neither descriptor and descriptor_schema.")
 
         process = self._get_process(slug)
-        inputs = self._process_inputs(input, process)
-
-        # Dehydrate `collections` list
-        dehydrated_collections = []
-        for collection in collections:
-            dehydrated_collections.append(get_collection_id(collection))
-        collections = dehydrated_collections
-
         data = {
-            'process': process.slug,
-            'input': inputs,
+            'process': {'slug': process.slug},
+            'input': self._process_inputs(input, process),
         }
-
-        if data_name:
-            data['name'] = data_name
 
         if descriptor and descriptor_schema:
             data['descriptor'] = descriptor
-            data['descriptor_schema'] = descriptor_schema
+            data['descriptor_schema'] = {'slug': descriptor_schema}
 
-        if collections:
-            data['collections'] = collections
+        if collection:
+            data['collection'] = {'id': get_collection_id(collection)}
+
+        if data_name:
+            data['name'] = data_name
 
         model_data = self.api.data.post(data)
         return Data(resolwe=self, **model_data)

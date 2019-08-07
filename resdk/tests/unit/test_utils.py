@@ -10,9 +10,8 @@ from mock import MagicMock, call, patch
 
 from resdk.resources import Collection, Data, Process, Relation, Sample
 from resdk.resources.utils import (
-    _print_input_line, fill_spaces, flatten_field, get_collection_id, get_data_id,
-    get_process_id, get_relation_id, get_sample_id,
-    iterate_fields, iterate_schema, parse_resolwe_datetime,
+    _print_input_line, fill_spaces, flatten_field, get_collection_id, get_data_id, get_process_id,
+    get_relation_id, get_sample_id, iterate_fields, iterate_schema, parse_resolwe_datetime,
 )
 
 PROCESS_OUTPUT_SCHEMA = [

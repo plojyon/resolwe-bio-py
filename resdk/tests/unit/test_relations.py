@@ -45,26 +45,8 @@ class TestRelation(unittest.TestCase):
 
         # get collection
         relation.resolwe.collection.get = MagicMock(return_value=collection)
-        relation._collection = 3
+        relation._collection = collection
         self.assertEqual(relation.collection, collection)
-
-        # test caching collection attribute
-        self.assertEqual(relation.collection, collection)
-        self.assertEqual(relation.resolwe.collection.get.call_count, 1)
-
-        # set collection
-        relation.collection = 2
-        self.assertEqual(relation._collection, 2)
-        self.assertEqual(relation._hydrated_collection, None)
-        relation.collection = collection
-        self.assertEqual(relation._collection, 3)
-        self.assertEqual(relation._hydrated_collection, collection)
-
-        # cache is cleared at update
-        relation._collection = 2
-        relation._hydrated_collection = collection
-        relation.update()
-        self.assertEqual(relation._hydrated_collection, None)
 
     def test_repr(self):
         relation = Relation(id=1, resolwe=MagicMock())

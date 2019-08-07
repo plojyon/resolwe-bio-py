@@ -13,14 +13,12 @@ import copy
 import logging
 import operator
 
-import resdk
-
 
 class ResolweQuery:
     """Query resource endpoints.
 
     A Resolwe instance (for example "res") has several endpoints:
-    res.data, res.collections, res.sample and res.process. Each
+    res.data, res.collection, res.sample and res.process. Each
     endpoint is an instance of the ResolweQuery class. ResolweQuery
     supports queries on corresponding objects, for example:
 
@@ -310,35 +308,21 @@ class ResolweQuery:
         new_query._add_filter(filters)  # pylint: disable=protected-access
         return new_query
 
-    def delete(self, force=False, delete_content=False):
+    def delete(self, force=False):
         """Delete objects in current query.
 
         :param bool force: Do not trigger confirmation prompt. WARNING: Be
             sure that you really know what you are doing as deleted objects
             are not recoverable.
-        :param bool delete_content: Also delete all the objects that the
-            current object contains.
 
         """
-        kwargs = {}
-        if delete_content:
-            if not issubclass(self.resource, resdk.resources.collection.BaseCollection):
-                raise TypeError("Parameter delete_content is only available for sample and "
-                                "collection endpoint.")
-            kwargs['delete_content'] = True
-            message = "Do you really want to delete {} objects(s) and all of their content?[yN]"
-        else:
-            message = 'Do you really want to delete {} object(s)?[yN] '
-
         if force is not True:
-            user_input = input(message.format(self.count()))
+            user_input = input(self.resource.delete_warning_bulk.format(self.count()))
             if user_input.strip().lower() != 'y':
                 return
 
-        kwargs['force'] = True
-        # TODO: Use bulk delete when supported on backend
         for obj in self:
-            obj.delete(**kwargs)
+            obj.delete(force=True)
 
         self.clear_cache()
 

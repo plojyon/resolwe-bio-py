@@ -1,7 +1,7 @@
 """Sample resource."""
 import logging
 
-from .collection import BaseCollection
+from .collection import BaseCollection, Collection
 
 
 class SampleUtilsMixin:
@@ -72,9 +72,6 @@ class SampleUtilsMixin:
 class Sample(SampleUtilsMixin, BaseCollection):
     """Resolwe Sample resource.
 
-    One and only one of the identifiers (slug, id or model_data)
-    should be given.
-
     :param resolwe: Resolwe instance
     :type resolwe: Resolwe object
     :param model_data: Resource model data
@@ -84,15 +81,15 @@ class Sample(SampleUtilsMixin, BaseCollection):
     endpoint = 'sample'
 
     WRITABLE_FIELDS = BaseCollection.WRITABLE_FIELDS + (
-        'descriptor_completed',
+        'descriptor_completed', 'collection',
     )
 
     def __init__(self, resolwe, **model_data):
         """Initialize attributes."""
         self.logger = logging.getLogger(__name__)
 
-        #: list of ``Collection``s that contain ``Sample`` (lazy loaded)
-        self._collections = None
+        #: ``Collection``s that contains the ``Sample`` (lazy loaded)
+        self._collection = None
         #: list of ``Relation`` objects in ``Collection`` (lazy loaded)
         self._relations = None
         #: background ``Sample`` of the current ``Sample``
@@ -106,7 +103,7 @@ class Sample(SampleUtilsMixin, BaseCollection):
 
     def update(self):
         """Clear cache and update resource fields from the server."""
-        self._collections = None
+        self._collection = None
         self._relations = None
         self._background = None
         self._is_background = None
@@ -115,7 +112,7 @@ class Sample(SampleUtilsMixin, BaseCollection):
 
     @property
     def data(self):
-        """Return list of data objects on collection."""
+        """Get data."""
         if self.id is None:
             raise ValueError('Instance must be saved before accessing `data` attribute.')
         if self._data is None:
@@ -124,19 +121,16 @@ class Sample(SampleUtilsMixin, BaseCollection):
         return self._data
 
     @property
-    def collections(self):
-        """Return list of collections to which sample belongs."""
+    def collection(self):
+        """Get collection."""
         if self.id is None:
-            raise ValueError('Instance must be saved before accessing `collections` attribute.')
+            raise ValueError('Instance must be saved before accessing `collection` attribute.')
+        return self._collection
 
-        if self._collections is None:
-            collection_ids = self._original_values.get('collections', [])
-            self._collections = self.resolwe.collection.filter(id__in=collection_ids)
-            if not collection_ids:
-                # Make querry empty.
-                self._collections._cache = []  # pylint: disable=protected-access
-
-        return self._collections
+    @collection.setter
+    def collection(self, payload):
+        """Set collection."""
+        self._resource_setter(payload, Collection, '_collection')
 
     @property
     def relations(self):
@@ -158,40 +152,25 @@ class Sample(SampleUtilsMixin, BaseCollection):
         self.api(self.id).patch({'descriptor_completed': True})
         self.logger.info('Marked Sample %s as annotated', self.id)
 
-    def get_background(self, fail_silently=False, **extra_filters):
-        """Get background sample of the current one."""
-        # XXX: This method is still needed as some samples may be
-        # backgrounds in multiple collections (collection can be given
-        # as extra_filters). When sample will be restricted to only be
-        # in one collection, the logic from this function can be placed
-        # in background property and collection query parameter removed.
-        self.logger.warning('This method is deprecated and will be removed when restriction is '
-                            'made that sample can only belong to single collection.')
-
-        background_relation = list(self.resolwe.relation.filter(
-            type='background',
-            entity=self.id,
-            label='case',
-            **extra_filters
-        ))
-
-        if len(background_relation) != 1:
-            if len(background_relation) > 1 and not fail_silently:
-                raise LookupError("Multiple backgrounds defined for sample '{}'".format(self.name))
-            elif not background_relation and not fail_silently:
-                raise LookupError("No background is defined for sample '{}'".format(self.name))
-            else:
-                return
-
-        for partition in background_relation[0].partitions:
-            if partition['label'] == 'background' and partition['entity'] != self.id:
-                return self.resolwe.sample.get(id=partition['entity'])
-
     @property
     def background(self):
         """Get background sample of the current one."""
         if self._background is None:
-            self._background = self.get_background(fail_silently=True)
+            background_relation = list(self.resolwe.relation.filter(
+                type='background',
+                entity=self.id,
+                label='case',
+            ))
+
+            if len(background_relation) > 1:
+                raise LookupError("Multiple backgrounds defined for sample '{}'".format(self.name))
+            elif not background_relation:
+                raise LookupError("No background is defined for sample '{}'".format(self.name))
+
+            for partition in background_relation[0].partitions:
+                if partition['label'] == 'background' and partition['entity'] != self.id:
+                    self._background = self.resolwe.sample.get(id=partition['entity'])
+
             if self._background is None:
                 # Cache the result = no background is found.
                 self._background = False
@@ -208,7 +187,7 @@ class Sample(SampleUtilsMixin, BaseCollection):
             Relation is specified by collection, type-background'entity and label.
             """
             relation = list(self.resolwe.relation.filter(
-                collection=collection.id,
+                collection=collection.id,  # pylint: disable=no-member
                 type='background',
                 entity=entity.id,
                 label=label,
@@ -233,12 +212,9 @@ class Sample(SampleUtilsMixin, BaseCollection):
         # Relations are always defined on collections: it is necessary
         # to check that both, background and case are defined in only
         # one common collection. Actions are done on this collection.
-        common_ids = {col.id for col in self.collections} & {col.id for col in bground.collections}
-        if not common_ids:
+        if self.collection.id != bground.collection.id:  # pylint: disable=no-member
             raise ValueError('Background and case sample are not in the same collection.')
-        elif len(common_ids) > 1:
-            raise ValueError('Background and case sample are in multiple common collections.')
-        collection = self.resolwe.collection.get(list(common_ids)[0])
+        collection = self.collection
 
         # One cannot simply assign a background to sample but needs to
         # account also for already existing background relations they
@@ -264,7 +240,9 @@ class Sample(SampleUtilsMixin, BaseCollection):
         if self_cases == bground_cases == 0:
             # Neither case nor background is in background relation.
             # Make a new background relation.
+            # pylint: disable=no-member
             collection.create_background_relation('Background', bground, [self])
+            # pylint: enable=no-member
         elif self_cases == 0 and bground_cases > 0:
             # Sample is not part of any existing background relation,
             # but background sample is. In this cae, just add sample to

@@ -6,99 +6,40 @@ import unittest
 
 from mock import MagicMock, patch
 
-from resdk.resources.collection import Collection
 from resdk.resources.data import Data
 from resdk.resources.descriptor import DescriptorSchema
-from resdk.resources.sample import Sample
+from resdk.resources.process import Process
 
 
 class TestData(unittest.TestCase):
 
-    def test_no_sample(self):
-        data = Data(id=1, resolwe=MagicMock())
-
-        # Data object does not belong to any sample:
-        data.api(data.id).get = MagicMock(return_value={'entities': []})
-        self.assertEqual(data.sample, None)
-
     def test_sample(self):
-        data = Data(id=1, resolwe=MagicMock())
+        data = Data(resolwe=MagicMock(), id=1)
+        data._original_values = {'entity': {'id': 5, 'name': 'XYZ'}}
 
-        data.api(data.id).get = MagicMock(return_value={'entities': [5]})
-        data.resolwe.sample.get = MagicMock(
-            return_value=Sample(data.resolwe, **{'id': 5, 'name': 'XYZ'}))
         self.assertEqual(data.sample.id, 5)
         self.assertEqual(data.sample.name, 'XYZ')
-        # test caching
-        self.assertEqual(data.sample.id, 5)
-        self.assertEqual(data.resolwe.sample.get.call_count, 1)
 
-        # cache is cleared at update
-        data.update()
-        self.assertEqual(data._sample, None)
-
-        # raising error if data object is not saved
-        data.id = None
-        with self.assertRaises(ValueError):
-            _ = data.sample
-
-    def test_collections(self):
-        data = Data(id=1, resolwe=MagicMock())
+    def test_collection(self):
+        data = Data(resolwe=MagicMock(), id=1, collection={'id': 5, 'name': 'XYZ'})
 
         # test getting collections attribute
-        data.api(data.id).get = MagicMock(return_value={'collections': [5]})
-        data.resolwe.collection.filter = MagicMock(return_value=[
-            Collection(data.resolwe, **{'id': 5, 'name': 'XYZ'})
-        ])
-
-        self.assertEqual(len(data.collections), 1)
-        self.assertEqual(data.collections[0].id, 5)
-        self.assertEqual(data.collections[0].name, 'XYZ')
-
-        # test caching collections attribute
-        self.assertEqual(len(data.collections), 1)
-        self.assertEqual(data.resolwe.collection.filter.call_count, 1)
-
-        # cache is cleared at update
-        data.update()
-        self.assertEqual(data._collections, None)
-
-        # raising error if data object is not saved
-        data.id = None
-        with self.assertRaises(ValueError):
-            _ = data.collections
+        self.assertEqual(data.collection.id, 5)
+        self.assertEqual(data.collection.name, 'XYZ')
 
     def test_descriptor_schema(self):
-        data = Data(id=1, resolwe=MagicMock())
-        data._descriptor_schema = 1
+        resolwe = MagicMock()
+        data = Data(id=1, resolwe=resolwe)
+        data._descriptor_schema = DescriptorSchema(resolwe=resolwe, id=2)
 
         # test getting descriptor schema attribute
-        data.resolwe.descriptor_schema.get = MagicMock(return_value='descriptor_schema')
-        self.assertEqual(data.descriptor_schema, 'descriptor_schema')
-        _, get_kwargs = data.resolwe.descriptor_schema.get.call_args
-        self.assertEqual(get_kwargs['id'], 1)
+        self.assertEqual(data.descriptor_schema.id, 2)  # pylint: disable=no-member
 
         # descriptor schema is not set
         data._descriptor_schema = None
         self.assertEqual(data.descriptor_schema, None)
 
-        # cache is cleared at update
-        data._hydrated_descriptor_schema = 'descriptor_schema'
-        data.update()
-        self.assertEqual(data._hydrated_descriptor_schema, None)
-
-        # new data object
-        data = Data(resolwe=MagicMock())
-
-        data.descriptor_schema = 'my-schema'
-        self.assertEqual(data._descriptor_schema, 'my-schema')
-
-        data.resolwe.descriptor_schema.get = MagicMock(return_value='descriptor_schema')
-        self.assertEqual(data.descriptor_schema, 'descriptor_schema')
-        _, get_kwargs = data.resolwe.descriptor_schema.get.call_args
-        self.assertEqual(get_kwargs['slug'], 'my-schema')
-
-        # hidrated descriptor schema
+        # hydrated descriptor schema
         descriptor_schema = {
             "slug": "test-schema",
             "name": "Test schema",
@@ -115,9 +56,10 @@ class TestData(unittest.TestCase):
         }
         data = Data(id=1, descriptor_schema=descriptor_schema, resolwe=MagicMock())
         self.assertTrue(isinstance(data.descriptor_schema, DescriptorSchema))
-        # pylint: disable=no-member
+        # pylint: disable=no-member,unsubscriptable-object
         self.assertEqual(data.descriptor_schema.slug, 'test-schema')
-        # pylint: enable=no-member
+        self.assertEqual(data.descriptor_schema.schema[0]['label'], 'Object description')
+        # pylint: enable=no-member,unsubscriptable-object
 
     def test_parents(self):
         # Data with no id should fail.
@@ -148,7 +90,8 @@ class TestData(unittest.TestCase):
         self.assertEqual(data._children, None)
 
     def test_files(self):
-        data = Data(id=123, resolwe=MagicMock())
+        resolwe = MagicMock()
+        data = Data(id=123, resolwe=resolwe)
         data._get_dir_files = MagicMock(
             side_effect=[['first_dir/file1.txt'], ['fastq_dir/file2.txt']])
 
@@ -159,13 +102,13 @@ class TestData(unittest.TestCase):
             'fastq_archive': {'file': "archive.gz"},
             'fastq_dir': {'dir': "fastq_dir"},
         }
-        data.process_output_schema = [
+        data.process = Process(resolwe=resolwe, output_schema=[
             {'name': 'list', 'label': 'List', 'type': 'list:basic:file:'},
             {'name': 'dir_list', 'label': 'Dir_list', 'type': 'list:basic:dir:'},
             {'name': 'fastq', 'label': 'Fastq', 'type': 'basic:file:fastq:'},
             {'name': 'fastq_archive', 'label': 'Fastq_archive', 'type': 'basic:file:'},
             {'name': 'fastq_dir', 'label': 'Fastq_dir', 'type': 'basic:dir:'},
-        ]
+        ])
 
         file_list = data.files()
         self.assertCountEqual(file_list, [
@@ -183,7 +126,7 @@ class TestData(unittest.TestCase):
         data.output = {
             'list': [{'no_file_field_here': "element.gz"}],
         }
-        data.process_output_schema = [
+        data.process.output_schema = [
             {'name': 'list', 'label': 'List', 'type': 'list:basic:file:'},
         ]
         with self.assertRaisesRegex(KeyError, "does not contain 'file' key."):
@@ -227,25 +170,6 @@ class TestData(unittest.TestCase):
         Data.download(data_mock, download_dir="/some/path/")
         data_mock.resolwe._download_files.assert_called_once_with(
             ['123/file1.txt', '123/file2.fq.gz'], '/some/path/')
-
-    @patch('resdk.resources.data.Data', spec=True)
-    def test_add_output(self, data_mock):
-        data_mock.configure_mock(
-            output={
-                'fastq': {'file': 'reads.fq'},
-                'fasta': {'file': 'genome.fa'},
-            },
-            process_output_schema=[
-                {'type': 'basic:file:', 'name': 'fastq', 'label': 'FASTQ'},
-                {'type': 'basic:file:', 'name': 'fasta', 'label': 'FASTA'},
-            ],
-        )
-
-        files_list = Data._files_dirs(data_mock, 'file', field_name="output.fastq")
-        self.assertEqual(files_list, ['reads.fq'])
-
-        files_list = Data._files_dirs(data_mock, 'file', field_name="fastq")
-        self.assertEqual(files_list, ['reads.fq'])
 
     @patch('resdk.resources.data.requests')
     @patch('resdk.resources.data.urljoin')

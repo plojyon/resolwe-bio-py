@@ -8,17 +8,15 @@ import requests
 from resdk.constants import CHUNK_SIZE
 
 from .base import BaseResolweResource
+from .collection import Collection
 from .descriptor import DescriptorSchema
-from .utils import (
-    flatten_field, get_descriptor_schema_id, is_descriptor_schema, parse_resolwe_datetime,
-)
+from .process import Process
+from .sample import Sample
+from .utils import flatten_field, parse_resolwe_datetime
 
 
 class Data(BaseResolweResource):
     """Resolwe Data resource.
-
-    One and only one of the identifiers (slug, id or model_data)
-    should be given.
 
     :param resolwe: Resolwe instance
     :type resolwe: Resolwe object
@@ -30,16 +28,15 @@ class Data(BaseResolweResource):
     full_search_paramater = 'text'
 
     READ_ONLY_FIELDS = BaseResolweResource.READ_ONLY_FIELDS + (
-        'checksum', 'descriptor_dirty', 'process_cores', 'process_error', 'process_info',
-        'process_input_schema', 'process_memory', 'process_name', 'process_output_schema',
-        'process_progress', 'process_rc', 'process_slug', 'process_type', 'process_warning',
-        'output', 'size', 'status',
+        'checksum', 'descriptor_dirty', 'duplicated', 'process_cores', 'process_error',
+        'process_info', 'process_memory', 'process_progress', 'process_rc', 'process_warning',
+        'output', 'scheduled', 'size', 'status',
     )
     UPDATE_PROTECTED_FIELDS = BaseResolweResource.UPDATE_PROTECTED_FIELDS + (
         'input', 'process',
     )
     WRITABLE_FIELDS = BaseResolweResource.WRITABLE_FIELDS + (
-        'descriptor', 'descriptor_schema', 'tags',
+        'collection', 'descriptor', 'descriptor_schema', 'sample', 'tags',
     )
 
     ALL_PERMISSIONS = ['view', 'download', 'edit', 'share', 'owner']
@@ -48,176 +45,137 @@ class Data(BaseResolweResource):
         """Initialize attributes."""
         self.logger = logging.getLogger(__name__)
 
-        #: list of ``Collection``s that contain ``Data`` (lazy loaded)
-        self._collections = None
-        #: ``DescriptorSchema`` id of ``Data`` object
-        self._descriptor_schema = None
+        #: ``Collection``s that contains ``Data``
+        self._collection = None
         #: ``DescriptorSchema`` of ``Data`` object
-        self._hydrated_descriptor_schema = None
-        #: ``Sample`` containing ``Data`` object (lazy loaded)
+        self._descriptor_schema = None
+        #: The process used in this data object
+        self._process = None
+        #: ``Sample`` containing ``Data`` object
         self._sample = None
+
         #: ``ResolweQuery`` containing parent ``Data`` objects (lazy loaded)
         self._parents = None
         #: ``ResolweQuery`` containing child ``Data`` objects (lazy loaded)
         self._children = None
 
-        #: specification of inputs
-        self.process_input_schema = None
-        #: actual input values
-        self.input = None
-        #: specification of outputs
-        self.process_output_schema = None
-        #: actual output values
-        self.output = None
-        #: annotation data, with the form defined in descriptor_schema
-        self.descriptor = None
-        #: The ID of the process used in this data object
-        self.process = None
         #: checksum field calculated on inputs
         self.checksum = None
-        #: process status - Possible values: Uploading(UP), Resolving(RE),
-        #: Waiting(WT), Processing(PR), Done(OK), Error(ER), Dirty (DR)
-        self.status = None
+        #: indicate whether `descriptor` doesn't match `descriptor_schema` (is dirty)
+        self.descriptor_dirty = None
+        #: annotation data, with the form defined in descriptor_schema
+        self.descriptor = None
+        #: duplicated
+        self.duplicated = None
+        #: actual input values
+        self.input = None
+        #: process cores
+        self.process_cores = None
+        #: error log message (list of strings)
+        self.process_error = None
+        #: info log message (list of strings)
+        self.process_info = None
+        #: process memory
+        self.process_memory = None
         #: process progress in percentage
         self.process_progress = None
         #: Process algorithm return code
         self.process_rc = None
-        #: info log message (list of strings)
-        self.process_info = None
         #: warning log message (list of strings)
         self.process_warning = None
-        #: error log message (list of strings)
-        self.process_error = None
-        #: what kind of output does process produce
-        self.process_type = None
-        #: process name
-        self.process_name = None
-        #: data object's tags
-        self.tags = None
-        #: indicate whether `descriptor` doesn't match `descriptor_schema` (is dirty)
-        self.descriptor_dirty = None
-        #: process slug
-        self.process_slug = None
-        #: process cores
-        self.process_cores = None
-        #: process memory
-        self.process_memory = None
+        #: actual output values
+        self.output = None
         #: size
         self.size = None
+        #: scheduled
+        self.scheduled = None
+        #: process status - Possible values: Uploading(UP), Resolving(RE),
+        #: Waiting(WT), Processing(PR), Done(OK), Error(ER), Dirty (DR)
+        self.status = None
+        #: data object's tags
+        self.tags = None
 
         super().__init__(resolwe, **model_data)
 
     def update(self):
         """Clear cache and update resource fields from the server."""
-        self._sample = None
-        self._collections = None
-        self._hydrated_descriptor_schema = None
-        self._parents = None
         self._children = None
+        self._collection = None
+        self._descriptor_schema = None
+        self._parents = None
+        self._process = None
+        self._sample = None
 
         super().update()
 
     @property
-    def collections(self):
-        """Get list of collections to which data object belongs."""
-        if self.id is None:
-            raise ValueError('Instance must be saved before accessing `collections` attribute.')
+    def process(self):
+        """Get process."""
+        return self._process
 
-        if self._collections is None:
-            # self._collections is set to False. This enables distinction between:
-            # (a) self._collections is None since self.collections was never accessed
-            # (b) self._collections is False since data object is not in any collection
-            self._collections = False
-
-            # Note: ``collections`` field will only be present on single data
-            # object endpoint (e.g. /api/data/<ID>), but not on list endpoint
-            # (e.g. /api/data?id=<ID>). Therefore, explicit call on ``self.api``
-            # is made instead of self.reslwe.data.get (which makes request on
-            # list view but requires that list of results is of length 1)
-            payload = self.api(self.id).get()
-
-            if payload['collections']:
-                self._collections = self.resolwe.collection.filter(id__in=payload['collections'])
-
-        return self._collections
-
-    @property
-    def sample(self):
-        """Get ``sample`` that object belongs to."""
-        if self.id is None:
-            raise ValueError('Instance must be saved before accessing `sample` attribute.')
-        if self._sample is None:
-            # self._sample is set to False. This enables distinction between:
-            # (a) self._sample is None since self.sample was never accessed
-            # (b) self._sample is False since data object is not in any sample
-            self._sample = False
-
-            # Note: ``entities`` field will only be present on single data
-            # object endpoint (e.g. /api/data/<ID>), but not on list endpoint
-            # (e.g. /api/data?id=<ID>). Therefore, explicit call on ``self.api``
-            # is made instead of self.reslwe.data.get (which makes request on
-            # list view but requires that list of results is of length 1)
-            payload = self.api(self.id).get()
-
-            if payload['entities']:
-                self._sample = self.resolwe.sample.get(id=payload['entities'][0])
-
-        if self._sample:
-            return self._sample
+    @process.setter
+    def process(self, payload):
+        """Set process."""
+        self._resource_setter(payload, Process, '_process')
 
     @property
     def descriptor_schema(self):
-        """Return descriptor schema assigned to the data object."""
-        if self._descriptor_schema is None:
-            return None
-
-        if self._hydrated_descriptor_schema is None:
-            if isinstance(self._descriptor_schema, int):
-                query_filters = {'id': self._descriptor_schema}
-            else:
-                query_filters = {'slug': self._descriptor_schema}
-
-            self._hydrated_descriptor_schema = self.resolwe.descriptor_schema.get(
-                ordering='-version', limit=1, **query_filters
-            )
-
-        return self._hydrated_descriptor_schema
+        """Get descriptor schema."""
+        return self._descriptor_schema
 
     @descriptor_schema.setter
-    def descriptor_schema(self, dschema):
-        """Set collection to which relation belongs."""
-        # On single data object endpoint descriptor schema is already
-        # hidrated, so it should be transformed into resource.
-        if isinstance(dschema, dict):
-            dschema = DescriptorSchema(resolwe=self.resolwe, **dschema)
+    def descriptor_schema(self, payload):
+        """Set descriptor schema."""
+        self._resource_setter(payload, DescriptorSchema, "_descriptor_schema")
 
-        self._descriptor_schema = get_descriptor_schema_id(dschema)
-        # Save descriptor schema if already hydrated, otherwise it will be rerived in getter
-        self._hydrated_descriptor_schema = dschema if is_descriptor_schema(dschema) else None
+    @property
+    def sample(self):
+        """Get sample."""
+        if self._sample is None and self._original_values.get('entity', None):
+            self._sample = Sample(resolwe=self.resolwe, **self._original_values['entity'])
+
+        return self._sample
+
+    @sample.setter
+    def sample(self, payload):
+        """Set sample."""
+        self._resource_setter(payload, Sample, "_sample")
+
+    @property
+    def collection(self):
+        """Get collection."""
+        if not self.id:
+            raise ValueError('Instance must be saved before accessing `collection` attribute.')
+        return self._collection
+
+    @collection.setter
+    def collection(self, payload):
+        """Set collection."""
+        self._resource_setter(payload, Collection, "_collection")
 
     @property
     def started(self):
-        """Start time."""
+        """Get start time."""
         if not self.id:
-            raise ValueError('Instance must be saved before acessing `started` attribute.')
+            raise ValueError('Instance must be saved before accessing `started` attribute.')
         return parse_resolwe_datetime(self._original_values['started'])
 
     @property
     def finished(self):
-        """Finish time."""
+        """Get finish time."""
         if not self.id:
-            raise ValueError('Instance must be saved before acessing `finished` attribute.')
+            raise ValueError('Instance must be saved before accessing `finished` attribute.')
         return parse_resolwe_datetime(self._original_values['finished'])
 
     @property
     def parents(self):
         """Get parents of this Data object."""
-        if self.id is None:
+        if not self.id:
             raise ValueError('Instance must be saved before accessing `parents` attribute.')
         if self._parents is None:
             ids = [item['id'] for item in self.resolwe.api.data(self.id).parents.get(fields='id')]
             if not ids:
-                return
+                return []
             # Resolwe querry must be returned:
             self._parents = self.resolwe.data.filter(id__in=ids)
 
@@ -226,12 +184,12 @@ class Data(BaseResolweResource):
     @property
     def children(self):
         """Get children of this Data object."""
-        if self.id is None:
+        if not self.id:
             raise ValueError('Instance must be saved before accessing `children` attribute.')
         if self._children is None:
             ids = [item['id'] for item in self.resolwe.api.data(self.id).children.get(fields='id')]
             if not ids:
-                return
+                return []
             # Resolwe querry must be returned:
             self._children = self.resolwe.data.filter(id__in=ids)
 
@@ -252,7 +210,7 @@ class Data(BaseResolweResource):
         if field_name and not field_name.startswith('output.'):
             field_name = 'output.{}'.format(field_name)
 
-        flattened = flatten_field(self.output, self.process_output_schema, 'output')
+        flattened = flatten_field(self.output, self.process.output_schema, 'output')
         for ann_field_name, ann in flattened.items():
             if (ann_field_name.startswith('output')
                     and (field_name is None or field_name == ann_field_name)

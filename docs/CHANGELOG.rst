@@ -27,6 +27,32 @@ Changed
 * **BACKWARD INCOMPATIBLE:** The following utilty functions were removed as
   they were not used anymore: ``find_field``, ``get_samples``,
   ``get_resource_collection`` and ``get_resolwe``
+* **BACKWARD INCOMPATIBLE:** Resolwe server now enforces that Data can
+  only be in one sample and one collection. Sample can only be in one
+  collection as well. This implies the following changes:
+
+  - Before, ``Data``/``Sample`` was added/removed to ``Sample``/``Collection``
+    through ``add_data``, ``remove_data``, ``add_samples`` and
+    ``remove_samples`` methods. These are removed. From now on, ``Data``
+    resource has writable attributes ``collection`` and ``sample`` and Sample
+    resource has ``collection`` attribute. Adding ``Data`` to ``Collection``
+    is as simple as ``Data.collection = <Collection instance>`` and than
+    ``Data.save()``
+  - Method ``delete()`` on Samples and Collections does not accept
+    ``delete_content`` parameter anymore. From now, when Collection or Sample
+    is deleted, all of it's content is deleted automatically.
+  - Resolwe.run method now has ``collection`` argument instead of
+    ``collections``. This argument can accept Collection resource or it's id.
+* **BACKWARD INCOMPATIBLE:** Data resource now has a ``process``
+  attribute, which is an instance of ``Process`` resource. Therefore the
+  following Data attributes are removed as they can be acessed through
+  Data.process::
+
+  - process_name
+  - process_slug
+  - process_type
+  - process_input_schema
+  - process_output_schema
 
 
 ===================

@@ -8,9 +8,6 @@ from .utils import _print_input_line
 class Process(BaseResolweResource):
     """Resolwe Process resource.
 
-    One and only one of the identifiers (slug, id or model_data)
-    should be given.
-
     :param resolwe: Resolwe instance
     :type resolwe: Resolwe object
     :param model_data: Resource model data
@@ -18,10 +15,13 @@ class Process(BaseResolweResource):
     """
 
     endpoint = "process"
-
+    READ_ONLY_FIELDS = BaseResolweResource.READ_ONLY_FIELDS + (
+        'is_active',
+    )
     UPDATE_PROTECTED_FIELDS = BaseResolweResource.UPDATE_PROTECTED_FIELDS + (
-        'category', 'data_name', 'description', 'flow_collection', 'input_schema', 'is_active',
-        'output_schema', 'persistence', 'requirements', 'run', 'scheduling_class', 'type',
+        'category', 'data_name', 'description', 'entity_descriptor_schema', 'entity_input',
+        'entity_type', 'input_schema', 'output_schema', 'persistence', 'requirements', 'run',
+        'scheduling_class', 'type',
     )
 
     ALL_PERMISSIONS = ['view', 'share', 'owner']
@@ -39,9 +39,12 @@ class Process(BaseResolweResource):
         """
         #: the type of process ``"type:sub_type:sub_sub_type:..."``
         self.type = None
-        #: Current options: "sample"/None. If sample, new "sample" will be created
-        #: (if not already existing) and annotated with provided descriptor.
-        self.flow_collection = None
+        #: entity_descriptor_schema
+        self.entity_descriptor_schema = None
+        #: entity_input
+        self.entity_input = None
+        #: entity_type
+        self.entity_type = None
         #: used to group processes in a GUI. Examples: ``upload:``, ``analyses:variants:``, ...
         self.category = None
         self.persistence = None

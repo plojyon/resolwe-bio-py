@@ -52,17 +52,21 @@ class TestBaseResolweResource(unittest.TestCase):
 
     def test_dehydrate_resources(self):
         obj = BaseResource(resolwe=self.resolwe_mock, id=1)
-        obj2 = DescriptorSchema(resolwe=self.resolwe_mock, slug='foo')
+        obj2 = DescriptorSchema(resolwe=self.resolwe_mock, slug='foo', id=2)
 
-        self.assertEqual(obj._dehydrate_resources(obj), 1)
-        self.assertEqual(obj._dehydrate_resources([obj]), [1])
-        self.assertEqual(obj._dehydrate_resources({'key': obj}), {'key': 1})
-        self.assertEqual(obj._dehydrate_resources({'key': [obj]}), {'key': [1]})
+        self.assertEqual(obj._dehydrate_resources(obj), {'id': 1})
+        self.assertEqual(obj._dehydrate_resources([obj]), [{'id': 1}])
+        self.assertEqual(obj._dehydrate_resources({'key': obj}), {'key': {'id': 1}})
+        self.assertEqual(obj._dehydrate_resources({'key': [obj]}), {'key': [{'id': 1}]})
 
-        self.assertEqual(obj._dehydrate_resources(obj2), 'foo')
-        self.assertEqual(obj._dehydrate_resources([obj2]), ['foo'])
-        self.assertEqual(obj._dehydrate_resources({'key': obj2}), {'key': 'foo'})
-        self.assertEqual(obj._dehydrate_resources({'key': [obj2]}), {'key': ['foo']})
+        self.assertEqual(obj._dehydrate_resources(obj2), {'id': 2})
+        self.assertEqual(obj._dehydrate_resources([obj2]), [{'id': 2}])
+        self.assertEqual(obj._dehydrate_resources({'key': obj2}), {'key': {'id': 2}})
+        self.assertEqual(obj._dehydrate_resources({'key': [obj2]}), {'key': [{'id': 2}]})
+
+        # Imitate creation (obj.id=None) - resource has to be given by slug
+        obj = BaseResource(resolwe=self.resolwe_mock, id=None)
+        self.assertEqual(obj._dehydrate_resources(obj2), {'slug': 'foo'})
 
     def test_update_fileds(self):
         resource = BaseResource(resolwe=self.resolwe_mock)
@@ -230,7 +234,13 @@ class TestAttributesDefined(unittest.TestCase):
         for class_ in classes:
             resource = class_(resolwe)
             for field in resource.fields():
-                assert hasattr(resource, field)
+                # Some fields are properties that can only be accessed when
+                # object has id != None. Otherwise they return ValueError.
+                # We therefore skip these ValueError's
+                try:
+                    assert hasattr(resource, field)
+                except ValueError:
+                    continue
 
 
 if __name__ == '__main__':

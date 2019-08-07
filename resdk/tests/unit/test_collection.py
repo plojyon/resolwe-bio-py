@@ -8,7 +8,9 @@ import unittest
 from mock import MagicMock, patch
 
 from resdk.resources.collection import BaseCollection, Collection
+from resdk.resources.data import Data
 from resdk.resources.descriptor import DescriptorSchema
+from resdk.resources.process import Process
 
 DATA0 = MagicMock(**{'files.return_value': [], 'id': 0})
 
@@ -19,26 +21,24 @@ DATA2 = MagicMock(**{'files.return_value': ['outfile.exp'], 'id': 2})
 
 class TestBaseCollection(unittest.TestCase):
 
-    @patch('resdk.resources.collection.BaseCollection', spec=True)
-    def test_data_types(self, collection_mock):
-        payload = {
-            'id': 123,
-            'process_type': 'data:reads:fastq:single:',
-            # ...
-        }
-        get_mock = MagicMock(**{'get.return_value': payload})
-        api_mock = MagicMock(**{'data.return_value': get_mock})
-        collection_mock.configure_mock(data=[1, 2], resolwe=MagicMock(api=api_mock))
+    def test_data_types(self):
+        resolwe = MagicMock()
 
-        types = BaseCollection.data_types(collection_mock)
+        data1 = Data(resolwe=resolwe, id=1)
+        data1._process = Process(resolwe=resolwe, type='data:reads:fastq:single:')
+
+        collection = Collection(resolwe=resolwe, id=1)
+        collection._data = [data1]
+
+        types = collection.data_types()
         self.assertEqual(types, ['data:reads:fastq:single:'])
 
-    @patch('resdk.resources.collection.BaseCollection', spec=True)
-    def test_files(self, collection_mock):
-        collection_mock.configure_mock(data=[DATA1, DATA2], resolwe=" ")
+    def test_files(self):
+        collection = Collection(resolwe=MagicMock(), id=1)
+        collection._data = [DATA1, DATA2]
 
-        flist = BaseCollection.files(collection_mock)
-        self.assertEqual(set(flist), set(['arch.gz', 'reads.fq', 'outfile.exp']))
+        files = collection.files()
+        self.assertCountEqual(files, ['arch.gz', 'reads.fq', 'outfile.exp'])
 
 
 class TestBaseCollectionDownload(unittest.TestCase):
@@ -50,18 +50,17 @@ class TestBaseCollectionDownload(unittest.TestCase):
         flist = ['2/outfile.exp']
         collection_mock.resolwe._download_files.assert_called_once_with(flist, None)
 
-        # Check if ok to also provide ``output_field`` that does not start with 'output'
+        # Check if ``output_field`` does not start with 'output'
         collection_mock.reset_mock()
         collection_mock.configure_mock(data=[DATA1, DATA0], resolwe=MagicMock())
         BaseCollection.download(collection_mock, field_name='fastq')
         flist = ['1/reads.fq', '1/arch.gz']
         collection_mock.resolwe._download_files.assert_called_once_with(flist, None)
 
-    @patch('resdk.resources.collection.BaseCollection', spec=True)
-    def test_bad_field_name(self, collection_mock):
-        message = "Invalid argument value `field_name`."
-        with self.assertRaisesRegex(ValueError, message):
-            BaseCollection.download(collection_mock, field_name=123)
+    def test_bad_field_name(self):
+        collection = Collection(resolwe=MagicMock(), id=1)
+        with self.assertRaisesRegex(ValueError, "Invalid argument value `field_name`."):
+            collection.download(field_name=123)
 
 
 class TestCollection(unittest.TestCase):
@@ -71,30 +70,11 @@ class TestCollection(unittest.TestCase):
         collection._descriptor_schema = 1
 
         # test getting descriptor schema attribute
-        collection.resolwe.descriptor_schema.get = MagicMock(return_value='descriptor_schema')
-        self.assertEqual(collection.descriptor_schema, 'descriptor_schema')
-        _, get_kwargs = collection.resolwe.descriptor_schema.get.call_args
-        self.assertEqual(get_kwargs['id'], 1)
+        self.assertEqual(collection.descriptor_schema, 1)
 
         # descriptor schema is not set
         collection._descriptor_schema = None
         self.assertEqual(collection.descriptor_schema, None)
-
-        # cache is cleared at update
-        collection._hydrated_descriptor_schema = 'descriptor_schema'
-        collection.update()
-        self.assertEqual(collection._hydrated_descriptor_schema, None)
-
-        # new collection
-        collection = Collection(resolwe=MagicMock())
-
-        collection.descriptor_schema = 'my-schema'
-        self.assertEqual(collection._descriptor_schema, 'my-schema')
-
-        collection.resolwe.descriptor_schema.get = MagicMock(return_value='descriptor_schema')
-        self.assertEqual(collection.descriptor_schema, 'descriptor_schema')
-        _, get_kwargs = collection.resolwe.descriptor_schema.get.call_args
-        self.assertEqual(get_kwargs['slug'], 'my-schema')
 
         # hidrated descriptor schema
         descriptor_schema = {
