@@ -43,7 +43,7 @@ data.permissions
 
 data = res.data.get('resdk-example-reads')
 data.status
-data.process_slug
+data.process
 data.started
 data.finished
 data.size

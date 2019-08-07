@@ -39,10 +39,10 @@ associated with. You can acess it by:
 
 .. note::
 
-  You can also upload your files by provinding url. Just replace path to your
+  You can also upload your files by providing url. Just replace path to your
   local files with the url. This comes handy when your files are large and/or
   are stored on a remote server and you don't want to download them to your
-  computer just to upload them to Resowle server again...
+  computer just to upload them to Resolwe server again...
 
 Modify data
 ===========
@@ -72,8 +72,8 @@ references a value in a descriptor schema (*i.e.* a template). Annotations for
 data objects, samples, and collections each follow a different descriptor
 format. For example, a reads data object can be annotated with the 'reads'
 descriptor schema, while a sample can be annotated by the 'sample' annotation
-schema. Each data object that is associated with the sample is also connected to
-the sample's annotation, so that the annotation for a sample (or collection)
+schema. Each data object that is associated with the sample is also connected
+to the sample's annotation, so that the annotation for a sample (or collection)
 represents all Data objects attached to it. `Descriptor schemas`_ are described
 in detail (with `accompanying examples`_) in the
 `Resolwe Bioinformatics documentation`_.
@@ -117,16 +117,6 @@ organize them. So let's create a collection and put some data inside!
 .. literalinclude:: files/tutorial-create.py
    :lines: 57-64
 
-We used ``collection.add_data()`` method. There are many other methods to help
-organising objects into logical units:
-
-  * ``collection.add_data()``
-  * ``collection.remove_data()``
-  * ``collection.add_samples()``
-  * ``collection.remove_samples()``
-  * ``sample.add_data()``
-  * ``sample.remove_data()``
-
 Run analyses
 ============
 
@@ -146,7 +136,7 @@ its algorithm that transforms inputs into outputs.
 .. _HISAT2 process catalog: https://resolwe-bio.readthedocs.io/en/latest/catalog-definitions.html#process-alignment-hisat2
 
 .. literalinclude:: files/tutorial-create.py
-   :lines: 66-75
+   :lines: 67-76
 
 Lets take a closer look to the code above. We defined the alignment process, by
 its slug ``'alignment-hisat2'``. For inputs we defined data objects ``reads``
@@ -162,7 +152,7 @@ processing runs asynchronously, so the returned data object does not
 have an OK status or outputs when returned.
 
 .. literalinclude:: files/tutorial-create.py
-   :lines: 77-84
+   :lines: 78-85
 
 Status ``OK`` indicates that processing has finished successfuly, but you will
 also find other statuses. They are given with two-letter abbreviations. To
@@ -171,7 +161,7 @@ understand their meanings, check the
 all outputs are witten to disk and you can inspect them:
 
 .. literalinclude:: files/tutorial-create.py
-   :lines: 86-87
+   :lines: 87-88
 
 Unitl now, we used ``run()`` method twice: to upload reads (yes, uploading
 files is just a matter of using an upload process) and to run alignment. You
@@ -191,7 +181,7 @@ normal process and have a process slug, inputs, outputs... For example, we
 can run workflow "BBDuk - STAR - HTSeq-count" on our reads:
 
 .. literalinclude:: files/tutorial-create.py
-   :lines: 89-101
+   :lines: 90-102
 
 Solving problems
 ================
@@ -204,4 +194,4 @@ exceedingly useful for debugging. Also, you can inspect the info, warning and
 error logs.
 
 .. literalinclude:: files/tutorial-create.py
-   :lines: 103-116
+   :lines: 104-117

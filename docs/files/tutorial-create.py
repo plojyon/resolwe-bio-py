@@ -57,11 +57,12 @@ reads.sample.save()
 # create a new collection object in your running instance of Resolwe (res)
 test_collection = res.collection.create(name='Test collection')
 
-# save new collection to the server you've accessed in your Resolwe instance
-test_collection.save()
 
-# add data to collection
-test_collection.add_data(reads)
+
+# add sample to collection
+reads.sample.collection = test_collection
+reads.sample.save()
+
 
 # Get genome
 genome = res.data.get('resdk-example-genome')

@@ -33,8 +33,7 @@ class BaseResdkDocsFunctionalTest(BaseResdkFunctionalTest):
         shutil.rmtree(self.tmpdir)
 
         if hasattr(self, 'reads'):
-            self.reads.sample.delete(force=True)
-            self.reads.delete(force=True)
+            self.reads.sample.delete(force=True)  # pylint: disable=no-member
         if hasattr(self, 'genome'):
             self.genome.delete(force=True)
         if hasattr(self, 'genome_index'):
@@ -212,11 +211,11 @@ class TestTutorialCreate(BaseResdkDocsFunctionalTest):
                     os.path.join(TEST_FILES_DIR, 'reads.fastq.gz'))),
 
                 # Data object is not finished, so something like this
-                # (106, "foo = res.data.get('{}').stdout()\n".format(self.reads_slug)),
+                # (107, "foo = res.data.get('{}').stdout()\n".format(self.reads_slug)),
                 # is replaced with an empty line. There is now way to perform
                 # download if data objects are still processing and/or have not
                 # produced any stdout.txt. So just write an empty line:
-                (106, "\n"),
+                (107, "\n"),
             ],
         )
 

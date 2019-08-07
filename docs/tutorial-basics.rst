@@ -77,8 +77,8 @@ one Sample. Two distinct Samples cannot contain the same Data object.
 **Collection** is a group of Samples. In addition to Samples and their Data,
 Collections may contain Data objects that store other analysis results. Example
 of this are differential expressions - they are done as combination of many
-Samples and cannot belong to only one Sample. Samples and Data objects may be
-in multiple Collections.
+Samples and cannot belong to only one Sample. Each Sample and Data object can
+only be in one Collection.
 
 .. figure:: images/data-hierarchy-diagram.png
    :width: 100 %

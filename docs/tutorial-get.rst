@@ -112,9 +112,9 @@ or to know the ``Sample`` of a given ``Data``... For such purposes, there are
 some handy shortcuts:
 
   * :obj:`data.sample <resdk.resources.Data.sample>`
-  * :obj:`data.collections <resdk.resources.Data.collections>`
+  * :obj:`data.collection <resdk.resources.Data.collection>`
   * :obj:`sample.data <resdk.resources.Sample.data>`
-  * :obj:`sample.collections <resdk.resources.Sample.collections>`
+  * :obj:`sample.collection <resdk.resources.Sample.collection>`
   * :obj:`collection.data <resdk.resources.Collection.data>`
   * :obj:`collection.samples <resdk.resources.Collection.samples>`
 
