@@ -4,7 +4,7 @@ import shutil
 import sys
 import tempfile
 
-import resdk
+from resdk import Resolwe
 from resdk.tests.functional.base import (
     ADMIN_PASSWORD, ADMIN_USERNAME, URL, USER_PASSWORD, USER_USERNAME, BaseResdkFunctionalTest,
 )
@@ -35,11 +35,11 @@ class BaseResdkDocsFunctionalTest(BaseResdkFunctionalTest):
         if hasattr(self, 'reads'):
             self.reads.sample.delete(force=True)  # pylint: disable=no-member
         if hasattr(self, 'genome'):
-            self.genome.delete(force=True)
+            self.genome.delete(force=True)  # pylint: disable=no-member
         if hasattr(self, 'genome_index'):
-            self.genome_index.delete(force=True)
+            self.genome_index.delete(force=True)  # pylint: disable=no-member
         if hasattr(self, 'annotation'):
-            self.annotation.delete(force=True)
+            self.annotation.delete(force=True)  # pylint: disable=no-member
 
     def run_tutorial_script(self, script_name, replace_lines=None):
         """Run a script from tutorial folder.
@@ -63,7 +63,7 @@ class BaseResdkDocsFunctionalTest(BaseResdkFunctionalTest):
             for line_index, line_content in replace_lines:
                 content[line_index] = line_content
 
-        exec(''.join(content))
+        exec(''.join(content))  # pylint: disable=exec-used
 
     def upload_reads(self, res):
         reads = res.run(
@@ -126,7 +126,7 @@ class BaseResdkDocsFunctionalTest(BaseResdkFunctionalTest):
 class TestIndex(BaseResdkDocsFunctionalTest):
 
     def setUp(self):
-        self.res = resdk.Resolwe(ADMIN_USERNAME, ADMIN_PASSWORD, URL)
+        self.res = Resolwe(ADMIN_USERNAME, ADMIN_PASSWORD, URL)
         self.reads = self.upload_reads(self.res)
         super().setUp()
 
@@ -141,7 +141,7 @@ class TestIndex(BaseResdkDocsFunctionalTest):
 class TestStart(BaseResdkDocsFunctionalTest):
 
     def setUp(self):
-        self.res = resdk.Resolwe(ADMIN_USERNAME, ADMIN_PASSWORD, URL)
+        self.res = Resolwe(ADMIN_USERNAME, ADMIN_PASSWORD, URL)
 
         # Create data for tests:
         self.reads = self.upload_reads(self.res)
@@ -165,7 +165,7 @@ class TestStart(BaseResdkDocsFunctionalTest):
 class TestTutorialGet(BaseResdkDocsFunctionalTest):
 
     def setUp(self):
-        self.res = resdk.Resolwe(ADMIN_USERNAME, ADMIN_PASSWORD, URL)
+        self.res = Resolwe(ADMIN_USERNAME, ADMIN_PASSWORD, URL)
 
         self.reads = self.upload_reads(self.res)
         super().setUp()
@@ -184,7 +184,7 @@ class TestTutorialGet(BaseResdkDocsFunctionalTest):
 class TestTutorialCreate(BaseResdkDocsFunctionalTest):
 
     def setUp(self):
-        self.res = resdk.Resolwe(ADMIN_USERNAME, ADMIN_PASSWORD, URL)
+        self.res = Resolwe(ADMIN_USERNAME, ADMIN_PASSWORD, URL)
 
         self.reads = self.upload_reads(self.res)
         self.genome = self.upload_genome(self.res)
@@ -224,13 +224,13 @@ class TestTutorialResources(BaseResdkFunctionalTest):
 
     def test_tutorial_resources(self):
         """Verify existance of resources required for tutorial."""
-        res = resdk.Resolwe(url='https://app.genialis.com')
+        res = Resolwe(url='https://app.genialis.com')
 
         sample_slugs = [
             BaseResdkDocsFunctionalTest.sample_slug,
         ]
         for sample_slug in sample_slugs:
-            res.sample.get(sample_slug)
+            res.sample.get(sample_slug)  # pylint: disable=no-member
 
         data_slugs = [
             BaseResdkDocsFunctionalTest.reads_slug,
@@ -239,4 +239,4 @@ class TestTutorialResources(BaseResdkFunctionalTest):
             BaseResdkDocsFunctionalTest.genome_index_slug,
         ]
         for data_slug in data_slugs:
-            res.data.get(data_slug)
+            res.data.get(slug=data_slug, fields='id')  # pylint: disable=no-member

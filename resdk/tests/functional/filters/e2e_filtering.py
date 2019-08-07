@@ -1,4 +1,4 @@
-# pylint: disable=missing-docstring
+# pylint: disable=missing-docstring,no-member
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import os
@@ -6,7 +6,7 @@ import unittest
 
 import six
 
-from resdk.tests.functional.base import FILES_PATH, BaseResdkFunctionalTest
+from ..base import FILES_PATH, BaseResdkFunctionalTest
 
 
 class BaseResdkFilteringTest(BaseResdkFunctionalTest):

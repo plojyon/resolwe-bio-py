@@ -1,5 +1,32 @@
 # pylint: disable=missing-docstring
-from resdk.tests.functional.base import BaseResdkFunctionalTest
+import resdk
+
+from ..base import BaseResdkFunctionalTest
+
+
+class TestRun(BaseResdkFunctionalTest):
+
+    def test_run(self):
+        collection = self.res.collection.get(name="Test collection")  # pylint: disable=no-member
+
+        data = self.res.run(
+            slug='test-sleep-progress',
+            input={'t': 1},
+            descriptor_schema='reads',
+            descriptor={'description': 'Lorem ipsum ...'},
+            collection=collection,
+            data_name='Test run data',
+        )
+
+        self.assertTrue(isinstance(data, resdk.resources.Data))
+        self.assertEqual(data.process.slug, 'test-sleep-progress')
+        self.assertEqual(data.input, {'t': 1})
+        self.assertEqual(data.descriptor_schema.slug, 'reads')
+        # pylint: disable=unsubscriptable-object
+        self.assertEqual(data.descriptor['description'], 'Lorem ipsum ...')
+        # pylint: enable=unsubscriptable-object
+        self.assertEqual(data.collection, collection)
+        self.assertEqual(data.name, 'Test run data')
 
 
 class TestDataUsage(BaseResdkFunctionalTest):

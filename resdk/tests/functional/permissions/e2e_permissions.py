@@ -1,6 +1,7 @@
-# pylint: disable=missing-docstring
+# pylint: disable=missing-docstring,no-member
 from resdk.exceptions import ResolweServerError
-from resdk.tests.functional.base import ADMIN_USERNAME, USER_USERNAME, BaseResdkFunctionalTest
+
+from ..base import USER_USERNAME, BaseResdkFunctionalTest
 
 
 class TestPermissions(BaseResdkFunctionalTest):
