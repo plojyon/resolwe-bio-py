@@ -3,6 +3,7 @@ import copy
 import logging
 import operator
 
+from ..utils.decorators import assert_object_exists
 from .permissions import PermissionsManager
 from .utils import parse_resolwe_datetime
 
@@ -206,10 +207,9 @@ class BaseResolweResource(BaseResource):
         BaseResource.__init__(self, resolwe, **model_data)
 
     @property
+    @assert_object_exists
     def permissions(self):
         """Permissions."""
-        if not self.id:
-            raise ValueError('Instance must be saved before accessing `permissions` attribute.')
         if not self._permissions:
             self._permissions = PermissionsManager(
                 self.ALL_PERMISSIONS,
@@ -220,10 +220,9 @@ class BaseResolweResource(BaseResource):
         return self._permissions
 
     @property
+    @assert_object_exists
     def contributor(self):
         """Contributor."""
-        if self.id is None:
-            raise ValueError('Instance must be saved before accessing `contributor` attribute.')
         if self._contributor is None:
             contributor_data = self._original_values.get('contributor', {})
             try:
@@ -245,17 +244,15 @@ class BaseResolweResource(BaseResource):
         return self._contributor
 
     @property
+    @assert_object_exists
     def created(self):
         """Creation time."""
-        if not self.id:
-            raise ValueError('Instance must be saved before accessing `created` attribute.')
         return parse_resolwe_datetime(self._original_values['created'])
 
     @property
+    @assert_object_exists
     def modified(self):
         """Modification time."""
-        if not self.id:
-            raise ValueError('Instance must be saved before accessing `modified` attribute.')
         return parse_resolwe_datetime(self._original_values['modified'])
 
     def update(self):

@@ -7,6 +7,7 @@ import requests
 
 from resdk.constants import CHUNK_SIZE
 
+from ..utils.decorators import assert_object_exists
 from .base import BaseResolweResource
 from .collection import Collection
 from .descriptor import DescriptorSchema
@@ -144,8 +145,6 @@ class Data(BaseResolweResource):
     @property
     def collection(self):
         """Get collection."""
-        if not self.id:
-            raise ValueError('Instance must be saved before accessing `collection` attribute.')
         return self._collection
 
     @collection.setter
@@ -154,24 +153,21 @@ class Data(BaseResolweResource):
         self._resource_setter(payload, Collection, "_collection")
 
     @property
+    @assert_object_exists
     def started(self):
         """Get start time."""
-        if not self.id:
-            raise ValueError('Instance must be saved before accessing `started` attribute.')
         return parse_resolwe_datetime(self._original_values['started'])
 
     @property
+    @assert_object_exists
     def finished(self):
         """Get finish time."""
-        if not self.id:
-            raise ValueError('Instance must be saved before accessing `finished` attribute.')
         return parse_resolwe_datetime(self._original_values['finished'])
 
     @property
+    @assert_object_exists
     def parents(self):
         """Get parents of this Data object."""
-        if not self.id:
-            raise ValueError('Instance must be saved before accessing `parents` attribute.')
         if self._parents is None:
             ids = [item['id'] for item in self.resolwe.api.data(self.id).parents.get(fields='id')]
             if not ids:
@@ -182,10 +178,9 @@ class Data(BaseResolweResource):
         return self._parents
 
     @property
+    @assert_object_exists
     def children(self):
         """Get children of this Data object."""
-        if not self.id:
-            raise ValueError('Instance must be saved before accessing `children` attribute.')
         if self._children is None:
             ids = [item['id'] for item in self.resolwe.api.data(self.id).children.get(fields='id')]
             if not ids:
@@ -245,6 +240,7 @@ class Data(BaseResolweResource):
 
         return files_list
 
+    @assert_object_exists
     def files(self, file_name=None, field_name=None):
         """Get list of downloadable file fields.
 
@@ -257,9 +253,6 @@ class Data(BaseResolweResource):
         :rtype: List of tuples (data_id, file_name, field_name, process_type)
 
         """
-        if not self.id:
-            raise ValueError('Instance must be saved before using `files` method.')
-
         file_list = self._files_dirs('file', file_name, field_name)
 
         for dir_name in self._files_dirs('dir', file_name, field_name):

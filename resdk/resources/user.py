@@ -1,4 +1,5 @@
 """Process resource."""
+from ..utils.decorators import assert_object_exists
 from .base import BaseResource
 from .utils import get_user_id
 
@@ -110,27 +111,24 @@ class Group(BaseResource):
         super().update()
 
     @property
+    @assert_object_exists
     def users(self):
         """Return list of users in group."""
-        if self.id is None:
-            raise ValueError('Instance must be saved before accessing `users` attribute.')
         if self._users is None:
             self._users = self.resolwe.user.filter(groups=self.id)
 
         return self._users
 
+    @assert_object_exists
     def add_users(self, *users):
         """Add users to group."""
-        if self.id is None:
-            raise ValueError('Instance must be saved before adding `users` attribute.')
         user_ids = [get_user_id(user) for user in users]
         self.resolwe.api.group(self.id).add_users.post({'user_ids': user_ids})
         self._users = None
 
+    @assert_object_exists
     def remove_users(self, *users):
         """Remove users from group."""
-        if self.id is None:
-            raise ValueError('Instance must be saved before adding `users` attribute.')
         user_ids = [get_user_id(user) for user in users]
         self.resolwe.api.group(self.id).remove_users.post({'user_ids': user_ids})
         self._users = None

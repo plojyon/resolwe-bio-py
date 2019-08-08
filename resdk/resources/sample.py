@@ -3,6 +3,7 @@ import logging
 
 from resdk.shortcuts.sample import SampleUtilsMixin
 
+from ..utils.decorators import assert_object_exists
 from .collection import BaseCollection, Collection
 
 
@@ -48,10 +49,9 @@ class Sample(SampleUtilsMixin, BaseCollection):
         super().update()
 
     @property
+    @assert_object_exists
     def data(self):
         """Get data."""
-        if self.id is None:
-            raise ValueError('Instance must be saved before accessing `data` attribute.')
         if self._data is None:
             self._data = self.resolwe.data.filter(entity=self.id)
 
@@ -60,8 +60,6 @@ class Sample(SampleUtilsMixin, BaseCollection):
     @property
     def collection(self):
         """Get collection."""
-        if self.id is None:
-            raise ValueError('Instance must be saved before accessing `collection` attribute.')
         return self._collection
 
     @collection.setter
@@ -70,10 +68,9 @@ class Sample(SampleUtilsMixin, BaseCollection):
         self._resource_setter(payload, Collection, '_collection')
 
     @property
+    @assert_object_exists
     def relations(self):
         """Get ``Relation`` objects for this sample."""
-        if self.id is None:
-            raise ValueError('Instance must be saved before accessing `relations` attribute.')
         if self._relations is None:
             self._relations = self.resolwe.relation.filter(entity=self.id)
 

@@ -3,6 +3,7 @@ import logging
 
 from resdk.shortcuts.collection import CollectionRelationsMixin
 
+from ..utils.decorators import assert_object_exists
 from .base import BaseResolweResource
 from .descriptor import DescriptorSchema
 
@@ -159,30 +160,27 @@ class Collection(CollectionRelationsMixin, BaseCollection):
         super().update()
 
     @property
+    @assert_object_exists
     def data(self):
         """Return list of data objects on collection."""
-        if self.id is None:
-            raise ValueError('Instance must be saved before accessing `data` attribute.')
         if self._data is None:
             self._data = self.resolwe.data.filter(collection=self.id)
 
         return self._data
 
     @property
+    @assert_object_exists
     def samples(self):
         """Return list of samples on collection."""
-        if self.id is None:
-            raise ValueError('Instance must be saved before accessing `samples` attribute.')
         if self._samples is None:
             self._samples = self.resolwe.sample.filter(collection=self.id)
 
         return self._samples
 
     @property
+    @assert_object_exists
     def relations(self):
         """Return list of data objects on collection."""
-        if self.id is None:
-            raise ValueError('Instance must be saved before accessing `relations` attribute.')
         if self._relations is None:
             self._relations = self.resolwe.relation.filter(collection=self.id)
 
