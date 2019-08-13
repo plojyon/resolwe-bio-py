@@ -54,6 +54,12 @@ Changed
   - process_input_schema
   - process_output_schema
 
+Added
+-----
+* Add ``fetch_object`` classmethod to ``BaseResource`` class.
+* Add ``get_query_by_resource`` method to ``Resolwe`` class. It gives the
+  correct ResolweQuerry for a given resource class/instance.
+
 
 ===================
 10.1.0 - 2019-07-18

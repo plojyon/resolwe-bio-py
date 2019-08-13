@@ -25,6 +25,7 @@ from .constants import CHUNK_SIZE
 from .exceptions import ValidationError, handle_http_exception
 from .query import ResolweQuery
 from .resources import Collection, Data, DescriptorSchema, Group, Process, Relation, Sample, User
+from .resources.base import BaseResource
 from .resources.kb import Feature, Mapping
 from .resources.utils import get_collection_id, get_data_id, is_data, iterate_fields
 
@@ -60,6 +61,25 @@ class Resolwe:
 
     """
 
+    # Map resource class to ResolweQuery name
+    resource_query_mapping = {
+        Data: 'data',
+        Collection: 'collection',
+        Sample: 'sample',
+        Relation: 'relation',
+        Process: 'process',
+        DescriptorSchema: 'descriptor_schema',
+        User: 'user',
+        Group: 'group',
+        Feature: 'feature',
+        Mapping: 'mapping',
+    }
+    # Map ResolweQuery name to it's slug_field
+    slug_field_mapping = {
+        'user': 'username',
+        'group': 'name',
+    }
+
     def __init__(self, username=None, password=None, url=None):
         """Initialize attributes."""
         if url is None:
@@ -90,18 +110,9 @@ class Resolwe:
 
     def _initialize_queries(self):
         """Initialize ResolweQuery's."""
-        # pylint: disable=attribute-defined-outside-init
-        self.data = ResolweQuery(self, Data)
-        self.collection = ResolweQuery(self, Collection)
-        self.sample = ResolweQuery(self, Sample)
-        self.relation = ResolweQuery(self, Relation)
-        self.process = ResolweQuery(self, Process)
-        self.descriptor_schema = ResolweQuery(self, DescriptorSchema)
-        self.user = ResolweQuery(self, User, slug_field='username')
-        self.group = ResolweQuery(self, Group, slug_field='name')
-        self.feature = ResolweQuery(self, Feature)
-        self.mapping = ResolweQuery(self, Mapping)
-        # pylint: enable=attribute-defined-outside-init
+        for resource, query_name in self.resource_query_mapping.items():
+            slug_field = self.slug_field_mapping.get(query_name, 'slug')
+            setattr(self, query_name, ResolweQuery(self, resource, slug_field=slug_field))
 
     def _login(self, username=None, password=None):
         self.auth = ResAuth(username, password, self.url)
@@ -119,6 +130,15 @@ class Resolwe:
         if password is None:
             password = getpass.getpass('Password: ')
         self._login(username=username, password=password)
+
+    def get_query_by_resource(self, resource):
+        """Get ResolweQuery for a given resource."""
+        if isinstance(resource, BaseResource):
+            resource = resource.__class__
+        elif not issubclass(resource, BaseResource):
+            raise ValueError("Provide a Resource class or it's instance as a resource argument.")
+
+        return getattr(self, self.resource_query_mapping.get(resource))
 
     def __repr__(self):
         """Return string representation of the current object."""
@@ -167,7 +187,9 @@ class Resolwe:
 
         Raise error if process doesn't exist or more than one is returned.
         """
+        # pylint: disable=no-member
         return self.process.get(slug=slug, ordering='-version', limit=1)
+        # pylint: enable=no-member
 
     def _process_inputs(self, inputs, process):
         """Process input fields.

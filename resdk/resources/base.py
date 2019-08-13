@@ -49,6 +49,19 @@ class BaseResource:
         if model_data:
             self._update_fields(model_data)
 
+    @classmethod
+    # pylint: disable=invalid-name,redefined-builtin
+    def fetch_object(cls, resolwe, id=None, slug=None):
+        # pylint: enable=invalid-name,redefined-builtin
+        """Return resource instance that is uniquely defined by identifier."""
+        if (id is None and slug is None) or (id and slug):
+            raise ValueError("One and only one of id or slug must be given")
+
+        query = resolwe.get_query_by_resource(cls)
+        if id:
+            return query.get(id=id)
+        return query.get(slug=slug)
+
     def fields(self):
         """Resource fields."""
         return self.READ_ONLY_FIELDS + self.UPDATE_PROTECTED_FIELDS + self.WRITABLE_FIELDS
@@ -274,14 +287,8 @@ class BaseResolweResource(BaseResource):
         elif isinstance(payload, dict):
             setattr(self, field, resource(resolwe=self.resolwe, **payload))
         elif isinstance(payload, int):
-            # Create instance to get access to instance.api which is
-            # creeated at instance creation.
-            instance = resource(resolwe=self.resolwe, id=payload)
-            setattr(self, field, instance.api.get(id=payload))
+            setattr(self, field, resource.fetch_object(self.resolwe, id=payload))
         elif isinstance(payload, str):
-            # Create instance to get access to instance.api which is
-            # creeated at instance creation.
-            instance = resource(resolwe=self.resolwe, slug=payload)
-            setattr(self, field, instance.api.get(slug=payload))
+            setattr(self, field, resource.fetch_object(self.resolwe, slug=payload))
         else:
             setattr(self, field, payload)
