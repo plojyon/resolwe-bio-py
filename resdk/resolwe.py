@@ -188,7 +188,7 @@ class Resolwe:
         Raise error if process doesn't exist or more than one is returned.
         """
         # pylint: disable=no-member
-        return self.process.get(slug=slug, ordering='-version', limit=1)
+        return self.process.get(slug=slug)
         # pylint: enable=no-member
 
     def _process_inputs(self, inputs, process):

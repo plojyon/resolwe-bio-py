@@ -115,11 +115,11 @@ class BaseResdkDocsFunctionalTest(BaseResdkFunctionalTest):
         return genome_index
 
     def allow_run_process(self, res, slug):
-        process = res.process.filter(slug=slug, ordering='-version')[0]
+        process = res.process.get(slug=slug)
         self.make_public(process, permissions=['view'])
 
     def allow_use_descriptor_schema(self, res, slug):
-        process = res.descriptor_schema.filter(slug=slug, ordering='-version')[0]
+        process = res.descriptor_schema.get(slug=slug)
         self.make_public(process, permissions=['view'])
 
 

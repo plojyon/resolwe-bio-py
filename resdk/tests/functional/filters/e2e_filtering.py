@@ -66,17 +66,9 @@ class TestProcessFilter(BaseResdkFilteringTest):
 
         self.endpoint = self.res.process
 
-        self.star = self.res.process.get(
-            slug='alignment-star',
-            ordering=['-version', 'id'],
-            limit=1,
-        )
+        self.star = self.res.process.get(slug='alignment-star')
 
-        self.hisat2 = self.res.process.get(
-            slug='alignment-hisat2',
-            ordering='-version',
-            limit=1,
-        )
+        self.hisat2 = self.res.process.get(slug='alignment-hisat2')
 
     def test_id(self):
         self._check_filter({'id': self.star.id}, [self.star])

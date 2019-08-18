@@ -13,6 +13,8 @@ import copy
 import logging
 import operator
 
+from resdk.resources import DescriptorSchema, Process
+
 
 class ResolweQuery:
     """Query resource endpoints.
@@ -281,6 +283,12 @@ class ResolweQuery:
 
             arg = args[0]
             kwargs = {'id': arg} if str(arg).isdigit() else {self.slug_field: arg}
+
+        if self.slug_field in kwargs:
+            if issubclass(self.resource, (Process, DescriptorSchema)):
+                kwargs['ordering'] = kwargs.get('ordering', '-version')
+
+            kwargs['limit'] = kwargs.get('limit', 1)
 
         new_query = self._clone()
         new_query._add_filter(kwargs)  # pylint: disable=protected-access

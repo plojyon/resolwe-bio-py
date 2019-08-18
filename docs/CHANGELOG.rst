@@ -5,6 +5,16 @@ Change Log
 All notable changes to this project are documented in this file.
 
 
+==========
+Unreleased
+==========
+
+Fix
+---
+* Fix ``ResolweQuery.get`` method. This fix handles the case when object is
+  not uniquely defined by ``slug`` (but it is with ``slug`` and ``version``)
+
+
 ===================
 11.0.0 - 2019-08-14
 ===================
