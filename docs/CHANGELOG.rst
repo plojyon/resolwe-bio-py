@@ -9,6 +9,11 @@ All notable changes to this project are documented in this file.
 Unreleased
 ==========
 
+Changed
+-------
+* **BACKWARD INCOMPATIBLE:** Remove ``Sample.descriptor_completed`` attribute
+  and start deprecation procedure for ``Sample.confirm_is_annotated`` method
+
 Added
 -----
 - Add duplicate method to collection, sample and data resources

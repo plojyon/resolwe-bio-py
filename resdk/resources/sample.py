@@ -1,5 +1,6 @@
 """Sample resource."""
 import logging
+import warnings
 
 from resdk.shortcuts.sample import SampleUtilsMixin
 
@@ -19,7 +20,7 @@ class Sample(SampleUtilsMixin, BaseCollection):
     endpoint = 'sample'
 
     WRITABLE_FIELDS = BaseCollection.WRITABLE_FIELDS + (
-        'descriptor_completed', 'collection',
+        'collection',
     )
 
     def __init__(self, resolwe, **model_data):
@@ -34,8 +35,6 @@ class Sample(SampleUtilsMixin, BaseCollection):
         self._background = None
         #: is this sample background to any other sample?
         self._is_background = None
-        #: indicate whether `descriptor` is completed
-        self.descriptor_completed = None
 
         super().__init__(resolwe, **model_data)
 
@@ -83,8 +82,10 @@ class Sample(SampleUtilsMixin, BaseCollection):
 
     def confirm_is_annotated(self):
         """Mark sample as annotated (descriptor is completed)."""
-        self.api(self.id).patch({'descriptor_completed': True})
-        self.logger.info('Marked Sample %s as annotated', self.id)
+        warnings.warn(
+            "Method `confirm_is_annotated` will be removed in the future.",
+            DeprecationWarning,
+        )
 
     @property
     def background(self):
