@@ -80,6 +80,17 @@ class Resolwe:
         'group': 'name',
     }
 
+    data = None
+    collection = None
+    sample = None
+    relation = None
+    process = None
+    descriptor_schema = None
+    user = None
+    group = None
+    feature = None
+    mapping = None
+
     def __init__(self, username=None, password=None, url=None):
         """Initialize attributes."""
         if url is None:
