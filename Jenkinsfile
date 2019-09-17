@@ -78,6 +78,7 @@ throttle(["resolwe_bio_py"]) {
                         "mzganec",
                         "acopar",
                         "hadalin",
+                        "romunov",
                     ]
                     if (change_author != null && ! trusted_authors.contains(change_author)) {
                         // NOTE: The change_author variable equals null if a branch from the main
