@@ -267,7 +267,8 @@ class Resolwe:
         :param dict input: Input values
         :param dict descriptor: Descriptor values
         :param str descriptor_schema: A valid descriptor schema slug
-        :param list collection: Collection into which data object should be included
+        :param int/resource collection: Collection resource or it's id
+            into which data object should be included
         :param str data_name: Default name of data object
 
         :return: data object that was just created

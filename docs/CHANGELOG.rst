@@ -13,6 +13,10 @@ Added
 -----
 - Add duplicate method to collection, sample and data resources
 
+Fix
+---
+* Fix documentation for ``Resolwe.run`` ``collection`` parameter
+
 
 ===================
 11.0.1 - 2019-08-19
