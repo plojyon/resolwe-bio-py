@@ -3,6 +3,7 @@ import copy
 import logging
 import operator
 
+from ..constants import ALL_PERMISSIONS
 from ..utils.decorators import assert_object_exists
 from .permissions import PermissionsManager
 from .utils import parse_resolwe_datetime
@@ -33,7 +34,7 @@ class BaseResource:
     UPDATE_PROTECTED_FIELDS = ()
     WRITABLE_FIELDS = ()
 
-    ALL_PERMISSIONS = []  # override this in subclass
+    all_permissions = []  # override this in subclass
 
     def __init__(self, resolwe, **model_data):
         """Initialize attributes."""
@@ -202,6 +203,8 @@ class BaseResolweResource(BaseResource):
         'name', 'slug',
     )
 
+    all_permissions = ALL_PERMISSIONS
+
     def __init__(self, resolwe, **model_data):
         """Initialize attributes."""
         self.logger = logging.getLogger(__name__)
@@ -225,7 +228,7 @@ class BaseResolweResource(BaseResource):
         """Permissions."""
         if not self._permissions:
             self._permissions = PermissionsManager(
-                self.ALL_PERMISSIONS,
+                self.all_permissions,
                 self.api(self.id),
                 self.resolwe
             )

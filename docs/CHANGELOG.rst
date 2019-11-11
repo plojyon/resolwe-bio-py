@@ -13,6 +13,8 @@ Changed
 -------
 * **BACKWARD INCOMPATIBLE:** Remove ``Sample.descriptor_completed`` attribute
   and start deprecation procedure for ``Sample.confirm_is_annotated`` method
+* **BACKWARD INCOMPATIBLE:** Remove ``add`` and ``download`` permission to
+  sync with changes in Resolwe
 
 Added
 -----

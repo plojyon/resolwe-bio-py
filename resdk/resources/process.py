@@ -24,7 +24,7 @@ class Process(BaseResolweResource):
         'scheduling_class', 'type',
     )
 
-    ALL_PERMISSIONS = ['view', 'share', 'owner']
+    all_permissions = ['view', 'share', 'owner']
 
     def __init__(self, resolwe, **model_data):
         """Initialize attributes."""

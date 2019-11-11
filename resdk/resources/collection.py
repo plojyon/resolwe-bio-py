@@ -31,8 +31,6 @@ class BaseCollection(BaseResolweResource):
         'description', 'descriptor', 'descriptor_schema', 'settings', 'tags',
     )
 
-    ALL_PERMISSIONS = ['view', 'download', 'add', 'edit', 'share', 'owner']
-
     def __init__(self, resolwe, **model_data):
         """Initialize attributes."""
         self.logger = logging.getLogger(__name__)

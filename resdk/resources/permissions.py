@@ -2,6 +2,7 @@
 import copy
 from collections import defaultdict
 
+from ..constants import ALL_PERMISSIONS
 from .utils import is_group, is_user
 
 
@@ -234,7 +235,7 @@ class PermissionsManager:
         perms = copy.copy(perms)
 
         # Order known permissions by importance.
-        for known_perm in ['owner', 'share', 'edit', 'add', 'download', 'view']:
+        for known_perm in ALL_PERMISSIONS:
             if known_perm in perms:
                 perms.remove(known_perm)
                 perms.insert(0, known_perm)

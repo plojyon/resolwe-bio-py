@@ -22,8 +22,6 @@ class DescriptorSchema(BaseResolweResource):
         'description',
     )
 
-    ALL_PERMISSIONS = ['view', 'edit', 'share', 'owner']
-
     def __init__(self, resolwe, **model_data):
         """Initialize attributes."""
         self.logger = logging.getLogger(__name__)

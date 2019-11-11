@@ -70,10 +70,8 @@ class BaseResdkDocsFunctionalTest(BaseResdkFunctionalTest):
             slug='upload-fastq-single',
             input={'src': os.path.join(TEST_FILES_DIR, 'reads.fastq.gz')},
         )
-        self.set_slug_and_make_public(reads, self.reads_slug, permissions=['view', 'download'])
-        self.set_slug_and_make_public(
-            reads.sample, self.sample_slug, permissions=['view', 'download']
-        )
+        self.set_slug_and_make_public(reads, self.reads_slug, permissions=['view'])
+        self.set_slug_and_make_public(reads.sample, self.sample_slug, permissions=['view'])
         return reads
 
     def upload_genome(self, res):
