@@ -17,6 +17,10 @@ Fixed
 Added
 -----
 - Add support for Python 3.8
+- Add attributes ``owners``, ``editors`` and ``viewers`` to
+  ``PermissionsManager``. For example, one can now see who are owners of
+  Collection ``c1`` with ``c1.permissions.owners``
+
 
 ===================
 12.0.0 - 2019-11-19

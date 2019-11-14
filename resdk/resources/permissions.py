@@ -11,6 +11,9 @@ class PermissionsManager:
 
     #: (lazy loaded) list of permissons on current object
     _permissions = None
+    _viewers = None
+    _editors = None
+    _owners = None
 
     def __init__(self, all_permissions, api_root, resolwe):
         """Initialize attributes."""
@@ -71,6 +74,9 @@ class PermissionsManager:
     def clear_cache(self):
         """Clear cache."""
         self._permissions = None
+        self._viewers = None
+        self._editors = None
+        self._owners = None
 
     def fetch(self):
         """Fetch permissions from server."""
@@ -269,3 +275,49 @@ class PermissionsManager:
                 ))
 
         return '\n'.join(res)
+
+    def _get_holders_with_perm(self, perm):
+        """Get Users/Group/public names that have ``perm`` perm."""
+        # Prevent circular imports
+        from .user import Group, User
+
+        self.fetch()
+
+        holders = []
+        for item in self._permissions:  # pylint: disable=protected-access
+            if perm in item['permissions']:
+                if item['type'] == 'user':
+                    holders.append(
+                        User(
+                            self.resolwe,
+                            id=item['id'],
+                            first_name=item['name'],
+                            username=item['username'],
+                        ),
+                    )
+                elif item['type'] == 'group':
+                    holders.append(Group(self.resolwe, id=item['id'], name=item['name']))
+                elif item['type'] == 'public':
+                    holders.append(User(self.resolwe, username='public', first_name="Public"))
+        return holders
+
+    @property
+    def owners(self):
+        """Get users with ``owner`` permission."""
+        if not self._owners:
+            self._owners = self._get_holders_with_perm(perm="owner")
+        return self._owners
+
+    @property
+    def editors(self):
+        """Get users with ``edit`` permission."""
+        if not self._editors:
+            self._editors = self._get_holders_with_perm(perm="edit")
+        return self._editors
+
+    @property
+    def viewers(self):
+        """Get users with ``view`` permission."""
+        if not self._viewers:
+            self._viewers = self._get_holders_with_perm(perm="view")
+        return self._viewers

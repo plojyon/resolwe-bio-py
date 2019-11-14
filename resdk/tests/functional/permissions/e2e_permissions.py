@@ -35,3 +35,21 @@ class TestPermissions(BaseResdkFunctionalTest):
         collection_user.name = 'Another collection'
         with self.assertRaises(ResolweServerError):
             collection_user.save()
+
+    def test_get_holders_with_perm(self):
+        collection = self.res.collection.create(name='Test collection')
+        collection.permissions.add_user(USER_USERNAME, ['edit', 'view'])
+        collection.permissions.add_public('view')
+
+        self.assertEqual(len(collection.permissions.owners), 1)
+        self.assertEqual(collection.permissions.owners[0].get_name(), "admin")
+
+        self.assertEqual(len(collection.permissions.editors), 2)
+        self.assertEqual(collection.permissions.editors[0].get_name(), "admin")
+        self.assertEqual(collection.permissions.editors[1].get_name(), "user")
+
+
+        self.assertEqual(len(collection.permissions.viewers), 3)
+        self.assertEqual(collection.permissions.viewers[0].first_name, "admin")
+        self.assertEqual(collection.permissions.viewers[1].first_name, "user")
+        self.assertEqual(collection.permissions.viewers[2].username, "public")
