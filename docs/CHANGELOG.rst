@@ -20,6 +20,9 @@ Added
 - Add attributes ``owners``, ``editors`` and ``viewers`` to
   ``PermissionsManager``. For example, one can now see who are owners of
   Collection ``c1`` with ``c1.permissions.owners``
+- Add ``iterate`` method to ``ResolweQuery``. This solves the
+  ``504 Gateway Time-out`` when one wants to fetch all (or hundreds)
+  objects from server.
 
 
 ===================

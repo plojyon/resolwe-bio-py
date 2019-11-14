@@ -84,6 +84,12 @@ class TestProcessFilter(BaseResdkFilteringTest):
         self._check_filter({'id__in': [self.star.id]}, [self.star])
         self._check_filter({'id__in': [self.star.id, self.hisat2.id]}, [self.star, self.hisat2])
 
+    def test_iterate_method(self):
+        workflows = list(self.res.process.filter(type="data:workflow").iterate(chunk_size=10))
+        # Use ``assertGreater`` to avoid updating this test each time
+        # after new workflow is added / removed.
+        self.assertGreater(len(workflows), 30)
+
 
 class TestFeatureFilter(BaseResdkFilteringTest):
 

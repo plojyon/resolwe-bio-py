@@ -352,3 +352,38 @@ class ResolweQuery:
         new_query._add_filter({self.resource.full_search_paramater: text})
         # pylint: enable=protected-access
         return new_query
+
+    def iterate(self, chunk_size=100):
+        """
+        Iterate through query.
+
+        This can come handy when one wishes to iterate through hundreds or
+        thousands of objects and would otherwise get "504 Gateway-timeout".
+        """
+        # For now, let's assume that this method will only be used when
+        # limit and offset are not used as query parameters. We can relax
+        # these limitations at some later point. Also, ordering is
+        # prohibited for now.
+        if self._limit is not None:
+            raise ValueError(
+                "Parameter 'limit' should not be used in combination with method iterate."
+            )
+        if self._offset is not None:
+            raise ValueError(
+                "Parameter 'offset' should not be used in combination with method iterate."
+            )
+        if "ordering" in self._filters:
+            raise ValueError(
+                "Specifying order in combination with method iterate is not allowed."
+            )
+
+        count = self.count()
+
+        iterate_query = self._clone()
+        min_id = 0
+        obj_count = 0
+        while obj_count < count:
+            for obj in iterate_query.filter(id__gt=min_id, limit=chunk_size, ordering="id"):
+                obj_count += 1
+                min_id = obj.id
+                yield obj
