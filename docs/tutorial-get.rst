@@ -63,7 +63,7 @@ But the real power of the ``filter()`` method is in combining multiple
 parameters:
 
 .. literalinclude:: files/tutorial-get.py
-  :lines: 20-27
+  :lines: 20-29
 
 This will return data objects with OK status, created in October 2018, order
 them by descending modified date and return first 3 objects. Quite powerful
@@ -75,7 +75,7 @@ list). If only one parameter is given, it will be interpreted as a unique
 identifier ``id`` or ``slug``, depending on if it is a number or string:
 
 .. literalinclude:: files/tutorial-get.py
-  :lines: 29-30
+  :lines: 31-32
 
 .. TODO How to know by which fields one can sort?
 
@@ -89,13 +89,13 @@ resources share some common attributes like ``name``, ``id``, ``slug``,
 them like any other Python class attributes:
 
 .. literalinclude:: files/tutorial-get.py
-  :lines: 32-42
+  :lines: 34-44
 
 Aside from these attributes, each resource class has some specific attributes
 and methods. For example, some of the most used ones for ``Data`` resource:
 
 .. literalinclude:: files/tutorial-get.py
-  :lines: 44-49
+  :lines: 46-51
 
 You can check list of methods defined for each of the resources in the
 :doc:`reference section <ref>`. Note that some attributes and methods are
@@ -128,7 +128,7 @@ The ``files()`` method returns a list of all files on the resource but does not
 download anything.
 
 .. literalinclude:: files/tutorial-get.py
-  :lines: 51-61
+  :lines: 53-63
 
 The method ``download()`` downloads the resource files. The optional parameters
 ``file_name`` and ``field_name`` have the same effect as in the ``files``
@@ -136,4 +136,4 @@ method. There is an additional parameter, ``download_dir``, that allows you to
 specify the download directory:
 
 .. literalinclude:: files/tutorial-get.py
-  :lines: 63-70
+  :lines: 65-72

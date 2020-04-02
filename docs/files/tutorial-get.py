@@ -18,10 +18,12 @@ res.collection.filter(name='SDK')
 res.process.filter(category='Align')
 
 # Filter by using several fields:
+from datetime import datetime
+
 res.data.filter(
   status='OK',
-  created__gt='2018-10-01',
-  created__lt='2025-11-01',
+  created__gt=datetime(2018, 10, 1),
+  created__lt=datetime(2025, 11, 1),
   ordering='-modified',
   limit=3,
 )

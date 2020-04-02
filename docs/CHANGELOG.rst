@@ -5,6 +5,16 @@ Change Log
 All notable changes to this project are documented in this file.
 
 
+==========
+Unreleased
+==========
+
+Fixed
+-----
+- Fix date format for filtering with ``created__gt`` / ``created__lt``
+  in tutorial script
+
+
 ===================
 12.0.0 - 2019-11-19
 ===================
