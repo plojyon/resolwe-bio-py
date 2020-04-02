@@ -38,12 +38,20 @@ class TestDataFilter(BaseResdkFilteringTest):
 
         self.data1 = self.res.run(
             slug='upload-fasta-nucl',
-            input={'src': os.path.join(FILES_PATH, 'genome.fasta.gz')},
+            input={
+                'src': os.path.join(FILES_PATH, 'genome.fasta.gz'),
+                'species': 'Homo sapiens',
+                'build': 'hg38',
+            },
             data_name='Data 1',
         )
         self.data2 = self.res.run(
             slug='upload-fasta-nucl',
-            input={'src': os.path.join(FILES_PATH, 'genome.fasta.gz')},
+            input={
+                'src': os.path.join(FILES_PATH, 'genome.fasta.gz'),
+                'species': 'Homo sapiens',
+                'build': 'hg38',
+            },
             data_name='Data 2',
         )
 

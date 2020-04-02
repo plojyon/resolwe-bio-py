@@ -20,6 +20,7 @@ class BaseResdkDocsFunctionalTest(BaseResdkFunctionalTest):
     sample_slug = 'resdk-example'
     reads_slug = 'resdk-example-reads'
     genome_slug = 'resdk-example-genome'
+    fasta_slug = 'resdk-example-fasta'
     genome_index_slug = 'resdk-example-genome-index'
     annotation_slug = 'resdk-example-annotation'
 
@@ -87,6 +88,19 @@ class BaseResdkDocsFunctionalTest(BaseResdkFunctionalTest):
 
         return genome
 
+    def upload_fasta(self, res):
+        fasta = res.run(
+            slug='upload-fasta-nucl',
+            input={
+                'src': os.path.join(TEST_FILES_DIR, 'genome.fasta.gz'),
+                'species': 'Dictyostelium discoideum',
+                'build': 'dd-05-2009',
+            },
+        )
+        self.set_slug_and_make_public(fasta, self.fasta_slug, permissions=['view'])
+
+        return fasta
+
     def upload_annotation(self, res):
         annotation = res.run(
             slug='upload-gtf',
@@ -101,11 +115,11 @@ class BaseResdkDocsFunctionalTest(BaseResdkFunctionalTest):
 
         return annotation
 
-    def create_genome_index(self, res, genome):
+    def create_genome_index(self, res, fasta):
         genome_index = res.run(
             slug='alignment-star-index',
             input={
-                'genome': genome,
+                'ref_seq': fasta,
             },
         )
         self.set_slug_and_make_public(genome_index, self.genome_index_slug, permissions=['view'])
@@ -186,7 +200,8 @@ class TestTutorialCreate(BaseResdkDocsFunctionalTest):
 
         self.reads = self.upload_reads(self.res)
         self.genome = self.upload_genome(self.res)
-        self.genome_index = self.create_genome_index(self.res, self.genome)
+        self.fasta = self.upload_fasta(self.res)
+        self.genome_index = self.create_genome_index(self.res, self.fasta)
         self.annotation = self.upload_annotation(self.res)
 
         # Set permissions for running processes:
