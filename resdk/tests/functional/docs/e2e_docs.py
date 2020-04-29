@@ -20,7 +20,6 @@ class BaseResdkDocsFunctionalTest(BaseResdkFunctionalTest):
     sample_slug = 'resdk-example'
     reads_slug = 'resdk-example-reads'
     genome_slug = 'resdk-example-genome'
-    fasta_slug = 'resdk-example-fasta'
     genome_index_slug = 'resdk-example-genome-index'
     annotation_slug = 'resdk-example-annotation'
 
@@ -77,7 +76,7 @@ class BaseResdkDocsFunctionalTest(BaseResdkFunctionalTest):
 
     def upload_genome(self, res):
         genome = res.run(
-            slug='upload-genome',
+            slug='upload-fasta-nucl',
             input={
                 'src': os.path.join(TEST_FILES_DIR, 'genome.fasta.gz'),
                 'species': 'Dictyostelium discoideum',
@@ -87,19 +86,6 @@ class BaseResdkDocsFunctionalTest(BaseResdkFunctionalTest):
         self.set_slug_and_make_public(genome, self.genome_slug, permissions=['view'])
 
         return genome
-
-    def upload_fasta(self, res):
-        fasta = res.run(
-            slug='upload-fasta-nucl',
-            input={
-                'src': os.path.join(TEST_FILES_DIR, 'genome.fasta.gz'),
-                'species': 'Dictyostelium discoideum',
-                'build': 'dd-05-2009',
-            },
-        )
-        self.set_slug_and_make_public(fasta, self.fasta_slug, permissions=['view'])
-
-        return fasta
 
     def upload_annotation(self, res):
         annotation = res.run(
@@ -158,9 +144,10 @@ class TestStart(BaseResdkDocsFunctionalTest):
         # Create data for tests:
         self.reads = self.upload_reads(self.res)
         self.genome = self.upload_genome(self.res)
+        self.genome_index = self.create_genome_index(self.res, self.genome)
 
         # Set permissions for running processes:
-        self.allow_run_process(self.res, 'alignment-hisat2')
+        self.allow_run_process(self.res, 'alignment-star')
         super().setUp()
 
     def test_start(self):
@@ -200,13 +187,12 @@ class TestTutorialCreate(BaseResdkDocsFunctionalTest):
 
         self.reads = self.upload_reads(self.res)
         self.genome = self.upload_genome(self.res)
-        self.fasta = self.upload_fasta(self.res)
-        self.genome_index = self.create_genome_index(self.res, self.fasta)
+        self.genome_index = self.create_genome_index(self.res, self.genome)
         self.annotation = self.upload_annotation(self.res)
 
         # Set permissions for running processes:
         self.allow_run_process(self.res, 'upload-fastq-single')
-        self.allow_run_process(self.res, 'alignment-hisat2')
+        self.allow_run_process(self.res, 'alignment-star')
         self.allow_run_process(self.res, 'workflow-bbduk-star-htseq')
         # Set permissions for using descriptor_schemas:
         self.allow_use_descriptor_schema(self.res, 'reads')

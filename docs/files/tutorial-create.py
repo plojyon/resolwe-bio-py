@@ -65,12 +65,12 @@ reads.sample.save()
 
 
 # Get genome
-genome = res.data.get('resdk-example-genome')
+genome_index = res.data.get('resdk-example-genome-index')
 
 alignment = res.run(
-    slug='alignment-hisat2',
+    slug='alignment-star',
     input={
-        'genome': genome,
+        'genome': genome_index,
         'reads': reads,
     },
 )

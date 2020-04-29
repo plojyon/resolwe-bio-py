@@ -15,7 +15,7 @@ res.data.filter(type='data:genome')
 res.data.filter(type='data:genome:fasta')
 
 # Get data object by slug
-genome = res.data.get('resdk-example-genome')
+genome_index = res.data.get('resdk-example-genome-index')
 
 # All paired-end fastq objects
 res.data.filter(type='data:reads:fastq:paired')
@@ -28,10 +28,10 @@ reads.contributor
 reads.files()
 
 bam = res.run(
-    slug='alignment-hisat2',
+    slug='alignment-star',
     input={
         'reads': reads.id,
-        'genome': genome.id,
+        'genome': genome_index.id,
     },
 )
 
