@@ -14,6 +14,9 @@ Fixed
 - Fix date format for filtering with ``created__gt`` / ``created__lt``
   in tutorial script
 
+Added
+-----
+- Add support for Python 3.8
 
 ===================
 12.0.0 - 2019-11-19
