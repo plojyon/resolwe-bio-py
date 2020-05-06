@@ -12,7 +12,7 @@ from ..base import FILES_PATH, BaseResdkFunctionalTest
 class BaseResdkFilteringTest(BaseResdkFunctionalTest):
 
     def setUp(self):
-        super(BaseResdkFilteringTest, self).setUp()
+        super().setUp()
         self.endpoint = self.res.data
 
     def _get_ids(self, query):
@@ -32,7 +32,7 @@ class BaseResdkFilteringTest(BaseResdkFunctionalTest):
 class TestDataFilter(BaseResdkFilteringTest):
 
     def setUp(self):
-        super(TestDataFilter, self).setUp()
+        super().setUp()
 
         self.endpoint = self.res.data
 
@@ -56,7 +56,7 @@ class TestDataFilter(BaseResdkFilteringTest):
         )
 
     def tearDown(self):
-        super(TestDataFilter, self).tearDown()
+        super().tearDown()
         self.data1.delete(force=True)
         self.data2.delete(force=True)
 
@@ -70,7 +70,7 @@ class TestDataFilter(BaseResdkFilteringTest):
 class TestProcessFilter(BaseResdkFilteringTest):
 
     def setUp(self):
-        super(TestProcessFilter, self).setUp()
+        super().setUp()
 
         self.endpoint = self.res.process
 
@@ -88,7 +88,7 @@ class TestProcessFilter(BaseResdkFilteringTest):
 class TestFeatureFilter(BaseResdkFilteringTest):
 
     def setUp(self):
-        super(TestFeatureFilter, self).setUp()
+        super().setUp()
 
         self.endpoint = self.res.feature
 
