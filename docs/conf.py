@@ -9,7 +9,7 @@ base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
 # Get package metadata from 'resdk/__about__.py' file
 about = {}
-with open(os.path.join(base_dir, 'resdk', '__about__.py')) as f:
+with open(os.path.join(base_dir, 'src', 'resdk', '__about__.py')) as f:
     exec(f.read(), about)
 
 # -- General configuration ------------------------------------------------

@@ -14,7 +14,7 @@ with open('README.rst') as f:
 # Get package metadata from '__about__.py' file.
 about = {}
 base_dir = os.path.abspath(os.path.dirname(__file__))
-with open(os.path.join(base_dir, 'resdk', '__about__.py')) as fh:
+with open(os.path.join(base_dir, 'src', 'resdk', '__about__.py')) as fh:
     exec(fh.read(), about)
 
 setuptools.setup(
@@ -28,9 +28,8 @@ setuptools.setup(
     url=about['__url__'],
     license=about['__license__'],
     # Exclude tests from built/installed package.
-    packages=setuptools.find_packages(
-        exclude=['tests', 'tests.*', '*.tests', '*.tests.*']
-    ),
+    packages=setuptools.find_packages("src"),
+    package_dir={"": "src"},
     install_requires=(
         'requests>=2.6.0',
         'slumber>=0.7.1',
