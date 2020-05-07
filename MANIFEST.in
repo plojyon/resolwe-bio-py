@@ -3,7 +3,6 @@ include LICENSE
 # Include documentation and files needed by documentation.
 recursive-include docs docs/images *.py *.rst *.jpg *.png
 # Include tests and files needed by tests.
-include .pylintrc
 include pyproject.toml
 include tox.ini
 recursive-include tests *.py
