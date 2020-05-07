@@ -1,7 +1,7 @@
 """
 Unit tests for resdk/resources/collection.py file.
 """
-# pylint: disable=missing-docstring, protected-access
+
 
 import unittest
 
@@ -92,9 +92,8 @@ class TestCollection(unittest.TestCase):
             id=1, descriptor_schema=descriptor_schema, resolwe=MagicMock()
         )
         self.assertTrue(isinstance(collection.descriptor_schema, DescriptorSchema))
-        # pylint: disable=no-member
+
         self.assertEqual(collection.descriptor_schema.slug, "test-schema")
-        # pylint: enable=no-member
 
     def test_data(self):
         collection = Collection(id=1, resolwe=MagicMock())

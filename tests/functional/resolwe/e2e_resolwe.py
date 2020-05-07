@@ -1,4 +1,3 @@
-# pylint: disable=missing-docstring
 import resdk
 
 from ..base import BaseResdkFunctionalTest
@@ -6,9 +5,7 @@ from ..base import BaseResdkFunctionalTest
 
 class TestRun(BaseResdkFunctionalTest):
     def test_run(self):
-        collection = self.res.collection.get(
-            name="Test collection"
-        )  # pylint: disable=no-member
+        collection = self.res.collection.get(name="Test collection")
 
         data = self.res.run(
             slug="test-sleep-progress",
@@ -23,9 +20,9 @@ class TestRun(BaseResdkFunctionalTest):
         self.assertEqual(data.process.slug, "test-sleep-progress")
         self.assertEqual(data.input, {"t": 1})
         self.assertEqual(data.descriptor_schema.slug, "reads")
-        # pylint: disable=unsubscriptable-object
+
         self.assertEqual(data.descriptor["description"], "Lorem ipsum ...")
-        # pylint: enable=unsubscriptable-object
+
         self.assertEqual(data.collection, collection)
         self.assertEqual(data.name, "Test run data")
 

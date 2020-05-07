@@ -1,4 +1,3 @@
-# pylint: disable=missing-docstring
 from ..base import BaseResdkFunctionalTest
 
 

@@ -1,7 +1,7 @@
 """
 Unit tests for resdk/query.py file.
 """
-# pylint: disable=missing-docstring, protected-access
+
 
 import unittest
 from collections import defaultdict
@@ -238,9 +238,7 @@ class TestResolweQuery(unittest.TestCase):
         query = MagicMock(spec=ResolweQuery, **{"_clone.return_value": new_query})
 
         result = ResolweQuery.filter(query, id=2)
-        result._add_filter.assert_called_once_with(
-            {"id": 2}
-        )  # pylint: disable=no-member
+        result._add_filter.assert_called_once_with({"id": 2})
         # make sure that original hasnt changed
         self.assertEqual(query._add_filter.call_count, 0)
 

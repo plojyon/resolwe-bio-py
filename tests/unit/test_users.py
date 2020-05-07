@@ -1,7 +1,7 @@
 """
 Unit tests for resdk/resources/user.py file.
 """
-# pylint: disable=missing-docstring, protected-access
+
 
 import unittest
 
@@ -19,7 +19,7 @@ class TestGroup(unittest.TestCase):
 
     def test_users_no_id(self):
         with self.assertRaises(ValueError):
-            self.group_no_id.users  # pylint: disable=pointless-statement
+            self.group_no_id.users
 
     def test_users(self):
         self.resolwe.user.filter.return_value = [self.user]

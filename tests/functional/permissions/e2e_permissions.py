@@ -1,4 +1,3 @@
-# pylint: disable=missing-docstring,no-member
 from resdk.exceptions import ResolweServerError
 
 from ..base import USER_USERNAME, BaseResdkFunctionalTest

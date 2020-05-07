@@ -31,6 +31,6 @@ def handle_http_exception(func):
         try:
             return func(*args, **kwargs)
         except SlumberHttpBaseException as exception:
-            raise ResolweServerError(exception.content)  # pylint: disable=no-member
+            raise ResolweServerError(exception.content)
 
     return wrapper

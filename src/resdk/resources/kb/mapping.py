@@ -40,7 +40,6 @@ class Mapping(BaseResource):
 
     def __repr__(self):
         """Format mapping representation."""
-        # pylint: disable=no-member
         return "<Mapping source_db='{}' source_id='{}' target_db='{}' target_id='{}'>".format(
             self.source_db, self.source_id, self.target_db, self.target_id
         )

@@ -125,7 +125,6 @@ class ResolweQuery:
 
     def __getitem__(self, index):
         """Retrieve an item or slice from the set of results."""
-        # pylint: disable=protected-access
         if not isinstance(index, (slice, int)):
             raise TypeError
         if (
@@ -181,7 +180,6 @@ class ResolweQuery:
 
     def _clone(self):
         """Return copy of current object with empty cache."""
-        # pylint: disable=protected-access
         new_obj = ResolweQuery(self.resolwe, self.resource)
         new_obj._filters = copy.deepcopy(self._filters)
         new_obj._limit = self._limit
@@ -251,7 +249,6 @@ class ResolweQuery:
 
     def count(self):
         """Return number of objects in current query."""
-        # pylint: disable=protected-access
         if self._count is None:
             count_query = self._clone()
             count_query._offset = 0
@@ -301,7 +298,7 @@ class ResolweQuery:
             kwargs["limit"] = kwargs.get("limit", 1)
 
         new_query = self._clone()
-        new_query._add_filter(kwargs)  # pylint: disable=protected-access
+        new_query._add_filter(kwargs)
 
         response = list(new_query)
 
@@ -323,7 +320,7 @@ class ResolweQuery:
     def filter(self, **filters):
         """Return clone of current query with added given filters."""
         new_query = self._clone()
-        new_query._add_filter(filters)  # pylint: disable=protected-access
+        new_query._add_filter(filters)
         return new_query
 
     def delete(self, force=False):
@@ -358,9 +355,7 @@ class ResolweQuery:
             raise NotImplementedError()
 
         new_query = self._clone()
-        # pylint: disable=protected-access
         new_query._add_filter({self.resource.full_search_paramater: text})
-        # pylint: enable=protected-access
         return new_query
 
     def iterate(self, chunk_size=100):

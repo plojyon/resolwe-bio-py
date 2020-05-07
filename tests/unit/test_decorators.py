@@ -1,7 +1,7 @@
 """
 Unit tests for resdk/utils/decorators.py file.
 """
-# pylint: disable=missing-docstring, protected-access
+
 
 import unittest
 
@@ -31,8 +31,6 @@ class TestDecorators(unittest.TestCase):
             test_function_3()
 
     def test_assert_object_exists(self):
-        # pylint: disable=invalid-name,redefined-builtin
-
         class Example:
             def __init__(self, id=None):
                 self.id = id
@@ -56,9 +54,7 @@ class TestDecorators(unittest.TestCase):
         example = Example()
         message = "Instance must be saved before accessing `attr` attribute."
         with self.assertRaisesRegex(ValueError, message):
-            example.attr  # pylint: disable=pointless-statement
+            example.attr
         message = "Instance must be saved before accessing `method` method."
         with self.assertRaisesRegex(ValueError, message):
             example.method()
-
-        # pylint: enable=invalid-name,redefined-builtin

@@ -1,7 +1,7 @@
 """
 Unit tests for resdk/resources/data.py file.
 """
-# pylint: disable=missing-docstring, protected-access
+
 import unittest
 
 from mock import MagicMock, patch
@@ -32,7 +32,7 @@ class TestData(unittest.TestCase):
         data._descriptor_schema = DescriptorSchema(resolwe=resolwe, id=2)
 
         # test getting descriptor schema attribute
-        self.assertEqual(data.descriptor_schema.id, 2)  # pylint: disable=no-member
+        self.assertEqual(data.descriptor_schema.id, 2)
 
         # descriptor schema is not set
         data._descriptor_schema = None
@@ -55,18 +55,17 @@ class TestData(unittest.TestCase):
         }
         data = Data(id=1, descriptor_schema=descriptor_schema, resolwe=MagicMock())
         self.assertTrue(isinstance(data.descriptor_schema, DescriptorSchema))
-        # pylint: disable=no-member,unsubscriptable-object
+
         self.assertEqual(data.descriptor_schema.slug, "test-schema")
         self.assertEqual(
             data.descriptor_schema.schema[0]["label"], "Object description"
         )
-        # pylint: enable=no-member,unsubscriptable-object
 
     def test_parents(self):
         # Data with no id should fail.
         data = Data(id=None, resolwe=MagicMock())
         with self.assertRaisesRegex(ValueError, "Instance must be saved *"):
-            data.parents  # pylint: disable=pointless-statement
+            data.parents
 
         # Core functionality should be checked with e2e tests.
 
@@ -80,7 +79,7 @@ class TestData(unittest.TestCase):
         # Data with no id should fail.
         data = Data(id=None, resolwe=MagicMock())
         with self.assertRaisesRegex(ValueError, "Instance must be saved *"):
-            data.children  # pylint: disable=pointless-statement
+            data.children
 
         # Core functionality should be checked with e2e tests.
 

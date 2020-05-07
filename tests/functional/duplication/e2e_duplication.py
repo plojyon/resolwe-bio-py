@@ -1,4 +1,3 @@
-# pylint: disable=missing-docstring
 from resdk.exceptions import ResolweServerError
 from resdk.tests.functional.base import BaseResdkFunctionalTest
 

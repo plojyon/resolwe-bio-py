@@ -129,7 +129,7 @@ class Sample(SampleUtilsMixin, BaseCollection):
             """
             relation = list(
                 self.resolwe.relation.filter(
-                    collection=collection.id,  # pylint: disable=no-member
+                    collection=collection.id,
                     type="background",
                     entity=entity.id,
                     label=label,
@@ -162,7 +162,7 @@ class Sample(SampleUtilsMixin, BaseCollection):
         # Relations are always defined on collections: it is necessary
         # to check that both, background and case are defined in only
         # one common collection. Actions are done on this collection.
-        if self.collection.id != bground.collection.id:  # pylint: disable=no-member
+        if self.collection.id != bground.collection.id:
             raise ValueError(
                 "Background and case sample are not in the same collection."
             )
@@ -192,9 +192,7 @@ class Sample(SampleUtilsMixin, BaseCollection):
         if self_cases == bground_cases == 0:
             # Neither case nor background is in background relation.
             # Make a new background relation.
-            # pylint: disable=no-member
             collection.create_background_relation("Background", bground, [self])
-            # pylint: enable=no-member
         elif self_cases == 0 and bground_cases > 0:
             # Sample is not part of any existing background relation,
             # but background sample is. In this cae, just add sample to
@@ -227,7 +225,7 @@ class Sample(SampleUtilsMixin, BaseCollection):
         self.save()
         self._relations = None
         self._background = None
-        bground._is_background = True  # pylint: disable=protected-access
+        bground._is_background = True
 
     @property
     def is_background(self):
@@ -238,9 +236,7 @@ class Sample(SampleUtilsMixin, BaseCollection):
             )
             # we need to iterate ``background_relations`` (using len) to
             # evaluate ResolweQuery:
-            self._is_background = (
-                len(background_relations) > 0
-            )  # pylint: disable=len-as-condition
+            self._is_background = len(background_relations) > 0
 
         return self._is_background
 

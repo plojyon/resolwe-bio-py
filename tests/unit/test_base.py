@@ -1,7 +1,7 @@
 """
 Unit tests for resdk/resolwe.py file.
 """
-# pylint: disable=missing-docstring, protected-access
+
 
 import unittest
 
@@ -28,7 +28,7 @@ BaseResource.endpoint = "endpoint"
 
 class TestBaseResolweResource(unittest.TestCase):
     @patch("resdk.resolwe.Resolwe")
-    def setUp(self, resolwe_mock):  # pylint: disable=arguments-differ
+    def setUp(self, resolwe_mock):
         self.resolwe_mock = resolwe_mock
 
     def test_field_constraints(self):

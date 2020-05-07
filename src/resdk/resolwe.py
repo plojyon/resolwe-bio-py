@@ -210,9 +210,7 @@ class Resolwe:
 
         Raise error if process doesn't exist or more than one is returned.
         """
-        # pylint: disable=no-member
         return self.process.get(slug=slug)
-        # pylint: enable=no-member
 
     def _process_inputs(self, inputs, process):
         """Process input fields.
@@ -283,7 +281,7 @@ class Resolwe:
         self,
         slug=None,
         input={},
-        descriptor=None,  # pylint: disable=redefined-builtin
+        descriptor=None,
         descriptor_schema=None,
         collection=None,
         data_name="",
@@ -334,7 +332,7 @@ class Resolwe:
         model_data = self.api.data.post(data)
         return Data(resolwe=self, **model_data)
 
-    def get_or_run(self, slug=None, input={}):  # pylint: disable=redefined-builtin
+    def get_or_run(self, slug=None, input={}):
         """Return existing object if found, otherwise create new one.
 
         :param str slug: Process slug (human readable unique identifier)
@@ -409,9 +407,7 @@ class Resolwe:
 
         return response.json()["files"][0]["temp"]
 
-    def _download_files(
-        self, files, download_dir=None
-    ):  # pylint: disable=redefined-builtin
+    def _download_files(self, files, download_dir=None):
         """Download files.
 
         Download files from the Resolwe server to the download

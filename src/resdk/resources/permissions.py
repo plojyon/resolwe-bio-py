@@ -301,7 +301,7 @@ class PermissionsManager:
         self.fetch()
 
         holders = []
-        for item in self._permissions:  # pylint: disable=protected-access
+        for item in self._permissions:
             if perm in item["permissions"]:
                 if item["type"] == "user":
                     holders.append(

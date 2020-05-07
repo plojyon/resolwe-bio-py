@@ -315,9 +315,7 @@ class Data(BaseResolweResource):
             "{}/{}".format(self.id, fname)
             for fname in self.files(file_name, field_name)
         ]
-        self.resolwe._download_files(
-            files, download_dir
-        )  # pylint: disable=protected-access
+        self.resolwe._download_files(files, download_dir)
 
     def stdout(self):
         """Return process standard output (stdout.txt file content).

@@ -86,4 +86,4 @@ class Process(BaseResolweResource):
 
     def print_inputs(self):
         """Pretty print input_schema."""
-        _print_input_line(self.input_schema, 0)  # pylint: disable=no-member
+        _print_input_line(self.input_schema, 0)

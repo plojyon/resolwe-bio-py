@@ -1,4 +1,3 @@
-# pylint: disable=missing-docstring
 import os
 import shutil
 import sys
@@ -41,13 +40,13 @@ class BaseResdkDocsFunctionalTest(BaseResdkFunctionalTest):
         shutil.rmtree(self.tmpdir)
 
         if hasattr(self, "reads"):
-            self.reads.sample.delete(force=True)  # pylint: disable=no-member
+            self.reads.sample.delete(force=True)
         if hasattr(self, "genome"):
-            self.genome.delete(force=True)  # pylint: disable=no-member
+            self.genome.delete(force=True)
         if hasattr(self, "genome_index"):
-            self.genome_index.delete(force=True)  # pylint: disable=no-member
+            self.genome_index.delete(force=True)
         if hasattr(self, "annotation"):
-            self.annotation.delete(force=True)  # pylint: disable=no-member
+            self.annotation.delete(force=True)
 
     def run_tutorial_script(self, script_name, replace_lines=None):
         """Run a script from tutorial folder.
@@ -71,7 +70,7 @@ class BaseResdkDocsFunctionalTest(BaseResdkFunctionalTest):
             for line_index, line_content in replace_lines:
                 content[line_index] = line_content
 
-        exec("".join(content))  # pylint: disable=exec-used
+        exec("".join(content))
 
     def upload_reads(self, res):
         reads = res.run(
@@ -236,7 +235,7 @@ class TestTutorialResources(BaseResdkFunctionalTest):
             BaseResdkDocsFunctionalTest.sample_slug,
         ]
         for sample_slug in sample_slugs:
-            res.sample.get(sample_slug)  # pylint: disable=no-member
+            res.sample.get(sample_slug)
 
         data_slugs = [
             BaseResdkDocsFunctionalTest.reads_slug,
@@ -245,4 +244,4 @@ class TestTutorialResources(BaseResdkFunctionalTest):
             BaseResdkDocsFunctionalTest.genome_index_slug,
         ]
         for data_slug in data_slugs:
-            res.data.get(slug=data_slug, fields="id")  # pylint: disable=no-member
+            res.data.get(slug=data_slug, fields="id")

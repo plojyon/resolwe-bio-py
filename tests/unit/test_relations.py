@@ -1,7 +1,7 @@
 """
 Unit tests for resdk/resources/relation.py file.
 """
-# pylint: disable=missing-docstring, protected-access
+
 import unittest
 
 from mock import MagicMock, patch

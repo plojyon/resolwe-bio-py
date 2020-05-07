@@ -1,7 +1,7 @@
 """
 Unit tests for resdk/resources/collection.py file.
 """
-# pylint: disable=missing-docstring, protected-access
+
 
 import unittest
 

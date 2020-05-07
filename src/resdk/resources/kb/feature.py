@@ -46,7 +46,6 @@ class Feature(BaseResource):
 
     def __repr__(self):
         """Format feature representation."""
-        # pylint: disable=no-member
         return "<Feature source='{}' feature_id='{}'>".format(
             self.source, self.feature_id
         )

@@ -43,15 +43,13 @@ class BaseResource:
         self.logger = logging.getLogger(__name__)
 
         #: unique identifier of an object
-        self.id = None  # pylint: disable=invalid-name
+        self.id = None
 
         if model_data:
             self._update_fields(model_data)
 
     @classmethod
-    # pylint: disable=invalid-name,redefined-builtin
     def fetch_object(cls, resolwe, id=None, slug=None):
-        # pylint: enable=invalid-name,redefined-builtin
         """Return resource instance that is uniquely defined by identifier."""
         if (id is None and slug is None) or (id and slug):
             raise ValueError("One and only one of id or slug must be given")

@@ -1,7 +1,7 @@
 """
 Unit tests for resdk/resolwe.py file.
 """
-# pylint: disable=missing-docstring, protected-access
+
 
 import io
 import os
@@ -489,7 +489,7 @@ class TestDownload(unittest.TestCase):
 
 class TestResAuth(unittest.TestCase):
     @patch("resdk.resolwe.ResAuth", spec=True)
-    def setUp(self, auth_mock):  # pylint: disable=arguments-differ
+    def setUp(self, auth_mock):
         auth_mock.configure_mock(sessionid=None, csrftoken=None)
         self.auth_mock = auth_mock
 
