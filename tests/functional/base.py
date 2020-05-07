@@ -4,18 +4,14 @@ import unittest
 
 from resdk import Resolwe
 
-URL = os.environ.get('SERVER_URL', 'http://localhost:8000')
-USER_USERNAME = 'user'
-USER_PASSWORD = 'user'
-ADMIN_USERNAME = 'admin'
-ADMIN_PASSWORD = 'admin'
+URL = os.environ.get("SERVER_URL", "http://localhost:8000")
+USER_USERNAME = "user"
+USER_PASSWORD = "user"
+ADMIN_USERNAME = "admin"
+ADMIN_PASSWORD = "admin"
 
 FILES_PATH = os.path.normpath(
-    os.path.join(
-        os.path.dirname(os.path.abspath(__file__)),
-        '..',
-        'files'
-    )
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "files")
 )
 
 
@@ -40,7 +36,7 @@ class BaseResdkFunctionalTest(unittest.TestCase):
     def make_public(self, resource, permissions=None):
         """Make resource public."""
         if permissions is None:
-            permissions = ['view']
+            permissions = ["view"]
         resource.permissions.add_public(permissions)
 
     def set_slug_and_make_public(self, resource, slug, permissions=None):

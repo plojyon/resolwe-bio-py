@@ -23,14 +23,12 @@ class BaseResource:
 
     endpoint = None
     query_endpoint = None
-    query_method = 'GET'
+    query_method = "GET"
     full_search_paramater = None
     delete_warning_single = "Do you really want to delete {}?[yN]"
     delete_warning_bulk = "Do you really want to delete {} objects?[yN]"
 
-    READ_ONLY_FIELDS = (
-        'id',
-    )
+    READ_ONLY_FIELDS = ("id",)
     UPDATE_PROTECTED_FIELDS = ()
     WRITABLE_FIELDS = ()
 
@@ -65,7 +63,9 @@ class BaseResource:
 
     def fields(self):
         """Resource fields."""
-        return self.READ_ONLY_FIELDS + self.UPDATE_PROTECTED_FIELDS + self.WRITABLE_FIELDS
+        return (
+            self.READ_ONLY_FIELDS + self.UPDATE_PROTECTED_FIELDS + self.WRITABLE_FIELDS
+        )
 
     def _update_fields(self, payload):
         """Update fields of the local resource based on the server values."""
@@ -87,11 +87,11 @@ class BaseResource:
         if isinstance(obj, DescriptorSchema) or isinstance(obj, Process):
             # Slug can only be given at create requests (id not present yet)
             if not self.id:
-                return {'slug': obj.slug}
+                return {"slug": obj.slug}
 
-            return {'id': obj.id}
+            return {"id": obj.id}
         if isinstance(obj, BaseResource):
-            return {'id': obj.id}
+            return {"id": obj.id}
         if isinstance(obj, list):
             return [self._dehydrate_resources(element) for element in obj]
         if isinstance(obj, dict):
@@ -101,6 +101,7 @@ class BaseResource:
 
     def save(self):
         """Save resource to the server."""
+
         def field_changed(field_name):
             """Check if local field value is different from the server."""
             original_value = self._original_values.get(field_name, None)
@@ -108,7 +109,7 @@ class BaseResource:
 
             if isinstance(current_value, BaseResource) and original_value:
                 # TODO: Check that current and original are instances of the same resource class
-                return current_value.id != original_value.get('id', None)
+                return current_value.id != original_value.get("id", None)
             else:
                 return current_value != original_value
 
@@ -117,16 +118,22 @@ class BaseResource:
             changed_fields = [name for name in field_names if field_changed(name)]
 
             if changed_fields:
-                msg = "Not allowed to change read only fields {}".format(', '.join(changed_fields))
+                msg = "Not allowed to change read only fields {}".format(
+                    ", ".join(changed_fields)
+                )
                 raise ValueError(msg)
 
         if self.id:  # update resource
-            assert_fields_unchanged(self.READ_ONLY_FIELDS + self.UPDATE_PROTECTED_FIELDS)
+            assert_fields_unchanged(
+                self.READ_ONLY_FIELDS + self.UPDATE_PROTECTED_FIELDS
+            )
 
             payload = {}
             for field_name in self.WRITABLE_FIELDS:
                 if field_changed(field_name):
-                    payload[field_name] = self._dehydrate_resources(getattr(self, field_name))
+                    payload[field_name] = self._dehydrate_resources(
+                        getattr(self, field_name)
+                    )
 
             if payload:
                 response = self.api(self.id).patch(payload)
@@ -136,8 +143,11 @@ class BaseResource:
             assert_fields_unchanged(self.READ_ONLY_FIELDS)
 
             field_names = self.WRITABLE_FIELDS + self.UPDATE_PROTECTED_FIELDS
-            payload = {field_name: self._dehydrate_resources(getattr(self, field_name))
-                       for field_name in field_names if getattr(self, field_name) is not None}
+            payload = {
+                field_name: self._dehydrate_resources(getattr(self, field_name))
+                for field_name in field_names
+                if getattr(self, field_name) is not None
+            }
 
             response = self.api.post(payload)
             self._update_fields(response)
@@ -153,7 +163,7 @@ class BaseResource:
         if force is not True:
             user_input = input(self.delete_warning_single.format(self))
 
-            if user_input.strip().lower() != 'y':
+            if user_input.strip().lower() != "y":
                 return
 
         self.api(self.id).delete()
@@ -165,18 +175,23 @@ class BaseResource:
         more comprehensive check is called before save.
 
         """
-        if (hasattr(self, '_original_values')
-                and name in self._original_values
-                and name in self.READ_ONLY_FIELDS
-                and value != self._original_values[name]):
+        if (
+            hasattr(self, "_original_values")
+            and name in self._original_values
+            and name in self.READ_ONLY_FIELDS
+            and value != self._original_values[name]
+        ):
             raise ValueError("Can not change read only field {}".format(name))
 
         super().__setattr__(name, value)
 
     def __eq__(self, obj):
         """Evaluate if objects are the same."""
-        if (self.__class__ == obj.__class__ and self.resolwe.url == obj.resolwe.url
-                and self.id == obj.id):
+        if (
+            self.__class__ == obj.__class__
+            and self.resolwe.url == obj.resolwe.url
+            and self.id == obj.id
+        ):
             return True
         else:
             return False
@@ -197,11 +212,11 @@ class BaseResolweResource(BaseResource):
     _permissions = None
 
     READ_ONLY_FIELDS = BaseResource.READ_ONLY_FIELDS + (
-        'current_user_permissions', 'id', 'version',
+        "current_user_permissions",
+        "id",
+        "version",
     )
-    WRITABLE_FIELDS = BaseResource.WRITABLE_FIELDS + (
-        'name', 'slug',
-    )
+    WRITABLE_FIELDS = BaseResource.WRITABLE_FIELDS + ("name", "slug",)
 
     all_permissions = ALL_PERMISSIONS
 
@@ -228,9 +243,7 @@ class BaseResolweResource(BaseResource):
         """Permissions."""
         if not self._permissions:
             self._permissions = PermissionsManager(
-                self.all_permissions,
-                self.api(self.id),
-                self.resolwe
+                self.all_permissions, self.api(self.id), self.resolwe
             )
 
         return self._permissions
@@ -240,21 +253,22 @@ class BaseResolweResource(BaseResource):
     def contributor(self):
         """Contributor."""
         if self._contributor is None:
-            contributor_data = self._original_values.get('contributor', {})
+            contributor_data = self._original_values.get("contributor", {})
             try:
-                self._contributor = self.resolwe.user.get(id=contributor_data.get('id'))
+                self._contributor = self.resolwe.user.get(id=contributor_data.get("id"))
             except LookupError:
                 from . import User
+
                 # Normal user has only access to his user instance on user
                 # endpoint. Instead of returning None for all other
                 # contributors, data that is received in response is used to
                 # populate User resource.
                 self._contributor = User(
                     self.resolwe,
-                    id=contributor_data.get('id'),
-                    username=contributor_data.get('username'),
-                    first_name=contributor_data.get('first_name'),
-                    last_name=contributor_data.get('last_name'),
+                    id=contributor_data.get("id"),
+                    username=contributor_data.get("username"),
+                    first_name=contributor_data.get("first_name"),
+                    last_name=contributor_data.get("last_name"),
                 )
 
         return self._contributor
@@ -263,13 +277,13 @@ class BaseResolweResource(BaseResource):
     @assert_object_exists
     def created(self):
         """Creation time."""
-        return parse_resolwe_datetime(self._original_values['created'])
+        return parse_resolwe_datetime(self._original_values["created"])
 
     @property
     @assert_object_exists
     def modified(self):
         """Modification time."""
-        return parse_resolwe_datetime(self._original_values['modified'])
+        return parse_resolwe_datetime(self._original_values["modified"])
 
     def update(self):
         """Clear permissions cache and update the object."""

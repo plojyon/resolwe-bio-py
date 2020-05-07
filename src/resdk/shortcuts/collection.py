@@ -7,7 +7,9 @@ from resdk.resources.utils import get_sample_id
 class CollectionRelationsMixin:
     """Mixin for managing relations in ``Collection`` class."""
 
-    def _create_relation(self, relation_type, category, samples, positions=[], labels=[]):
+    def _create_relation(
+        self, relation_type, category, samples, positions=[], labels=[]
+    ):
         """Create relation."""
         if not isinstance(samples, list):
             raise ValueError("`samples` argument must be list.")
@@ -23,25 +25,29 @@ class CollectionRelationsMixin:
                 "`samples`, `positions` and `labels` arguments must be of the same length."
             )
         elif labels and not len(samples) == len(labels):
-            raise ValueError("`samples` and `labels` arguments must be of the same length.")
+            raise ValueError(
+                "`samples` and `labels` arguments must be of the same length."
+            )
         elif positions and not len(samples) == len(positions):
-            raise ValueError("`samples` and `positions` arguments must be of the same length.")
+            raise ValueError(
+                "`samples` and `positions` arguments must be of the same length."
+            )
 
         relation_data = {
-            'type': relation_type,
-            'collection': self.id,
-            'category': category,
-            'partitions': []
+            "type": relation_type,
+            "collection": self.id,
+            "category": category,
+            "partitions": [],
         }
 
         for sample, position, label in zip_longest(samples, positions, labels):
-            partition = {'entity': get_sample_id(sample)}
+            partition = {"entity": get_sample_id(sample)}
             if position:
-                partition['position'] = position
+                partition["position"] = position
             if label:
-                partition['label'] = label
+                partition["label"] = label
 
-            relation_data['partitions'].append(partition)
+            relation_data["partitions"].append(partition)
 
         return self.resolwe.relation.create(**relation_data)
 
@@ -54,7 +60,7 @@ class CollectionRelationsMixin:
         :param list labels: List of labels assigned to corresponding
             samples. If given it should be of same length as samples.
         """
-        return self._create_relation('group', category, samples, labels=labels)
+        return self._create_relation("group", category, samples, labels=labels)
 
     def create_compare_relation(self, category, samples, labels=[]):
         """Create compare relation.
@@ -65,7 +71,7 @@ class CollectionRelationsMixin:
         :param list labels: List of labels assigned to corresponding
             samples. If given it should be of same length as samples.
         """
-        return self._create_relation('compare', category, samples, labels=labels)
+        return self._create_relation("compare", category, samples, labels=labels)
 
     def create_series_relation(self, category, samples, positions=[], labels=[]):
         """Create series relation.
@@ -80,7 +86,7 @@ class CollectionRelationsMixin:
         :param list labels: List of labels assigned to corresponding
             samples. If given it should be of same length as samples.
         """
-        return self._create_relation('series', category, samples, positions, labels)
+        return self._create_relation("series", category, samples, positions, labels)
 
     def create_background_relation(self, category, background, cases):
         """Create background relation.
@@ -90,8 +96,8 @@ class CollectionRelationsMixin:
         :param Sample cases: Case samples (signals)
         """
         return self._create_relation(
-            relation_type='background',
+            relation_type="background",
             category=category,
             samples=[background] + cases,
-            labels=['background'] + ['case'] * len(cases),
+            labels=["background"] + ["case"] * len(cases),
         )

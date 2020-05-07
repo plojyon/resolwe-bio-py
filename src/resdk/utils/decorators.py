@@ -12,10 +12,10 @@ def return_first_element(wrapped, instance, args, kwargs):
     result = wrapped(*args, **kwargs)
 
     if not isinstance(result, list):
-        raise TypeError('Result of decorated function must be a list')
+        raise TypeError("Result of decorated function must be a list")
 
     if len(result) != 1:
-        raise RuntimeError('Function returned more than one result')
+        raise RuntimeError("Function returned more than one result")
 
     return result[0]
 
@@ -27,13 +27,14 @@ def assert_object_exists(wrapped, instance, args, kwargs):
     # `instance` argment, but as the first element of *args
     if instance is None:
         instance = args[0]
-        member = 'attribute'
+        member = "attribute"
     else:
-        member = 'method'
+        member = "method"
 
     if instance.id is None:
-        raise ValueError("Instance must be saved before accessing `{}` {}.".format(
-            wrapped.__name__,
-            member,
-        ))
+        raise ValueError(
+            "Instance must be saved before accessing `{}` {}.".format(
+                wrapped.__name__, member,
+            )
+        )
     return wrapped(*args, **kwargs)

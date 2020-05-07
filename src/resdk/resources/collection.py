@@ -20,15 +20,24 @@ class BaseCollection(BaseResolweResource):
 
     """
 
-    full_search_paramater = 'text'
-    delete_warning_single = "Do you really want to delete {} and all of it's content?[yN]"
-    delete_warning_bulk = "Do you really want to delete {} objects and all of their content?[yN]"
+    full_search_paramater = "text"
+    delete_warning_single = (
+        "Do you really want to delete {} and all of it's content?[yN]"
+    )
+    delete_warning_bulk = (
+        "Do you really want to delete {} objects and all of their content?[yN]"
+    )
 
     READ_ONLY_FIELDS = BaseResolweResource.READ_ONLY_FIELDS + (
-        'descriptor_dirty', 'duplicated',
+        "descriptor_dirty",
+        "duplicated",
     )
     WRITABLE_FIELDS = BaseResolweResource.WRITABLE_FIELDS + (
-        'description', 'descriptor', 'descriptor_schema', 'settings', 'tags',
+        "description",
+        "descriptor",
+        "descriptor_schema",
+        "settings",
+        "tags",
     )
 
     def __init__(self, resolwe, **model_data):
@@ -58,7 +67,7 @@ class BaseCollection(BaseResolweResource):
     @property
     def data(self):
         """Return list of attached Data objects."""
-        raise NotImplementedError('This should be implemented in subclass')
+        raise NotImplementedError("This should be implemented in subclass")
 
     @property
     def descriptor_schema(self):
@@ -89,8 +98,10 @@ class BaseCollection(BaseResolweResource):
         """Return list of files in resource."""
         file_list = []
         for data in self.data:
-            file_list.extend(fname for fname in data.files(file_name=file_name,
-                                                           field_name=field_name))
+            file_list.extend(
+                fname
+                for fname in data.files(file_name=file_name, field_name=field_name)
+            )
 
         return file_list
 
@@ -123,9 +134,11 @@ class BaseCollection(BaseResolweResource):
 
         for data in self.data:
             data_files = data.files(file_name, field_name)
-            files.extend('{}/{}'.format(data.id, file_name) for file_name in data_files)
+            files.extend("{}/{}".format(data.id, file_name) for file_name in data_files)
 
-        self.resolwe._download_files(files, download_dir)  # pylint: disable=protected-access
+        self.resolwe._download_files(
+            files, download_dir
+        )  # pylint: disable=protected-access
 
 
 class Collection(CollectionRelationsMixin, BaseCollection):
@@ -137,7 +150,7 @@ class Collection(CollectionRelationsMixin, BaseCollection):
 
     """
 
-    endpoint = 'collection'
+    endpoint = "collection"
 
     def __init__(self, resolwe, **model_data):
         """Initialize attributes."""
@@ -190,5 +203,5 @@ class Collection(CollectionRelationsMixin, BaseCollection):
 
         :return: Duplicated collection
         """
-        duplicated = self.api().duplicate.post({'ids': [self.id]})
+        duplicated = self.api().duplicate.post({"ids": [self.id]})
         return self.__class__(resolwe=self.resolwe, **duplicated[0])

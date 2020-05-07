@@ -69,14 +69,16 @@ only when they are caught and not re-raised."
 import logging
 import sys
 
-LEVEL_MAP = {"DEBUG": logging.DEBUG,
-             "INFO": logging.INFO,
-             "WARNING": logging.WARNING,
-             "ERROR": logging.ERROR,
-             "EXCEPTION": logging.ERROR,
-             "CRITICAL": logging.CRITICAL}
+LEVEL_MAP = {
+    "DEBUG": logging.DEBUG,
+    "INFO": logging.INFO,
+    "WARNING": logging.WARNING,
+    "ERROR": logging.ERROR,
+    "EXCEPTION": logging.ERROR,
+    "CRITICAL": logging.CRITICAL,
+}
 
-LOGGER_NAME = __name__.split('.')[0]
+LOGGER_NAME = __name__.split(".")[0]
 
 # Create root logger:
 ROOT_LOGGER = logging.getLogger(LOGGER_NAME)
@@ -94,7 +96,7 @@ STDOUT_LOG_ON = True
 
 # Create stdout handler and make initial configuration:
 STDOUT_HANDLER = logging.StreamHandler()
-FORMATTER1 = logging.Formatter(fmt='%(message)s')
+FORMATTER1 = logging.Formatter(fmt="%(message)s")
 STDOUT_HANDLER.setFormatter(FORMATTER1)
 
 
@@ -118,7 +120,9 @@ def _configure_handler(handler, is_on=None, level=None):
             else:
                 ROOT_LOGGER.removeHandler(handler)
         else:
-            raise ValueError("Wrong type of 'is_on' parameter: only True/False/None posssible.")
+            raise ValueError(
+                "Wrong type of 'is_on' parameter: only True/False/None posssible."
+            )
 
     if level is not None:
         if isinstance(level, str) and level.upper() in LEVEL_MAP.keys():

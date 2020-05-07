@@ -17,11 +17,9 @@ class Sample(SampleUtilsMixin, BaseCollection):
 
     """
 
-    endpoint = 'sample'
+    endpoint = "sample"
 
-    WRITABLE_FIELDS = BaseCollection.WRITABLE_FIELDS + (
-        'collection',
-    )
+    WRITABLE_FIELDS = BaseCollection.WRITABLE_FIELDS + ("collection",)
 
     def __init__(self, resolwe, **model_data):
         """Initialize attributes."""
@@ -64,7 +62,7 @@ class Sample(SampleUtilsMixin, BaseCollection):
     @collection.setter
     def collection(self, payload):
         """Set collection."""
-        self._resource_setter(payload, Collection, '_collection')
+        self._resource_setter(payload, Collection, "_collection")
 
     @property
     @assert_object_exists
@@ -77,7 +75,7 @@ class Sample(SampleUtilsMixin, BaseCollection):
 
     def update_descriptor(self, descriptor):
         """Update descriptor and descriptor_schema."""
-        self.api(self.id).patch({'descriptor': descriptor})
+        self.api(self.id).patch({"descriptor": descriptor})
         self.descriptor = descriptor
 
     def confirm_is_annotated(self):
@@ -91,20 +89,27 @@ class Sample(SampleUtilsMixin, BaseCollection):
     def background(self):
         """Get background sample of the current one."""
         if self._background is None:
-            background_relation = list(self.resolwe.relation.filter(
-                type='background',
-                entity=self.id,
-                label='case',
-            ))
+            background_relation = list(
+                self.resolwe.relation.filter(
+                    type="background", entity=self.id, label="case",
+                )
+            )
 
             if len(background_relation) > 1:
-                raise LookupError("Multiple backgrounds defined for sample '{}'".format(self.name))
+                raise LookupError(
+                    "Multiple backgrounds defined for sample '{}'".format(self.name)
+                )
             elif not background_relation:
-                raise LookupError("No background is defined for sample '{}'".format(self.name))
+                raise LookupError(
+                    "No background is defined for sample '{}'".format(self.name)
+                )
 
             for partition in background_relation[0].partitions:
-                if partition['label'] == 'background' and partition['entity'] != self.id:
-                    self._background = self.resolwe.sample.get(id=partition['entity'])
+                if (
+                    partition["label"] == "background"
+                    and partition["entity"] != self.id
+                ):
+                    self._background = self.resolwe.sample.get(id=partition["entity"])
 
             if self._background is None:
                 # Cache the result = no background is found.
@@ -116,24 +121,34 @@ class Sample(SampleUtilsMixin, BaseCollection):
     @background.setter
     def background(self, bground):
         """Set sample background."""
+
         def count_cases(entity, label):
             """Get a tuple (relation, number_of_cases) in a specified relation.
 
             Relation is specified by collection, type-background'entity and label.
             """
-            relation = list(self.resolwe.relation.filter(
-                collection=collection.id,  # pylint: disable=no-member
-                type='background',
-                entity=entity.id,
-                label=label,
-            ))
+            relation = list(
+                self.resolwe.relation.filter(
+                    collection=collection.id,  # pylint: disable=no-member
+                    type="background",
+                    entity=entity.id,
+                    label=label,
+                )
+            )
             if len(relation) > 1:
                 raise ValueError(
-                    'Multiple relations of type "background" for sample {} in ' 'collection {} '
-                    'with label {}.'.format(entity, collection, label)
+                    'Multiple relations of type "background" for sample {} in '
+                    "collection {} "
+                    "with label {}.".format(entity, collection, label)
                 )
             elif len(relation) == 1:
-                cases = len([prt for prt in relation[0].partitions if prt.get('label') == 'case'])
+                cases = len(
+                    [
+                        prt
+                        for prt in relation[0].partitions
+                        if prt.get("label") == "case"
+                    ]
+                )
             else:
                 cases = 0
 
@@ -148,7 +163,9 @@ class Sample(SampleUtilsMixin, BaseCollection):
         # to check that both, background and case are defined in only
         # one common collection. Actions are done on this collection.
         if self.collection.id != bground.collection.id:  # pylint: disable=no-member
-            raise ValueError('Background and case sample are not in the same collection.')
+            raise ValueError(
+                "Background and case sample are not in the same collection."
+            )
         collection = self.collection
 
         # One cannot simply assign a background to sample but needs to
@@ -165,32 +182,32 @@ class Sample(SampleUtilsMixin, BaseCollection):
 
         # Get background relation for this sample and count cases in it.
         # If no relation is found set to 0.
-        self_relation, self_cases = count_cases(self, 'case')
+        self_relation, self_cases = count_cases(self, "case")
 
         # Get background relation of to-be background sample and count
         # cases in it. If no relation is found set to 0.
-        bground_relation, bground_cases = count_cases(bground, 'background')
+        bground_relation, bground_cases = count_cases(bground, "background")
 
         # 3 x 3 options reduce to 5, since some of them can be treated equally:
         if self_cases == bground_cases == 0:
             # Neither case nor background is in background relation.
             # Make a new background relation.
             # pylint: disable=no-member
-            collection.create_background_relation('Background', bground, [self])
+            collection.create_background_relation("Background", bground, [self])
             # pylint: enable=no-member
         elif self_cases == 0 and bground_cases > 0:
             # Sample is not part of any existing background relation,
             # but background sample is. In this cae, just add sample to
             # alread existing background relation
-            bground_relation.add_sample(self, label='case')
+            bground_relation.add_sample(self, label="case")
         elif self_cases == 1 and bground_cases == 0:
             # Sample si part od already existing background relation
             # where there is one sample and one background. New,
             # to-be-background sample is not part of any background
             # relation yet. Modify sample relation and replace background.
             for partition in self_relation.partitions:
-                if partition['label'] == 'background':
-                    partition['entity'] = bground.id
+                if partition["label"] == "background":
+                    partition["entity"] = bground.id
                     break
         elif self_cases == 1 and bground_cases > 0:
             # Sample si part od already existing background relation
@@ -199,12 +216,12 @@ class Sample(SampleUtilsMixin, BaseCollection):
             # Remove relaton of case sample and add it to existing
             # relation of the background smaple.
             self_relation.delete(force=True)
-            bground_relation.add_sample(self, label='case')
+            bground_relation.add_sample(self, label="case")
         elif self_cases > 1:
             raise ValueError(
-                'This sample is a case in a background relation with also other samples as cases. '
-                'If you would like to change background sample for all of them please delete '
-                'current relation and create new one with desired background.'
+                "This sample is a case in a background relation with also other samples as cases. "
+                "If you would like to change background sample for all of them please delete "
+                "current relation and create new one with desired background."
             )
 
         self.save()
@@ -217,13 +234,13 @@ class Sample(SampleUtilsMixin, BaseCollection):
         """Return ``True`` if given sample is background to any other and ``False`` otherwise."""
         if self._is_background is None:
             background_relations = self.resolwe.relation.filter(
-                type='background',
-                entity=self.id,
-                label='background',
+                type="background", entity=self.id, label="background",
             )
             # we need to iterate ``background_relations`` (using len) to
             # evaluate ResolweQuery:
-            self._is_background = len(background_relations) > 0  # pylint: disable=len-as-condition
+            self._is_background = (
+                len(background_relations) > 0
+            )  # pylint: disable=len-as-condition
 
         return self._is_background
 
@@ -236,8 +253,7 @@ class Sample(SampleUtilsMixin, BaseCollection):
             sample.
         :return: Duplicated sample
         """
-        duplicated = self.api().duplicate.post({
-            'ids': [self.id],
-            'inherit_collection': inherit_collection
-        })
+        duplicated = self.api().duplicate.post(
+            {"ids": [self.id], "inherit_collection": inherit_collection}
+        )
         return self.__class__(resolwe=self.resolwe, **duplicated[0])

@@ -19,19 +19,17 @@ class User(BaseResource):
     endpoint = "user"
 
     WRITABLE_FIELDS = (
-        'company',
-        'department',
-        'email',
-        'first_name',
-        'job_title',
-        'lab',
-        'last_name',
-        'location',
-        'phone_number',
+        "company",
+        "department",
+        "email",
+        "first_name",
+        "job_title",
+        "lab",
+        "last_name",
+        "location",
+        "phone_number",
     )
-    UPDATE_PROTECTED_FIELDS = (
-        'username',
-    )
+    UPDATE_PROTECTED_FIELDS = ("username",)
 
     def __init__(self, resolwe=None, **model_data):
         """Initialize attributes."""
@@ -61,9 +59,9 @@ class User(BaseResource):
     def get_name(self):
         """Return user's name."""
         if self.first_name and self.last_name:
-            return '{} {}'.format(self.first_name, self.last_name)
+            return "{} {}".format(self.first_name, self.last_name)
 
-        return self.first_name or self.last_name or ''
+        return self.first_name or self.last_name or ""
 
     def __repr__(self):
         """Format resource name."""
@@ -93,9 +91,7 @@ class Group(BaseResource):
     #: (lazy loaded) list of users in Group
     _users = None
 
-    WRITABLE_FIELDS = (
-        'name',
-    )
+    WRITABLE_FIELDS = ("name",)
 
     def __init__(self, resolwe=None, **model_data):
         """Initialize attributes."""
@@ -123,16 +119,18 @@ class Group(BaseResource):
     def add_users(self, *users):
         """Add users to group."""
         user_ids = [get_user_id(user) for user in users]
-        self.resolwe.api.group(self.id).add_users.post({'user_ids': user_ids})
+        self.resolwe.api.group(self.id).add_users.post({"user_ids": user_ids})
         self._users = None
 
     @assert_object_exists
     def remove_users(self, *users):
         """Remove users from group."""
         user_ids = [get_user_id(user) for user in users]
-        self.resolwe.api.group(self.id).remove_users.post({'user_ids': user_ids})
+        self.resolwe.api.group(self.id).remove_users.post({"user_ids": user_ids})
         self._users = None
 
     def __repr__(self):
         """Format resource name."""
-        return "{} <id: {}, name: '{}'>".format(self.__class__.__name__, self.id, self.name)
+        return "{} <id: {}, name: '{}'>".format(
+            self.__class__.__name__, self.id, self.name
+        )

@@ -17,9 +17,9 @@ class ExceptionsTestCase(unittest.TestCase):
         wrapped = handle_http_exception(func)
 
         func.return_value = 42
-        self.assertEqual(wrapped(40, 2, operation='add'), 42)
-        func.assert_called_once_with(40, 2, operation='add')
+        self.assertEqual(wrapped(40, 2, operation="add"), 42)
+        func.assert_called_once_with(40, 2, operation="add")
 
-        func.side_effect = SlumberHttpBaseException(content='error message')
-        with self.assertRaisesRegex(ResolweServerError, 'error message'):
+        func.side_effect = SlumberHttpBaseException(content="error message")
+        with self.assertRaisesRegex(ResolweServerError, "error message"):
             wrapped()

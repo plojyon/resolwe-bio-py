@@ -22,6 +22,7 @@ class ResolweServerError(Exception):
 
 def handle_http_exception(func):
     """Handle slumber errors in more verbose way."""
+
     def wrapper(*args, **kwargs):
         """Transform slumber errors into ReSDK errors.
 

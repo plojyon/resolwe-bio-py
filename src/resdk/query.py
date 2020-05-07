@@ -97,7 +97,9 @@ class ResolweQuery:
     """
 
     _cache = None
-    _count = None  # number of objects in current query (without applied limit and offset)
+    _count = (
+        None  # number of objects in current query (without applied limit and offset)
+    )
     _limit = None
     _offset = None
     _filters = None
@@ -109,7 +111,7 @@ class ResolweQuery:
     api = None
     logger = None
 
-    def __init__(self, resolwe, resource, slug_field='slug'):
+    def __init__(self, resolwe, resource, slug_field="slug"):
         """Initialize attributes."""
         self.resolwe = resolwe
         self.resource = resource
@@ -126,9 +128,13 @@ class ResolweQuery:
         # pylint: disable=protected-access
         if not isinstance(index, (slice, int)):
             raise TypeError
-        if ((not isinstance(index, slice) and index < 0)
-                or (isinstance(index, slice) and index.start is not None and index.start < 0)
-                or (isinstance(index, slice) and index.stop is not None and index.stop < 0)):
+        if (
+            (not isinstance(index, slice) and index < 0)
+            or (
+                isinstance(index, slice) and index.start is not None and index.start < 0
+            )
+            or (isinstance(index, slice) and index.stop is not None and index.stop < 0)
+        ):
             raise ValueError("Negative indexing is not supported.")
         if isinstance(index, slice) and index.step is not None:
             raise ValueError("`step` parameter in slice is not supported")
@@ -140,10 +146,12 @@ class ResolweQuery:
 
         if isinstance(index, slice):
             if self._offset or self._limit:
-                raise NotImplementedError('You cannot slice already sliced query.')
+                raise NotImplementedError("You cannot slice already sliced query.")
 
             start = 0 if index.start is None else int(index.start)
-            stop = 1000000 if index.stop is None else int(index.stop)  # default to something big
+            stop = (
+                1000000 if index.stop is None else int(index.stop)
+            )  # default to something big
             new_query._offset = start
             new_query._limit = stop - start
             return new_query
@@ -153,7 +161,7 @@ class ResolweQuery:
 
         query_list = list(new_query)
         if not query_list:
-            raise IndexError('list index out of range')
+            raise IndexError("list index out of range")
         return query_list[0]
 
     def __iter__(self):
@@ -164,9 +172,7 @@ class ResolweQuery:
     def __repr__(self):
         """Return string representation of the current object."""
         self._fetch()
-        rep = '[{}]'.format(
-            ',\n '.join(str(obj) for obj in self._cache)
-        )
+        rep = "[{}]".format(",\n ".join(str(obj) for obj in self._cache))
         return rep
 
     def __len__(self):
@@ -186,27 +192,28 @@ class ResolweQuery:
         """Add filtering parameters."""
         for key, value in filter_.items():
             # 'sample' is called 'entity' in the backend.
-            key = key.replace('sample', 'entity')
+            key = key.replace("sample", "entity")
 
             if isinstance(value, list):
-                value = ','.join(map(str, value))
+                value = ",".join(map(str, value))
 
-            if self.resource.query_method == 'GET':
+            if self.resource.query_method == "GET":
                 self._filters[key].append(value)
-            elif self.resource.query_method == 'POST':
+            elif self.resource.query_method == "POST":
                 self._filters[key] = value
             else:
                 raise NotImplementedError(
-                    'Unsupported query_method: {}'.format(self.resource.query_method))
+                    "Unsupported query_method: {}".format(self.resource.query_method)
+                )
 
     def _compose_filters(self):
         """Convert filters to dict and add pagination filters."""
         filters = self._filters
 
         if self._limit is not None:
-            filters['limit'] = self._limit
+            filters["limit"] = self._limit
         if self._offset is not None:
-            filters['offset'] = self._offset
+            filters["offset"] = self._offset
 
         return dict(filters)
 
@@ -221,18 +228,19 @@ class ResolweQuery:
             return
 
         filters = self._compose_filters()
-        if self.resource.query_method == 'GET':
+        if self.resource.query_method == "GET":
             items = self.api.get(**filters)
-        elif self.resource.query_method == 'POST':
+        elif self.resource.query_method == "POST":
             items = self.api.post(filters)
         else:
             raise NotImplementedError(
-                'Unsupported query_method: {}'.format(self.resource.query_method))
+                "Unsupported query_method: {}".format(self.resource.query_method)
+            )
 
         # Extract data from paginated response
-        if isinstance(items, dict) and 'results' in items:
-            self._count = items['count']
-            items = items['results']
+        if isinstance(items, dict) and "results" in items:
+            self._count = items["count"]
+            items = items["results"]
 
         self._cache = [self._populate_resource(data) for data in items]
 
@@ -277,18 +285,20 @@ class ResolweQuery:
         """
         if args:
             if len(args) > 1:
-                raise ValueError('Only one non-keyworded argument can be given')
+                raise ValueError("Only one non-keyworded argument can be given")
             if kwargs:
-                raise ValueError('Non-keyworded arguments cannot be combined with keyworded ones.')
+                raise ValueError(
+                    "Non-keyworded arguments cannot be combined with keyworded ones."
+                )
 
             arg = args[0]
-            kwargs = {'id': arg} if str(arg).isdigit() else {self.slug_field: arg}
+            kwargs = {"id": arg} if str(arg).isdigit() else {self.slug_field: arg}
 
         if self.slug_field in kwargs:
             if issubclass(self.resource, (Process, DescriptorSchema)):
-                kwargs['ordering'] = kwargs.get('ordering', '-version')
+                kwargs["ordering"] = kwargs.get("ordering", "-version")
 
-            kwargs['limit'] = kwargs.get('limit', 1)
+            kwargs["limit"] = kwargs.get("limit", 1)
 
         new_query = self._clone()
         new_query._add_filter(kwargs)  # pylint: disable=protected-access
@@ -296,10 +306,10 @@ class ResolweQuery:
         response = list(new_query)
 
         if not response:
-            raise LookupError('Matching object does not exist.')
+            raise LookupError("Matching object does not exist.")
 
         if len(response) > 1:
-            raise LookupError('get() returned more than one object.')
+            raise LookupError("get() returned more than one object.")
 
         return response[0]
 
@@ -326,7 +336,7 @@ class ResolweQuery:
         """
         if force is not True:
             user_input = input(self.resource.delete_warning_bulk.format(self.count()))
-            if user_input.strip().lower() != 'y':
+            if user_input.strip().lower() != "y":
                 return
 
         for obj in self:
@@ -383,7 +393,9 @@ class ResolweQuery:
         min_id = 0
         obj_count = 0
         while obj_count < count:
-            for obj in iterate_query.filter(id__gt=min_id, limit=chunk_size, ordering="id"):
+            for obj in iterate_query.filter(
+                id__gt=min_id, limit=chunk_size, ordering="id"
+            ):
                 obj_count += 1
                 min_id = obj.id
                 yield obj

@@ -12,49 +12,47 @@ from resdk.resources.data import Data
 from resdk.resources.descriptor import DescriptorSchema
 from resdk.resources.process import Process
 
-DATA0 = MagicMock(**{'files.return_value': [], 'id': 0})
+DATA0 = MagicMock(**{"files.return_value": [], "id": 0})
 
-DATA1 = MagicMock(**{'files.return_value': ['reads.fq', 'arch.gz'], 'id': 1})
+DATA1 = MagicMock(**{"files.return_value": ["reads.fq", "arch.gz"], "id": 1})
 
-DATA2 = MagicMock(**{'files.return_value': ['outfile.exp'], 'id': 2})
+DATA2 = MagicMock(**{"files.return_value": ["outfile.exp"], "id": 2})
 
 
 class TestBaseCollection(unittest.TestCase):
-
     def test_data_types(self):
         resolwe = MagicMock()
 
         data1 = Data(resolwe=resolwe, id=1)
-        data1._process = Process(resolwe=resolwe, type='data:reads:fastq:single:')
+        data1._process = Process(resolwe=resolwe, type="data:reads:fastq:single:")
 
         collection = Collection(resolwe=resolwe, id=1)
         collection._data = [data1]
 
         types = collection.data_types()
-        self.assertEqual(types, ['data:reads:fastq:single:'])
+        self.assertEqual(types, ["data:reads:fastq:single:"])
 
     def test_files(self):
         collection = Collection(resolwe=MagicMock(), id=1)
         collection._data = [DATA1, DATA2]
 
         files = collection.files()
-        self.assertCountEqual(files, ['arch.gz', 'reads.fq', 'outfile.exp'])
+        self.assertCountEqual(files, ["arch.gz", "reads.fq", "outfile.exp"])
 
 
 class TestBaseCollectionDownload(unittest.TestCase):
-
-    @patch('resdk.resources.collection.BaseCollection', spec=True)
+    @patch("resdk.resources.collection.BaseCollection", spec=True)
     def test_field_name(self, collection_mock):
         collection_mock.configure_mock(data=[DATA0, DATA2], resolwe=MagicMock())
-        BaseCollection.download(collection_mock, field_name='output.exp')
-        flist = ['2/outfile.exp']
+        BaseCollection.download(collection_mock, field_name="output.exp")
+        flist = ["2/outfile.exp"]
         collection_mock.resolwe._download_files.assert_called_once_with(flist, None)
 
         # Check if ``output_field`` does not start with 'output'
         collection_mock.reset_mock()
         collection_mock.configure_mock(data=[DATA1, DATA0], resolwe=MagicMock())
-        BaseCollection.download(collection_mock, field_name='fastq')
-        flist = ['1/reads.fq', '1/arch.gz']
+        BaseCollection.download(collection_mock, field_name="fastq")
+        flist = ["1/reads.fq", "1/arch.gz"]
         collection_mock.resolwe._download_files.assert_called_once_with(flist, None)
 
     def test_bad_field_name(self):
@@ -64,7 +62,6 @@ class TestBaseCollectionDownload(unittest.TestCase):
 
 
 class TestCollection(unittest.TestCase):
-
     def test_descriptor_schema(self):
         collection = Collection(id=1, resolwe=MagicMock())
         collection._descriptor_schema = 1
@@ -86,30 +83,34 @@ class TestCollection(unittest.TestCase):
                     "default": "56G",
                     "type": "basic:string:",
                     "name": "description",
-                    "label": "Object description"
+                    "label": "Object description",
                 }
             ],
             "id": 1,
         }
-        collection = Collection(id=1, descriptor_schema=descriptor_schema, resolwe=MagicMock())
+        collection = Collection(
+            id=1, descriptor_schema=descriptor_schema, resolwe=MagicMock()
+        )
         self.assertTrue(isinstance(collection.descriptor_schema, DescriptorSchema))
         # pylint: disable=no-member
-        self.assertEqual(collection.descriptor_schema.slug, 'test-schema')
+        self.assertEqual(collection.descriptor_schema.slug, "test-schema")
         # pylint: enable=no-member
 
     def test_data(self):
         collection = Collection(id=1, resolwe=MagicMock())
 
         # test getting data attribute
-        collection.resolwe.data.filter = MagicMock(return_value=['data_1', 'data_2', 'data_3'])
-        self.assertEqual(collection.data, ['data_1', 'data_2', 'data_3'])
+        collection.resolwe.data.filter = MagicMock(
+            return_value=["data_1", "data_2", "data_3"]
+        )
+        self.assertEqual(collection.data, ["data_1", "data_2", "data_3"])
 
         # test caching data attribute
-        self.assertEqual(collection.data, ['data_1', 'data_2', 'data_3'])
+        self.assertEqual(collection.data, ["data_1", "data_2", "data_3"])
         self.assertEqual(collection.resolwe.data.filter.call_count, 1)
 
         # cache is cleared at update
-        collection._data = ['data']
+        collection._data = ["data"]
         collection.update()
         self.assertEqual(collection._data, None)
 
@@ -122,11 +123,13 @@ class TestCollection(unittest.TestCase):
         collection = Collection(id=1, resolwe=MagicMock())
 
         # test getting samples attribute
-        collection.resolwe.sample.filter = MagicMock(return_value=['sample1', 'sample2'])
-        self.assertEqual(collection.samples, ['sample1', 'sample2'])
+        collection.resolwe.sample.filter = MagicMock(
+            return_value=["sample1", "sample2"]
+        )
+        self.assertEqual(collection.samples, ["sample1", "sample2"])
 
         # cache is cleared at update
-        collection._samples = ['sample']
+        collection._samples = ["sample"]
         collection.update()
         self.assertEqual(collection._samples, None)
 
@@ -139,11 +142,13 @@ class TestCollection(unittest.TestCase):
         collection = Collection(id=1, resolwe=MagicMock())
 
         # test getting relations attribute
-        collection.resolwe.relation.filter = MagicMock(return_value=['relation1', 'relation2'])
-        self.assertEqual(collection.relations, ['relation1', 'relation2'])
+        collection.resolwe.relation.filter = MagicMock(
+            return_value=["relation1", "relation2"]
+        )
+        self.assertEqual(collection.relations, ["relation1", "relation2"])
 
         # cache is cleared at update
-        collection._relations = ['relation']
+        collection._relations = ["relation"]
         collection.update()
         self.assertEqual(collection._relations, None)
 
@@ -153,5 +158,5 @@ class TestCollection(unittest.TestCase):
             _ = collection.relations
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

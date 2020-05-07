@@ -6,22 +6,30 @@ import tempfile
 
 from resdk import Resolwe
 from resdk.tests.functional.base import (
-    ADMIN_PASSWORD, ADMIN_USERNAME, URL, USER_PASSWORD, USER_USERNAME, BaseResdkFunctionalTest,
+    ADMIN_PASSWORD,
+    ADMIN_USERNAME,
+    URL,
+    USER_PASSWORD,
+    USER_USERNAME,
+    BaseResdkFunctionalTest,
 )
 
-TEST_FILES_DIR = os.path.abspath(os.path.normpath(os.path.join(__file__, '../../../files')))
+TEST_FILES_DIR = os.path.abspath(
+    os.path.normpath(os.path.join(__file__, "../../../files"))
+)
 DOCS_SCRIPTS_DIR = os.path.abspath(
-    os.path.normpath(os.path.join(__file__, '../../../../../docs/files')))
+    os.path.normpath(os.path.join(__file__, "../../../../../docs/files"))
+)
 sys.path.insert(0, DOCS_SCRIPTS_DIR)
 
 
 class BaseResdkDocsFunctionalTest(BaseResdkFunctionalTest):
 
-    sample_slug = 'resdk-example'
-    reads_slug = 'resdk-example-reads'
-    genome_slug = 'resdk-example-genome'
-    genome_index_slug = 'resdk-example-genome-index'
-    annotation_slug = 'resdk-example-annotation'
+    sample_slug = "resdk-example"
+    reads_slug = "resdk-example-reads"
+    genome_slug = "resdk-example-genome"
+    genome_index_slug = "resdk-example-genome-index"
+    annotation_slug = "resdk-example-annotation"
 
     def setUp(self):
         self.tmpdir = tempfile.mkdtemp()
@@ -32,13 +40,13 @@ class BaseResdkDocsFunctionalTest(BaseResdkFunctionalTest):
         os.chdir(self.original_cwd)
         shutil.rmtree(self.tmpdir)
 
-        if hasattr(self, 'reads'):
+        if hasattr(self, "reads"):
             self.reads.sample.delete(force=True)  # pylint: disable=no-member
-        if hasattr(self, 'genome'):
+        if hasattr(self, "genome"):
             self.genome.delete(force=True)  # pylint: disable=no-member
-        if hasattr(self, 'genome_index'):
+        if hasattr(self, "genome_index"):
             self.genome_index.delete(force=True)  # pylint: disable=no-member
-        if hasattr(self, 'annotation'):
+        if hasattr(self, "annotation"):
             self.annotation.delete(force=True)  # pylint: disable=no-member
 
     def run_tutorial_script(self, script_name, replace_lines=None):
@@ -63,66 +71,66 @@ class BaseResdkDocsFunctionalTest(BaseResdkFunctionalTest):
             for line_index, line_content in replace_lines:
                 content[line_index] = line_content
 
-        exec(''.join(content))  # pylint: disable=exec-used
+        exec("".join(content))  # pylint: disable=exec-used
 
     def upload_reads(self, res):
         reads = res.run(
-            slug='upload-fastq-single',
-            input={'src': os.path.join(TEST_FILES_DIR, 'reads.fastq.gz')},
+            slug="upload-fastq-single",
+            input={"src": os.path.join(TEST_FILES_DIR, "reads.fastq.gz")},
         )
-        self.set_slug_and_make_public(reads, self.reads_slug, permissions=['view'])
-        self.set_slug_and_make_public(reads.sample, self.sample_slug, permissions=['view'])
+        self.set_slug_and_make_public(reads, self.reads_slug, permissions=["view"])
+        self.set_slug_and_make_public(
+            reads.sample, self.sample_slug, permissions=["view"]
+        )
         return reads
 
     def upload_genome(self, res):
         genome = res.run(
-            slug='upload-fasta-nucl',
+            slug="upload-fasta-nucl",
             input={
-                'src': os.path.join(TEST_FILES_DIR, 'genome.fasta.gz'),
-                'species': 'Dictyostelium discoideum',
-                'build': 'dd-05-2009',
+                "src": os.path.join(TEST_FILES_DIR, "genome.fasta.gz"),
+                "species": "Dictyostelium discoideum",
+                "build": "dd-05-2009",
             },
         )
-        self.set_slug_and_make_public(genome, self.genome_slug, permissions=['view'])
+        self.set_slug_and_make_public(genome, self.genome_slug, permissions=["view"])
 
         return genome
 
     def upload_annotation(self, res):
         annotation = res.run(
-            slug='upload-gtf',
+            slug="upload-gtf",
             input={
-                'src': os.path.join(TEST_FILES_DIR, 'annotation.gtf.gz'),
-                'source': 'DICTYBASE',
-                'species': 'Dictyostelium discoideum',
-                'build': 'dd-05-2009',
+                "src": os.path.join(TEST_FILES_DIR, "annotation.gtf.gz"),
+                "source": "DICTYBASE",
+                "species": "Dictyostelium discoideum",
+                "build": "dd-05-2009",
             },
         )
-        self.set_slug_and_make_public(annotation, self.annotation_slug, permissions=['view'])
+        self.set_slug_and_make_public(
+            annotation, self.annotation_slug, permissions=["view"]
+        )
 
         return annotation
 
     def create_genome_index(self, res, fasta):
-        genome_index = res.run(
-            slug='alignment-star-index',
-            input={
-                'ref_seq': fasta,
-            },
+        genome_index = res.run(slug="alignment-star-index", input={"ref_seq": fasta,},)
+        self.set_slug_and_make_public(
+            genome_index, self.genome_index_slug, permissions=["view"]
         )
-        self.set_slug_and_make_public(genome_index, self.genome_index_slug, permissions=['view'])
 
         return genome_index
 
     def allow_run_process(self, res, slug):
         process = res.process.get(slug=slug)
-        self.make_public(process, permissions=['view'])
+        self.make_public(process, permissions=["view"])
 
     def allow_use_descriptor_schema(self, res, slug):
         process = res.descriptor_schema.get(slug=slug)
-        self.make_public(process, permissions=['view'])
+        self.make_public(process, permissions=["view"])
 
 
 class TestIndex(BaseResdkDocsFunctionalTest):
-
     def setUp(self):
         self.res = Resolwe(ADMIN_USERNAME, ADMIN_PASSWORD, URL)
         self.reads = self.upload_reads(self.res)
@@ -131,13 +139,12 @@ class TestIndex(BaseResdkDocsFunctionalTest):
     def test_index(self):
         """Test example code used in ``README.rst`` and ``index.rst``."""
         self.run_tutorial_script(
-            'index.py',
+            "index.py",
             replace_lines=[(4, "res = resdk.Resolwe(url='{}')\n".format(URL))],
         )
 
 
 class TestStart(BaseResdkDocsFunctionalTest):
-
     def setUp(self):
         self.res = Resolwe(ADMIN_USERNAME, ADMIN_PASSWORD, URL)
 
@@ -147,13 +154,13 @@ class TestStart(BaseResdkDocsFunctionalTest):
         self.genome_index = self.create_genome_index(self.res, self.genome)
 
         # Set permissions for running processes:
-        self.allow_run_process(self.res, 'alignment-star')
+        self.allow_run_process(self.res, "alignment-star")
         super().setUp()
 
     def test_start(self):
         """Test getting started."""
         self.run_tutorial_script(
-            'start.py',
+            "start.py",
             replace_lines=[
                 (4, "res = resdk.Resolwe(url='{}')\n".format(URL)),
                 (5, "res.login('{}', '{}')\n".format(USER_USERNAME, USER_PASSWORD)),
@@ -162,7 +169,6 @@ class TestStart(BaseResdkDocsFunctionalTest):
 
 
 class TestTutorialGet(BaseResdkDocsFunctionalTest):
-
     def setUp(self):
         self.res = Resolwe(ADMIN_USERNAME, ADMIN_PASSWORD, URL)
 
@@ -172,7 +178,7 @@ class TestTutorialGet(BaseResdkDocsFunctionalTest):
     def test_tutorial_get(self):
         """Test tutorial-get."""
         self.run_tutorial_script(
-            'tutorial-get.py',
+            "tutorial-get.py",
             replace_lines=[
                 (4, "res = resdk.Resolwe(url='{}')\n".format(URL)),
                 (5, "res.login('{}', '{}')\n".format(USER_USERNAME, USER_PASSWORD)),
@@ -181,7 +187,6 @@ class TestTutorialGet(BaseResdkDocsFunctionalTest):
 
 
 class TestTutorialCreate(BaseResdkDocsFunctionalTest):
-
     def setUp(self):
         self.res = Resolwe(ADMIN_USERNAME, ADMIN_PASSWORD, URL)
 
@@ -191,24 +196,27 @@ class TestTutorialCreate(BaseResdkDocsFunctionalTest):
         self.annotation = self.upload_annotation(self.res)
 
         # Set permissions for running processes:
-        self.allow_run_process(self.res, 'upload-fastq-single')
-        self.allow_run_process(self.res, 'alignment-star')
-        self.allow_run_process(self.res, 'workflow-bbduk-star-htseq')
+        self.allow_run_process(self.res, "upload-fastq-single")
+        self.allow_run_process(self.res, "alignment-star")
+        self.allow_run_process(self.res, "workflow-bbduk-star-htseq")
         # Set permissions for using descriptor_schemas:
-        self.allow_use_descriptor_schema(self.res, 'reads')
-        self.allow_use_descriptor_schema(self.res, 'sample')
+        self.allow_use_descriptor_schema(self.res, "reads")
+        self.allow_use_descriptor_schema(self.res, "sample")
         super().setUp()
 
     def test_tutorial_create(self):
         """Test tutorial-create."""
         self.run_tutorial_script(
-            'tutorial-create.py',
+            "tutorial-create.py",
             replace_lines=[
                 (3, "res = resdk.Resolwe(url='{}')\n".format(URL)),
                 (4, "res.login('{}', '{}')\n".format(USER_USERNAME, USER_PASSWORD)),
-                (18, "        'src': '{}'\n".format(
-                    os.path.join(TEST_FILES_DIR, 'reads.fastq.gz'))),
-
+                (
+                    18,
+                    "        'src': '{}'\n".format(
+                        os.path.join(TEST_FILES_DIR, "reads.fastq.gz")
+                    ),
+                ),
                 # Data object is not finished, so something like this
                 # (107, "foo = res.data.get('{}').stdout()\n".format(self.reads_slug)),
                 # is replaced with an empty line. There is now way to perform
@@ -220,10 +228,9 @@ class TestTutorialCreate(BaseResdkDocsFunctionalTest):
 
 
 class TestTutorialResources(BaseResdkFunctionalTest):
-
     def test_tutorial_resources(self):
         """Verify existance of resources required for tutorial."""
-        res = Resolwe(url='https://app.genialis.com')
+        res = Resolwe(url="https://app.genialis.com")
 
         sample_slugs = [
             BaseResdkDocsFunctionalTest.sample_slug,
@@ -238,4 +245,4 @@ class TestTutorialResources(BaseResdkFunctionalTest):
             BaseResdkDocsFunctionalTest.genome_index_slug,
         ]
         for data_slug in data_slugs:
-            res.data.get(slug=data_slug, fields='id')  # pylint: disable=no-member
+            res.data.get(slug=data_slug, fields="id")  # pylint: disable=no-member

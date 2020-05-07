@@ -15,16 +15,24 @@ class Process(BaseResolweResource):
     """
 
     endpoint = "process"
-    READ_ONLY_FIELDS = BaseResolweResource.READ_ONLY_FIELDS + (
-        'is_active',
-    )
+    READ_ONLY_FIELDS = BaseResolweResource.READ_ONLY_FIELDS + ("is_active",)
     UPDATE_PROTECTED_FIELDS = BaseResolweResource.UPDATE_PROTECTED_FIELDS + (
-        'category', 'data_name', 'description', 'entity_descriptor_schema', 'entity_input',
-        'entity_type', 'input_schema', 'output_schema', 'persistence', 'requirements', 'run',
-        'scheduling_class', 'type',
+        "category",
+        "data_name",
+        "description",
+        "entity_descriptor_schema",
+        "entity_input",
+        "entity_type",
+        "input_schema",
+        "output_schema",
+        "persistence",
+        "requirements",
+        "run",
+        "scheduling_class",
+        "type",
     )
 
-    all_permissions = ['view', 'share', 'owner']
+    all_permissions = ["view", "share", "owner"]
 
     def __init__(self, resolwe, **model_data):
         """Initialize attributes."""

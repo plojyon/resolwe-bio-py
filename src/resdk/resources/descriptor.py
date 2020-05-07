@@ -15,12 +15,8 @@ class DescriptorSchema(BaseResolweResource):
 
     endpoint = "descriptorschema"
 
-    READ_ONLY_FIELDS = BaseResolweResource.READ_ONLY_FIELDS + (
-        'schema',
-    )
-    WRITABLE_FIELDS = BaseResolweResource.WRITABLE_FIELDS + (
-        'description',
-    )
+    READ_ONLY_FIELDS = BaseResolweResource.READ_ONLY_FIELDS + ("schema",)
+    WRITABLE_FIELDS = BaseResolweResource.WRITABLE_FIELDS + ("description",)
 
     def __init__(self, resolwe, **model_data):
         """Initialize attributes."""

@@ -5,13 +5,18 @@ from ..base import BaseResource
 class Mapping(BaseResource):
     """Knowledge base Mapping resource."""
 
-    endpoint = 'kb.mapping.admin'
-    query_endpoint = 'kb.mapping.search'
-    query_method = 'POST'
+    endpoint = "kb.mapping.admin"
+    query_endpoint = "kb.mapping.search"
+    query_method = "POST"
 
     READ_ONLY_FIELDS = BaseResource.READ_ONLY_FIELDS + (
-        'relation_type', 'source_db', 'source_id', 'source_species', 'target_db', 'target_id',
-        'target_species',
+        "relation_type",
+        "source_db",
+        "source_id",
+        "source_species",
+        "target_db",
+        "target_id",
+        "target_species",
     )
 
     def __init__(self, resolwe, **model_data):
@@ -37,4 +42,5 @@ class Mapping(BaseResource):
         """Format mapping representation."""
         # pylint: disable=no-member
         return "<Mapping source_db='{}' source_id='{}' target_db='{}' target_id='{}'>".format(
-            self.source_db, self.source_id, self.target_db, self.target_id)
+            self.source_db, self.source_id, self.target_db, self.target_id
+        )

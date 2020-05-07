@@ -16,10 +16,12 @@ def iterate_fields(fields, schema):
     :type schema: dict
 
     """
-    schema_dict = {val['name']: val for val in schema}
+    schema_dict = {val["name"]: val for val in schema}
     for field_id, properties in fields.items():
-        if 'group' in schema_dict[field_id]:
-            for _field_sch, _fields in iterate_fields(properties, schema_dict[field_id]['group']):
+        if "group" in schema_dict[field_id]:
+            for _field_sch, _fields in iterate_fields(
+                properties, schema_dict[field_id]["group"]
+            ):
                 yield (_field_sch, _fields)
         else:
             yield (schema_dict[field_id], fields)
@@ -37,17 +39,19 @@ def iterate_schema(fields, schema, path=None):
 
     """
     for field_schema in schema:
-        name = field_schema['name']
-        if 'group' in field_schema:
-            for rvals in iterate_schema(fields[name] if name in fields else {},
-                                        field_schema['group'],
-                                        None if path is None else '{}.{}'.format(path, name)):
+        name = field_schema["name"]
+        if "group" in field_schema:
+            for rvals in iterate_schema(
+                fields[name] if name in fields else {},
+                field_schema["group"],
+                None if path is None else "{}.{}".format(path, name),
+            ):
                 yield rvals
         else:
             if path is None:
                 yield (field_schema, fields)
             else:
-                yield (field_schema, fields, '{}.{}'.format(path, name))
+                yield (field_schema, fields, "{}.{}".format(path, name))
 
 
 def flatten_field(field, schema, path):
@@ -65,18 +69,18 @@ def flatten_field(field, schema, path):
     """
     flat = {}
     for field_schema, fields, current_path in iterate_schema(field, schema, path):
-        name = field_schema['name']
-        typ = field_schema['type']
-        label = field_schema['label']
+        name = field_schema["name"]
+        typ = field_schema["type"]
+        label = field_schema["label"]
         value = fields.get(name, None)
-        flat[current_path] = {'name': name, 'type': typ, 'label': label, 'value': value}
+        flat[current_path] = {"name": name, "type": typ, "label": label, "value": value}
 
     return flat
 
 
 def fill_spaces(word, desired_length):
     """Fill spaces at the end until word reaches desired length."""
-    return str(word) + ' ' * (desired_length - len(word))
+    return str(word) + " " * (desired_length - len(word))
 
 
 def _print_input_line(element_list, level):
@@ -85,27 +89,36 @@ def _print_input_line(element_list, level):
 
     for element in element_list:
         if "group" in element:
-            print("{}- {} - {}".format('    ' * level, element['name'], element['label']))
-            _print_input_line(element['group'], level + 1)
+            print(
+                "{}- {} - {}".format("    " * level, element["name"], element["label"])
+            )
+            _print_input_line(element["group"], level + 1)
         else:
-            max_name_len = max([len(elm['name']) for elm in element_list])
-            max_type_len = max([len(elm['type']) or 0 for elm in [e for e in element_list if
-                                                                  'group' not in e]])
-            print("{}- {} {} - {}".format(
-                '    ' * level,
-                fill_spaces(element['name'], max_name_len + spacing),
-                fill_spaces("[" + element['type'] + "]", max_type_len + spacing),
-                element['label']))
+            max_name_len = max([len(elm["name"]) for elm in element_list])
+            max_type_len = max(
+                [
+                    len(elm["type"]) or 0
+                    for elm in [e for e in element_list if "group" not in e]
+                ]
+            )
+            print(
+                "{}- {} {} - {}".format(
+                    "    " * level,
+                    fill_spaces(element["name"], max_name_len + spacing),
+                    fill_spaces("[" + element["type"] + "]", max_type_len + spacing),
+                    element["label"],
+                )
+            )
 
 
 def get_collection_id(collection):
     """Return id attribute of the object if it is collection, otherwise return given value."""
-    return collection.id if type(collection).__name__ == 'Collection' else collection
+    return collection.id if type(collection).__name__ == "Collection" else collection
 
 
 def get_data_id(data):
     """Return id attribute of the object if it is data, otherwise return given value."""
-    return data.id if type(data).__name__ == 'Data' else data
+    return data.id if type(data).__name__ == "Data" else data
 
 
 def get_descriptor_schema_id(dschema):
@@ -115,67 +128,67 @@ def get_descriptor_schema_id(dschema):
     otherwise return given value.
 
     """
-    return dschema.id if type(dschema).__name__ == 'DescriptorSchema' else dschema
+    return dschema.id if type(dschema).__name__ == "DescriptorSchema" else dschema
 
 
 def get_process_id(process):
     """Return id attribute of the object if it is process, otherwise return given value."""
-    return process.id if type(process).__name__ == 'Process' else process
+    return process.id if type(process).__name__ == "Process" else process
 
 
 def get_sample_id(sample):
     """Return id attribute of the object if it is sample, otherwise return given value."""
-    return sample.id if type(sample).__name__ == 'Sample' else sample
+    return sample.id if type(sample).__name__ == "Sample" else sample
 
 
 def get_relation_id(relation):
     """Return id attribute of the object if it is relation, otherwise return given value."""
-    return relation.id if type(relation).__name__ == 'Relation' else relation
+    return relation.id if type(relation).__name__ == "Relation" else relation
 
 
 def get_user_id(user):
     """Return id attribute of the object if it is relation, otherwise return given value."""
-    return user.id if type(user).__name__ == 'User' else user
+    return user.id if type(user).__name__ == "User" else user
 
 
 def is_collection(collection):
     """Return ``True`` if passed object is Collection and ``False`` otherwise."""
-    return type(collection).__name__ == 'Collection'
+    return type(collection).__name__ == "Collection"
 
 
 def is_data(data):
     """Return ``True`` if passed object is Data and ``False`` otherwise."""
-    return type(data).__name__ == 'Data'
+    return type(data).__name__ == "Data"
 
 
 def is_descriptor_schema(data):
     """Return ``True`` if passed object is DescriptorSchema and ``False`` otherwise."""
-    return type(data).__name__ == 'DescriptorSchema'
+    return type(data).__name__ == "DescriptorSchema"
 
 
 def is_process(process):
     """Return ``True`` if passed object is Process and ``False`` otherwise."""
-    return type(process).__name__ == 'Process'
+    return type(process).__name__ == "Process"
 
 
 def is_sample(sample):
     """Return ``True`` if passed object is Sample and ``False`` otherwise."""
-    return type(sample).__name__ == 'Sample'
+    return type(sample).__name__ == "Sample"
 
 
 def is_relation(relation):
     """Return ``True`` if passed object is Relation and ``False`` otherwise."""
-    return type(relation).__name__ == 'Relation'
+    return type(relation).__name__ == "Relation"
 
 
 def is_user(user):
     """Return ``True`` if passed object is User and ``False`` otherwise."""
-    return type(user).__name__ == 'User'
+    return type(user).__name__ == "User"
 
 
 def is_group(group):
     """Return ``True`` if passed object is Group and ``False`` otherwise."""
-    return type(group).__name__ == 'Group'
+    return type(group).__name__ == "Group"
 
 
 def parse_resolwe_datetime(dtime):

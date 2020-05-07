@@ -18,18 +18,28 @@ from urllib.parse import urljoin
 
 import requests
 import slumber
+
 # Needed because we mock requests in test_resolwe.py
 from requests.exceptions import ConnectionError  # pylint: disable=redefined-builtin
 
 from .constants import CHUNK_SIZE
 from .exceptions import ValidationError, handle_http_exception
 from .query import ResolweQuery
-from .resources import Collection, Data, DescriptorSchema, Group, Process, Relation, Sample, User
+from .resources import (
+    Collection,
+    Data,
+    DescriptorSchema,
+    Group,
+    Process,
+    Relation,
+    Sample,
+    User,
+)
 from .resources.base import BaseResource
 from .resources.kb import Feature, Mapping
 from .resources.utils import get_collection_id, get_data_id, is_data, iterate_fields
 
-DEFAULT_URL = 'http://localhost:8000'
+DEFAULT_URL = "http://localhost:8000"
 
 
 class ResolweResource(slumber.Resource):
@@ -38,7 +48,7 @@ class ResolweResource(slumber.Resource):
     def __getattribute__(self, item):
         """Return class attribute and wrapp request methods in exception handler."""
         attr = super().__getattribute__(item)
-        if item in ['get', 'options', 'head', 'post', 'patch', 'put', 'delete']:
+        if item in ["get", "options", "head", "post", "patch", "put", "delete"]:
             return handle_http_exception(attr)
         return attr
 
@@ -63,21 +73,21 @@ class Resolwe:
 
     # Map resource class to ResolweQuery name
     resource_query_mapping = {
-        Data: 'data',
-        Collection: 'collection',
-        Sample: 'sample',
-        Relation: 'relation',
-        Process: 'process',
-        DescriptorSchema: 'descriptor_schema',
-        User: 'user',
-        Group: 'group',
-        Feature: 'feature',
-        Mapping: 'mapping',
+        Data: "data",
+        Collection: "collection",
+        Sample: "sample",
+        Relation: "relation",
+        Process: "process",
+        DescriptorSchema: "descriptor_schema",
+        User: "user",
+        Group: "group",
+        Feature: "feature",
+        Mapping: "mapping",
     }
     # Map ResolweQuery name to it's slug_field
     slug_field_mapping = {
-        'user': 'username',
-        'group': 'name',
+        "user": "username",
+        "group": "name",
     }
 
     data = None
@@ -95,15 +105,15 @@ class Resolwe:
         """Initialize attributes."""
         if url is None:
             # Try to get URL from environmental variable, otherwise fallback to default.
-            url = os.environ.get('RESOLWE_HOST_URL', DEFAULT_URL)
+            url = os.environ.get("RESOLWE_HOST_URL", DEFAULT_URL)
 
         self._validate_url(url)
 
         if username is None:
-            username = os.environ.get('RESOLWE_API_USERNAME', None)
+            username = os.environ.get("RESOLWE_API_USERNAME", None)
 
         if password is None:
-            password = os.environ.get('RESOLWE_API_PASSWORD', None)
+            password = os.environ.get("RESOLWE_API_PASSWORD", None)
 
         self.url = url
         self._login(username=username, password=password)
@@ -111,23 +121,25 @@ class Resolwe:
         self.logger = logging.getLogger(__name__)
 
     def _validate_url(self, url):
-        if not re.match(r'https?://', url):
+        if not re.match(r"https?://", url):
             raise ValueError("Server url must start with http(s)://")
 
         try:
-            requests.get(urljoin(url, '/api/'))
+            requests.get(urljoin(url, "/api/"))
         except requests.exceptions.ConnectionError:
             raise ValueError("The site can't be reached: {}".format(url))
 
     def _initialize_queries(self):
         """Initialize ResolweQuery's."""
         for resource, query_name in self.resource_query_mapping.items():
-            slug_field = self.slug_field_mapping.get(query_name, 'slug')
-            setattr(self, query_name, ResolweQuery(self, resource, slug_field=slug_field))
+            slug_field = self.slug_field_mapping.get(query_name, "slug")
+            setattr(
+                self, query_name, ResolweQuery(self, resource, slug_field=slug_field)
+            )
 
     def _login(self, username=None, password=None):
         self.auth = ResAuth(username, password, self.url)
-        self.api = ResolweAPI(urljoin(self.url, '/api/'), self.auth, append_slash=False)
+        self.api = ResolweAPI(urljoin(self.url, "/api/"), self.auth, append_slash=False)
         self._initialize_queries()
 
     def login(self, username=None, password=None):
@@ -137,9 +149,9 @@ class Resolwe:
         and password are given, login without prompt.
         """
         if username is None:
-            username = input('Username: ')
+            username = input("Username: ")
         if password is None:
-            password = getpass.getpass('Password: ')
+            password = getpass.getpass("Password: ")
         self._login(username=username, password=password)
 
     def get_query_by_resource(self, resource):
@@ -147,14 +159,18 @@ class Resolwe:
         if isinstance(resource, BaseResource):
             resource = resource.__class__
         elif not issubclass(resource, BaseResource):
-            raise ValueError("Provide a Resource class or it's instance as a resource argument.")
+            raise ValueError(
+                "Provide a Resource class or it's instance as a resource argument."
+            )
 
         return getattr(self, self.resource_query_mapping.get(resource))
 
     def __repr__(self):
         """Return string representation of the current object."""
         if self.auth.username:
-            return "Resolwe <url: {}, username: {}>".format(self.url, self.auth.username)
+            return "Resolwe <url: {}, username: {}>".format(
+                self.url, self.auth.username
+            )
         return "Resolwe <url: {}>".format(self.url)
 
     def _process_file_field(self, path):
@@ -168,16 +184,15 @@ class Resolwe:
 
         :rtype: dict
         """
-        if isinstance(path, dict) and 'file' in path and 'file_temp' in path:
+        if isinstance(path, dict) and "file" in path and "file_temp" in path:
             return path
 
-        url_regex = r'^(https?|ftp)://[-A-Za-z0-9\+&@#/%?=~_|!:,.;]*[-A-Za-z0-9\+&@#/%=~_|]$'
+        url_regex = (
+            r"^(https?|ftp)://[-A-Za-z0-9\+&@#/%?=~_|!:,.;]*[-A-Za-z0-9\+&@#/%=~_|]$"
+        )
         if re.match(url_regex, path):
-            file_name = path.split('/')[-1].split('#')[0].split('?')[0]
-            return {
-                'file': file_name,
-                'file_temp': path
-            }
+            file_name = path.split("/")[-1].split("#")[0].split("?")[0]
+            return {"file": file_name, "file_temp": path}
 
         if not os.path.isfile(path):
             raise ValueError("File {} not found.".format(path))
@@ -189,8 +204,8 @@ class Resolwe:
 
         file_name = ntpath.basename(path)
         return {
-            'file': file_name,
-            'file_temp': file_temp,
+            "file": file_name,
+            "file_temp": file_temp,
         }
 
     def _get_process(self, slug=None):
@@ -211,6 +226,7 @@ class Resolwe:
         * uploading files in ``basic:file:`` and ``list:basic:file:``
           fields
         """
+
         def deep_copy(current):
             """Copy inputs."""
             if isinstance(current, dict):
@@ -227,42 +243,54 @@ class Resolwe:
 
         try:
             for schema, fields in iterate_fields(inputs, process.input_schema):
-                field_name = schema['name']
-                field_type = schema['type']
+                field_name = schema["name"]
+                field_type = schema["type"]
                 field_value = fields[field_name]
 
                 # XXX: Remove this when supported on server.
                 # Wrap `list:` fields into list if they are not already
-                if field_type.startswith('list:') and not isinstance(field_value, list):
+                if field_type.startswith("list:") and not isinstance(field_value, list):
                     fields[field_name] = [field_value]
-                    field_value = fields[field_name]  # update value for the rest of the loop
+                    field_value = fields[
+                        field_name
+                    ]  # update value for the rest of the loop
 
                 # Dehydrate `data:*` fields
-                if field_type.startswith('data:'):
+                if field_type.startswith("data:"):
                     fields[field_name] = get_data_id(field_value)
 
                 # Dehydrate `list:data:*` fields
-                elif field_type.startswith('list:data:'):
+                elif field_type.startswith("list:data:"):
                     fields[field_name] = [get_data_id(data) for data in field_value]
 
                 # Upload files in `basic:file:` fields
-                elif field_type == 'basic:file:':
+                elif field_type == "basic:file:":
                     fields[field_name] = self._process_file_field(field_value)
 
                 # Upload files in list:basic:file:` fields
-                elif field_type == 'list:basic:file:':
-                    fields[field_name] = [self._process_file_field(obj) for obj in field_value]
+                elif field_type == "list:basic:file:":
+                    fields[field_name] = [
+                        self._process_file_field(obj) for obj in field_value
+                    ]
 
         except KeyError as key_error:
             field_name = key_error.args[0]
             slug = process.slug
             raise ValidationError(
-                "Field '{}' not in process '{}' input schema.".format(field_name, slug))
+                "Field '{}' not in process '{}' input schema.".format(field_name, slug)
+            )
 
         return inputs
 
-    def run(self, slug=None, input={}, descriptor=None,  # pylint: disable=redefined-builtin
-            descriptor_schema=None, collection=None, data_name=''):
+    def run(
+        self,
+        slug=None,
+        input={},
+        descriptor=None,  # pylint: disable=redefined-builtin
+        descriptor_schema=None,
+        collection=None,
+        data_name="",
+    ):
         """Run process and return the corresponding Data object.
 
         1. Upload files referenced in inputs
@@ -285,24 +313,26 @@ class Resolwe:
         :return: data object that was just created
         :rtype: Data object
         """
-        if ((descriptor and not descriptor_schema) or (not descriptor and descriptor_schema)):
+        if (descriptor and not descriptor_schema) or (
+            not descriptor and descriptor_schema
+        ):
             raise ValueError("Set both or neither descriptor and descriptor_schema.")
 
         process = self._get_process(slug)
         data = {
-            'process': {'slug': process.slug},
-            'input': self._process_inputs(input, process),
+            "process": {"slug": process.slug},
+            "input": self._process_inputs(input, process),
         }
 
         if descriptor and descriptor_schema:
-            data['descriptor'] = descriptor
-            data['descriptor_schema'] = {'slug': descriptor_schema}
+            data["descriptor"] = descriptor
+            data["descriptor_schema"] = {"slug": descriptor_schema}
 
         if collection:
-            data['collection'] = {'id': get_collection_id(collection)}
+            data["collection"] = {"id": get_collection_id(collection)}
 
         if data_name:
-            data['name'] = data_name
+            data["name"] = data_name
 
         model_data = self.api.data.post(data)
         return Data(resolwe=self, **model_data)
@@ -317,8 +347,8 @@ class Resolwe:
         inputs = self._process_inputs(input, process)
 
         data = {
-            'process': process.slug,
-            'input': inputs,
+            "process": process.slug,
+            "input": inputs,
         }
 
         model_data = self.api.data.get_or_create.post(data)
@@ -339,7 +369,7 @@ class Resolwe:
         file_size = os.path.getsize(file_path)
         base_name = os.path.basename(file_path)
 
-        with open(file_path, 'rb') as file_:
+        with open(file_path, "rb") as file_:
             while True:
                 chunk = file_.read(CHUNK_SIZE)
                 if not chunk:
@@ -350,25 +380,23 @@ class Resolwe:
                         self.logger.warning(
                             "Chunk upload failed (error %s): repeating for chunk number %s",
                             response.status_code,
-                            chunk_number)
+                            chunk_number,
+                        )
 
                     response = requests.post(
-                        urljoin(self.url, 'upload/'),
+                        urljoin(self.url, "upload/"),
                         auth=self.auth,
-
                         # request are smart and make
                         # 'CONTENT_TYPE': 'multipart/form-data;''
-                        files={'file': (base_name, chunk)},
-
+                        files={"file": (base_name, chunk)},
                         # stuff in data will be in response.POST on server
                         data={
-                            '_chunkSize': CHUNK_SIZE,
-                            '_totalSize': file_size,
-                            '_chunkNumber': chunk_number,
-                            '_currentChunkSize': len(chunk)},
-                        headers={
-                            'Session-Id': session_id,
-                            'X-File-Uid': file_uid}
+                            "_chunkSize": CHUNK_SIZE,
+                            "_totalSize": file_size,
+                            "_chunkNumber": chunk_number,
+                            "_currentChunkSize": len(chunk),
+                        },
+                        headers={"Session-Id": session_id, "X-File-Uid": file_uid},
                     )
 
                     if response.status_code in [200, 201]:
@@ -377,14 +405,16 @@ class Resolwe:
                     # Upload of a chunk failed (5 retries)
                     return None
 
-                progress = 100. * (chunk_number * CHUNK_SIZE + len(chunk)) / file_size
+                progress = 100.0 * (chunk_number * CHUNK_SIZE + len(chunk)) / file_size
                 message = "{:.0f} % Uploaded {}".format(progress, file_path)
                 self.logger.info(message)
                 chunk_number += 1
 
-        return response.json()['files'][0]['temp']
+        return response.json()["files"][0]["temp"]
 
-    def _download_files(self, files, download_dir=None):  # pylint: disable=redefined-builtin
+    def _download_files(
+        self, files, download_dir=None
+    ):  # pylint: disable=redefined-builtin
         """Download files.
 
         Download files from the Resolwe server to the download
@@ -401,7 +431,9 @@ class Resolwe:
             download_dir = os.getcwd()
 
         if not os.path.isdir(download_dir):
-            raise ValueError("Download directory does not exist: {}".format(download_dir))
+            raise ValueError(
+                "Download directory does not exist: {}".format(download_dir)
+            )
 
         if not files:
             self.logger.info("No files to download.")
@@ -412,17 +444,19 @@ class Resolwe:
             for file_uri in files:
                 file_name = os.path.basename(file_uri)
                 file_path = os.path.dirname(file_uri)
-                file_url = urljoin(self.url, 'data/{}'.format(file_uri))
+                file_url = urljoin(self.url, "data/{}".format(file_uri))
 
                 # Remove data id from path
-                file_path = file_path.split('/', 1)[1] if '/' in file_path else ''
+                file_path = file_path.split("/", 1)[1] if "/" in file_path else ""
                 full_path = os.path.join(download_dir, file_path)
                 if not os.path.isdir(full_path):
                     os.makedirs(full_path)
 
                 self.logger.info("* %s", os.path.join(file_path, file_name))
 
-                with open(os.path.join(download_dir, file_path, file_name), 'wb') as file_handle:
+                with open(
+                    os.path.join(download_dir, file_path, file_name), "wb"
+                ) as file_handle:
                     response = requests.get(file_url, stream=True, auth=self.auth)
 
                     if not response.ok:
@@ -465,34 +499,37 @@ class ResAuth(requests.auth.AuthBase):
         if not username and not password:
             return
 
-        payload = {'username': username, 'password': password}
+        payload = {"username": username, "password": password}
 
         try:
-            response = requests.post(urljoin(url, '/rest-auth/login/'), data=payload)
+            response = requests.post(urljoin(url, "/rest-auth/login/"), data=payload)
         except ConnectionError:
-            raise ValueError('Server not accessible on {}. Wrong url?'.format(url))
+            raise ValueError("Server not accessible on {}. Wrong url?".format(url))
 
         status_code = response.status_code
         if status_code in [400, 403]:
-            msg = 'Response HTTP status code {}. Invalid credentials?'.format(status_code)
+            msg = "Response HTTP status code {}. Invalid credentials?".format(
+                status_code
+            )
             raise ValueError(msg)
 
-        if not ('sessionid' in response.cookies and 'csrftoken' in response.cookies):
-            raise Exception('Missing sessionid or csrftoken. Invalid credentials?')
+        if not ("sessionid" in response.cookies and "csrftoken" in response.cookies):
+            raise Exception("Missing sessionid or csrftoken. Invalid credentials?")
 
-        self.sessionid = response.cookies['sessionid']
-        self.csrftoken = response.cookies['csrftoken']
+        self.sessionid = response.cookies["sessionid"]
+        self.csrftoken = response.cookies["csrftoken"]
         self.url = url
         # self.subscribe_id = str(uuid.uuid4())
 
     def __call__(self, request):
         """Set request headers."""
         if self.sessionid and self.csrftoken:
-            request.headers['Cookie'] = 'csrftoken={}; sessionid={}'.format(
-                self.csrftoken, self.sessionid)
-            request.headers['X-CSRFToken'] = self.csrftoken
+            request.headers["Cookie"] = "csrftoken={}; sessionid={}".format(
+                self.csrftoken, self.sessionid
+            )
+            request.headers["X-CSRFToken"] = self.csrftoken
 
-        request.headers['referer'] = self.url
+        request.headers["referer"] = self.url
 
         # Not needed until we support HTTP Push with the API
         # if r.path_url != '/upload/':

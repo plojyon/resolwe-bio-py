@@ -25,19 +25,35 @@ class Data(BaseResolweResource):
 
     """
 
-    endpoint = 'data'
-    full_search_paramater = 'text'
+    endpoint = "data"
+    full_search_paramater = "text"
 
     READ_ONLY_FIELDS = BaseResolweResource.READ_ONLY_FIELDS + (
-        'checksum', 'descriptor_dirty', 'duplicated', 'process_cores', 'process_error',
-        'process_info', 'process_memory', 'process_progress', 'process_rc', 'process_warning',
-        'output', 'scheduled', 'size', 'status',
+        "checksum",
+        "descriptor_dirty",
+        "duplicated",
+        "process_cores",
+        "process_error",
+        "process_info",
+        "process_memory",
+        "process_progress",
+        "process_rc",
+        "process_warning",
+        "output",
+        "scheduled",
+        "size",
+        "status",
     )
     UPDATE_PROTECTED_FIELDS = BaseResolweResource.UPDATE_PROTECTED_FIELDS + (
-        'input', 'process',
+        "input",
+        "process",
     )
     WRITABLE_FIELDS = BaseResolweResource.WRITABLE_FIELDS + (
-        'collection', 'descriptor', 'descriptor_schema', 'sample', 'tags',
+        "collection",
+        "descriptor",
+        "descriptor_schema",
+        "sample",
+        "tags",
     )
 
     def __init__(self, resolwe, **model_data):
@@ -115,7 +131,7 @@ class Data(BaseResolweResource):
     @process.setter
     def process(self, payload):
         """Set process."""
-        self._resource_setter(payload, Process, '_process')
+        self._resource_setter(payload, Process, "_process")
 
     @property
     def descriptor_schema(self):
@@ -130,8 +146,10 @@ class Data(BaseResolweResource):
     @property
     def sample(self):
         """Get sample."""
-        if self._sample is None and self._original_values.get('entity', None):
-            self._sample = Sample(resolwe=self.resolwe, **self._original_values['entity'])
+        if self._sample is None and self._original_values.get("entity", None):
+            self._sample = Sample(
+                resolwe=self.resolwe, **self._original_values["entity"]
+            )
 
         return self._sample
 
@@ -154,20 +172,23 @@ class Data(BaseResolweResource):
     @assert_object_exists
     def started(self):
         """Get start time."""
-        return parse_resolwe_datetime(self._original_values['started'])
+        return parse_resolwe_datetime(self._original_values["started"])
 
     @property
     @assert_object_exists
     def finished(self):
         """Get finish time."""
-        return parse_resolwe_datetime(self._original_values['finished'])
+        return parse_resolwe_datetime(self._original_values["finished"])
 
     @property
     @assert_object_exists
     def parents(self):
         """Get parents of this Data object."""
         if self._parents is None:
-            ids = [item['id'] for item in self.resolwe.api.data(self.id).parents.get(fields='id')]
+            ids = [
+                item["id"]
+                for item in self.resolwe.api.data(self.id).parents.get(fields="id")
+            ]
             if not ids:
                 return []
             # Resolwe querry must be returned:
@@ -180,7 +201,10 @@ class Data(BaseResolweResource):
     def children(self):
         """Get children of this Data object."""
         if self._children is None:
-            ids = [item['id'] for item in self.resolwe.api.data(self.id).children.get(fields='id')]
+            ids = [
+                item["id"]
+                for item in self.resolwe.api.data(self.id).children.get(fields="id")
+            ]
             if not ids:
                 return []
             # Resolwe querry must be returned:
@@ -198,20 +222,24 @@ class Data(BaseResolweResource):
                 if file_name is None or file_name == elm[field_type]:
                     download_list.append(elm[field_type])
             else:
-                raise KeyError("Item {} does not contain '{}' key.".format(fname, field_type))
+                raise KeyError(
+                    "Item {} does not contain '{}' key.".format(fname, field_type)
+                )
 
-        if field_name and not field_name.startswith('output.'):
-            field_name = 'output.{}'.format(field_name)
+        if field_name and not field_name.startswith("output."):
+            field_name = "output.{}".format(field_name)
 
-        flattened = flatten_field(self.output, self.process.output_schema, 'output')
+        flattened = flatten_field(self.output, self.process.output_schema, "output")
         for ann_field_name, ann in flattened.items():
-            if (ann_field_name.startswith('output')
-                    and (field_name is None or field_name == ann_field_name)
-                    and ann['value'] is not None):
-                if ann['type'].startswith('basic:{}:'.format(field_type)):
-                    put_in_download_list(ann['value'], ann_field_name)
-                elif ann['type'].startswith('list:basic:{}:'.format(field_type)):
-                    for element in ann['value']:
+            if (
+                ann_field_name.startswith("output")
+                and (field_name is None or field_name == ann_field_name)
+                and ann["value"] is not None
+            ):
+                if ann["type"].startswith("basic:{}:".format(field_type)):
+                    put_in_download_list(ann["value"], ann_field_name)
+                elif ann["type"].startswith("list:basic:{}:".format(field_type)):
+                    for element in ann["value"]:
                         put_in_download_list(element, ann_field_name)
 
         return download_list
@@ -219,15 +247,15 @@ class Data(BaseResolweResource):
     def _get_dir_files(self, dir_name):
         files_list, dir_list = [], []
 
-        dir_url = urljoin(self.resolwe.url, 'data/{}/{}'.format(self.id, dir_name))
-        if not dir_url.endswith('/'):
-            dir_url += '/'
+        dir_url = urljoin(self.resolwe.url, "data/{}/{}".format(self.id, dir_name))
+        if not dir_url.endswith("/"):
+            dir_url += "/"
         response = requests.get(dir_url, auth=self.resolwe.auth)
-        response = json.loads(response.content.decode('utf-8'))
+        response = json.loads(response.content.decode("utf-8"))
 
         for obj in response:
-            obj_path = '{}/{}'.format(dir_name, obj['name'])
-            if obj['type'] == 'directory':
+            obj_path = "{}/{}".format(dir_name, obj["name"])
+            if obj["type"] == "directory":
                 dir_list.append(obj_path)
             else:
                 files_list.append(obj_path)
@@ -251,9 +279,9 @@ class Data(BaseResolweResource):
         :rtype: List of tuples (data_id, file_name, field_name, process_type)
 
         """
-        file_list = self._files_dirs('file', file_name, field_name)
+        file_list = self._files_dirs("file", file_name, field_name)
 
-        for dir_name in self._files_dirs('dir', file_name, field_name):
+        for dir_name in self._files_dirs("dir", file_name, field_name):
             file_list.extend(self._get_dir_files(dir_name))
 
         return file_list
@@ -283,8 +311,13 @@ class Data(BaseResolweResource):
         if file_name and field_name:
             raise ValueError("Only one of file_name or field_name may be given.")
 
-        files = ['{}/{}'.format(self.id, fname) for fname in self.files(file_name, field_name)]
-        self.resolwe._download_files(files, download_dir)  # pylint: disable=protected-access
+        files = [
+            "{}/{}".format(self.id, fname)
+            for fname in self.files(file_name, field_name)
+        ]
+        self.resolwe._download_files(
+            files, download_dir
+        )  # pylint: disable=protected-access
 
     def stdout(self):
         """Return process standard output (stdout.txt file content).
@@ -295,8 +328,8 @@ class Data(BaseResolweResource):
         :rtype: string
 
         """
-        output = b''
-        url = urljoin(self.resolwe.url, 'data/{}/stdout.txt'.format(self.id))
+        output = b""
+        url = urljoin(self.resolwe.url, "data/{}/stdout.txt".format(self.id))
         response = requests.get(url, stream=True, auth=self.resolwe.auth)
         if not response.ok:
             response.raise_for_status()
@@ -312,5 +345,5 @@ class Data(BaseResolweResource):
 
         :return: Duplicated data object
         """
-        duplicated = self.api().duplicate.post({'ids': [self.id]})
+        duplicated = self.api().duplicate.post({"ids": [self.id]})
         return self.__class__(resolwe=self.resolwe, **duplicated[0])

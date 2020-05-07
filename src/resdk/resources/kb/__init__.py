@@ -12,6 +12,6 @@ from .feature import Feature
 from .mapping import Mapping
 
 __all__ = (
-    'Feature',
-    'Mapping',
+    "Feature",
+    "Mapping",
 )

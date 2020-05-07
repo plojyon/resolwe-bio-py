@@ -11,12 +11,11 @@ from resdk.resources.user import Group, User
 
 
 class TestGroup(unittest.TestCase):
-
     def setUp(self):
         self.resolwe = MagicMock()
         self.user = User(resolwe=self.resolwe, id=42)
-        self.group = Group(resolwe=self.resolwe, name='Test group', id=1)
-        self.group_no_id = Group(resolwe=self.resolwe, name='Test group')
+        self.group = Group(resolwe=self.resolwe, name="Test group", id=1)
+        self.group_no_id = Group(resolwe=self.resolwe, name="Test group")
 
     def test_users_no_id(self):
         with self.assertRaises(ValueError):
@@ -35,7 +34,7 @@ class TestGroup(unittest.TestCase):
 
     def test_add_user(self):
         self.group.add_users(self.user)
-        self.resolwe.api.group().add_users.post.assert_called_with({'user_ids': [42]})
+        self.resolwe.api.group().add_users.post.assert_called_with({"user_ids": [42]})
 
     def test_remove_user_no_id(self):
         with self.assertRaises(ValueError):
@@ -43,8 +42,10 @@ class TestGroup(unittest.TestCase):
 
     def test_remove_user(self):
         self.group.remove_users(self.user)
-        self.resolwe.api.group().remove_users.post.assert_called_with({'user_ids': [42]})
+        self.resolwe.api.group().remove_users.post.assert_called_with(
+            {"user_ids": [42]}
+        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

@@ -17,13 +17,14 @@ class Relation(BaseResolweResource):
 
     """
 
-    endpoint = 'relation'
+    endpoint = "relation"
 
-    UPDATE_PROTECTED_FIELDS = BaseResolweResource.UPDATE_PROTECTED_FIELDS + (
-        'type',
-    )
+    UPDATE_PROTECTED_FIELDS = BaseResolweResource.UPDATE_PROTECTED_FIELDS + ("type",)
     WRITABLE_FIELDS = BaseResolweResource.WRITABLE_FIELDS + (
-        'collection', 'category', 'partitions', 'unit',
+        "collection",
+        "category",
+        "partitions",
+        "unit",
     )
 
     def __init__(self, resolwe, **model_data):
@@ -53,7 +54,7 @@ class Relation(BaseResolweResource):
             if not self.partitions:
                 self._samples = []
             else:
-                sample_ids = [partition['entity'] for partition in self.partitions]
+                sample_ids = [partition["entity"] for partition in self.partitions]
                 self._samples = self.resolwe.sample.filter(id__in=sample_ids)
                 # Samples should be sorted, so they have same order as positions
                 # XXX: This may be slow for many samples in single collection
@@ -67,14 +68,14 @@ class Relation(BaseResolweResource):
         """Return collection object to which relation belongs."""
         if not self._collection:
             self._collection = self.resolwe.collection.get(
-                self._original_values.get('colection', None)
+                self._original_values.get("colection", None)
             )
         return self._collection
 
     @collection.setter
     def collection(self, payload):
         """Set collection to which relation belongs."""
-        self._resource_setter(payload, Collection, '_collection')
+        self._resource_setter(payload, Collection, "_collection")
 
     def update(self):
         """Clear cache and update resource fields from the server."""
@@ -84,19 +85,20 @@ class Relation(BaseResolweResource):
 
     def add_sample(self, sample, label=None, position=None):
         """Add ``sample`` object to relation."""
-        self.partitions.append({
-            'entity': sample.id,
-            'position': position,
-            'label': label,
-        })
+        self.partitions.append(
+            {"entity": sample.id, "position": position, "label": label,}
+        )
         self.save()
         self._samples = None
 
     def remove_samples(self, *samples):
         """Remove ``sample`` objects from relation."""
         sample_ids = [get_sample_id(sample) for sample in samples]
-        self.partitions = [partition for partition in self.partitions if
-                           partition['entity'] not in sample_ids]
+        self.partitions = [
+            partition
+            for partition in self.partitions
+            if partition["entity"] not in sample_ids
+        ]
         self.save()
         self._samples = None
 
@@ -104,7 +106,7 @@ class Relation(BaseResolweResource):
         """Check that collection is saved and save instance."""
         if self._collection is None:
             # `save` fails in an ugly way if collection is not set
-            raise ValidationError('`collection` attribute is required.')
+            raise ValidationError("`collection` attribute is required.")
 
         super().save()
 
@@ -113,15 +115,17 @@ class Relation(BaseResolweResource):
         sample_info = []
         for sample, partition in zip(self.samples, self.partitions):
             name = sample.name
-            label = partition.get('label', None)
-            position = partition.get('position', None)
+            label = partition.get("label", None)
+            position = partition.get("position", None)
 
             if label and position:
-                sample_info.append('{} ({} {}): {}'.format(label, position, self.unit, name))
-            elif partition['label']:
-                sample_info.append('{}: {}'.format(label, name))
-            elif partition['position']:
-                sample_info.append('{} {}: {}'.format(position, self.unit, name))
+                sample_info.append(
+                    "{} ({} {}): {}".format(label, position, self.unit, name)
+                )
+            elif partition["label"]:
+                sample_info.append("{}: {}".format(label, name))
+            elif partition["position"]:
+                sample_info.append("{} {}: {}".format(position, self.unit, name))
             else:
                 sample_info.append(name)
 
@@ -130,5 +134,5 @@ class Relation(BaseResolweResource):
             self.id,
             self.type,
             self.category,
-            ', '.join(sample_info),
+            ", ".join(sample_info),
         )

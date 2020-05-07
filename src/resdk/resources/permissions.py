@@ -25,21 +25,26 @@ class PermissionsManager:
         if not isinstance(users, list):
             users = [users]
 
-        return [self.resolwe.user.get(user) if not is_user(user) else user for user in users]
+        return [
+            self.resolwe.user.get(user) if not is_user(user) else user for user in users
+        ]
 
     def _fetch_group(self, groups):
         if not isinstance(groups, list):
             groups = [groups]
 
         return [
-            self.resolwe.group.get(group) if not is_group(group) else group for group in groups
+            self.resolwe.group.get(group) if not is_group(group) else group
+            for group in groups
         ]
 
     def _validate_perms(self, perms):
         """Check that given list of permissions is valid for current object type."""
         for perm in perms:
             if perm not in self.all_permissions:
-                valid_perms = ', '.join(["'{}'".format(p) for p in self.all_permissions])
+                valid_perms = ", ".join(
+                    ["'{}'".format(p) for p in self.all_permissions]
+                )
                 raise ValueError(
                     "Invalid permission '{}' for type '{}'. Valid permissions are: {}".format(
                         perm, self.__class__.__name__, valid_perms
@@ -49,9 +54,9 @@ class PermissionsManager:
     def _set_permissions(self, action, perms, who_type, who=None):
         """Generate permissions payload and post it to the API."""
         payload = {
-            'users': defaultdict(lambda: defaultdict(list)),
-            'groups': defaultdict(lambda: defaultdict(list)),
-            'public': defaultdict(list)
+            "users": defaultdict(lambda: defaultdict(list)),
+            "groups": defaultdict(lambda: defaultdict(list)),
+            "public": defaultdict(list),
         }
 
         if not isinstance(perms, list):
@@ -59,11 +64,11 @@ class PermissionsManager:
 
         self._validate_perms(perms)
 
-        if who_type in ['users', 'groups']:
+        if who_type in ["users", "groups"]:
             for single in who:
                 payload[who_type][action][single.id] = copy.copy(perms)
 
-        elif who_type == 'public':
+        elif who_type == "public":
             payload[who_type][action] = copy.copy(perms)
 
         else:
@@ -110,7 +115,7 @@ class PermissionsManager:
             collection.permissions.add_user([john, mary], ['view', 'edit'])
 
         """
-        self._set_permissions('add', perms, 'users', self._fetch_users(user))
+        self._set_permissions("add", perms, "users", self._fetch_users(user))
 
     def remove_user(self, user, perms):
         """Remove ``perms`` permissions from ``user``.
@@ -139,7 +144,7 @@ class PermissionsManager:
             collection.permissions.remove_user([john, mary], ['view', 'edit'])
 
         """
-        self._set_permissions('remove', perms, 'users', self._fetch_users(user))
+        self._set_permissions("remove", perms, "users", self._fetch_users(user))
 
     def add_group(self, group, perms):
         """Add ``perms`` permissions to ``group``.
@@ -168,7 +173,7 @@ class PermissionsManager:
             collection.permissions.add_group([my_lab, your_lab], ['view', 'edit'])
 
         """
-        self._set_permissions('add', perms, 'groups', self._fetch_group(group))
+        self._set_permissions("add", perms, "groups", self._fetch_group(group))
 
     def remove_group(self, group, perms):
         """Remove ``perms`` permissions from ``group``.
@@ -198,7 +203,7 @@ class PermissionsManager:
             collection.permissions.remove_group([my_lab, your_lab], ['view', 'edit'])
 
         """
-        self._set_permissions('remove', perms, 'groups', self._fetch_group(group))
+        self._set_permissions("remove", perms, "groups", self._fetch_group(group))
 
     def add_public(self, perms):
         """Add ``perms`` permissions to public user.
@@ -214,7 +219,7 @@ class PermissionsManager:
             collection.permissions.add_public('view')
 
         """
-        self._set_permissions('add', perms, 'public')
+        self._set_permissions("add", perms, "public")
 
     def remove_public(self, perms):
         """Remove ``perms`` permissions from public user.
@@ -230,11 +235,11 @@ class PermissionsManager:
             collection.permissions.remove_public('view')
 
         """
-        self._set_permissions('remove', perms, 'public')
+        self._set_permissions("remove", perms, "public")
 
     def _get_perms_by_type(self, perm_type):
         """Return only permissions with ``perm_type`` type."""
-        return [perm for perm in self._permissions if perm['type'] == perm_type]
+        return [perm for perm in self._permissions if perm["type"] == perm_type]
 
     def _perms_to_string(self, perms):
         """Return string representation of given permissions array."""
@@ -246,7 +251,7 @@ class PermissionsManager:
                 perms.remove(known_perm)
                 perms.insert(0, known_perm)
 
-        return ', '.join(perms)
+        return ", ".join(perms)
 
     def __repr__(self):
         """Show permissions."""
@@ -254,27 +259,39 @@ class PermissionsManager:
 
         res = []
 
-        public_perms = self._get_perms_by_type('public')
+        public_perms = self._get_perms_by_type("public")
         if public_perms:
-            res.append('Public: {}'.format(self._perms_to_string(public_perms[0]['permissions'])))
+            res.append(
+                "Public: {}".format(
+                    self._perms_to_string(public_perms[0]["permissions"])
+                )
+            )
 
-        user_perms = self._get_perms_by_type('user')
+        user_perms = self._get_perms_by_type("user")
         if user_perms:
-            res.append('Users:')
+            res.append("Users:")
             for perm in user_perms:
-                res.append(' - {} (id={}): {}'.format(
-                    perm['name'], perm['id'], self._perms_to_string(perm['permissions'])
-                ))
+                res.append(
+                    " - {} (id={}): {}".format(
+                        perm["name"],
+                        perm["id"],
+                        self._perms_to_string(perm["permissions"]),
+                    )
+                )
 
-        group_perms = self._get_perms_by_type('group')
+        group_perms = self._get_perms_by_type("group")
         if group_perms:
-            res.append('Groups:')
+            res.append("Groups:")
             for perm in group_perms:
-                res.append(' - {} (id={}): {}'.format(
-                    perm['name'], perm['id'], self._perms_to_string(perm['permissions'])
-                ))
+                res.append(
+                    " - {} (id={}): {}".format(
+                        perm["name"],
+                        perm["id"],
+                        self._perms_to_string(perm["permissions"]),
+                    )
+                )
 
-        return '\n'.join(res)
+        return "\n".join(res)
 
     def _get_holders_with_perm(self, perm):
         """Get Users/Group/public names that have ``perm`` perm."""
@@ -285,20 +302,24 @@ class PermissionsManager:
 
         holders = []
         for item in self._permissions:  # pylint: disable=protected-access
-            if perm in item['permissions']:
-                if item['type'] == 'user':
+            if perm in item["permissions"]:
+                if item["type"] == "user":
                     holders.append(
                         User(
                             self.resolwe,
-                            id=item['id'],
-                            first_name=item['name'],
-                            username=item['username'],
+                            id=item["id"],
+                            first_name=item["name"],
+                            username=item["username"],
                         ),
                     )
-                elif item['type'] == 'group':
-                    holders.append(Group(self.resolwe, id=item['id'], name=item['name']))
-                elif item['type'] == 'public':
-                    holders.append(User(self.resolwe, username='public', first_name="Public"))
+                elif item["type"] == "group":
+                    holders.append(
+                        Group(self.resolwe, id=item["id"], name=item["name"])
+                    )
+                elif item["type"] == "public":
+                    holders.append(
+                        User(self.resolwe, username="public", first_name="Public")
+                    )
         return holders
 
     @property
