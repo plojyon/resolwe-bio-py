@@ -69,4 +69,13 @@ from .relation import Relation
 from .sample import Sample
 from .user import Group, User
 
-__all__ = ("Collection", "Data", "Group", "Sample", "Process", "Relation", "User")
+__all__ = (
+    "Collection",
+    "Data",
+    "DescriptorSchema",
+    "Group",
+    "Sample",
+    "Process",
+    "Relation",
+    "User",
+)

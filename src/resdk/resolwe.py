@@ -19,9 +19,6 @@ from urllib.parse import urljoin
 import requests
 import slumber
 
-# Needed because we mock requests in test_resolwe.py
-from requests.exceptions import ConnectionError  # pylint: disable=redefined-builtin
-
 from .constants import CHUNK_SIZE
 from .exceptions import ValidationError, handle_http_exception
 from .query import ResolweQuery
@@ -503,7 +500,7 @@ class ResAuth(requests.auth.AuthBase):
 
         try:
             response = requests.post(urljoin(url, "/rest-auth/login/"), data=payload)
-        except ConnectionError:
+        except requests.exceptions.ConnectionError:
             raise ValueError("Server not accessible on {}. Wrong url?".format(url))
 
         status_code = response.status_code

@@ -1,6 +1,6 @@
 # pylint: disable=missing-docstring
 from resdk.exceptions import ResolweServerError
-from resdk.tests.functional.base import USER_USERNAME, BaseResdkFunctionalTest
+from resdk.tests.functional.base import BaseResdkFunctionalTest
 
 
 class TestDuplication(BaseResdkFunctionalTest):

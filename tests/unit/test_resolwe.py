@@ -493,11 +493,9 @@ class TestResAuth(unittest.TestCase):
         auth_mock.configure_mock(sessionid=None, csrftoken=None)
         self.auth_mock = auth_mock
 
-    @patch("resdk.resolwe.requests")
-    def test_bad_url(self, requests_mock):
-        requests_mock.post = MagicMock(
-            side_effect=[requests.exceptions.ConnectionError()]
-        )
+    @patch("resdk.resolwe.requests.post")
+    def test_bad_url(self, requests_post_mock):
+        requests_post_mock.side_effect = requests.exceptions.ConnectionError()
 
         with self.assertRaisesRegex(
             ValueError, "Server not accessible on www.abc.com. Wrong url?"
