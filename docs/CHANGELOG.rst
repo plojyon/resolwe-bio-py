@@ -23,6 +23,7 @@ Added
 - Add ``iterate`` method to ``ResolweQuery``. This solves the
   ``504 Gateway Time-out`` when one wants to fetch all (or hundreds)
   objects from server.
+- Support collection inheritance in ``Data.duplicate()``
 
 
 ===================

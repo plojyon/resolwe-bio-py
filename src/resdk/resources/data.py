@@ -338,10 +338,15 @@ class Data(BaseResolweResource):
         return output.decode("utf-8")
 
     @assert_object_exists
-    def duplicate(self):
+    def duplicate(self, inherit_collection=False):
         """Duplicate (make copy of) ``data`` object.
+
+        :param inherit_collection: If ``True`` then duplicated data
+            will be added to collection of the original data.
 
         :return: Duplicated data object
         """
-        duplicated = self.api().duplicate.post({"ids": [self.id]})
+        duplicated = self.api().duplicate.post(
+            {"ids": [self.id], "inherit_collection": inherit_collection}
+        )
         return self.__class__(resolwe=self.resolwe, **duplicated[0])
