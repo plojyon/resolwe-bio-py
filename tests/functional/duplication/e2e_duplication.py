@@ -1,5 +1,6 @@
 from resdk.exceptions import ResolweServerError
-from resdk.tests.functional.base import BaseResdkFunctionalTest
+
+from ..base import BaseResdkFunctionalTest
 
 
 class TestDuplication(BaseResdkFunctionalTest):

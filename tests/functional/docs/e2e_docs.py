@@ -4,7 +4,8 @@ import sys
 import tempfile
 
 from resdk import Resolwe
-from resdk.tests.functional.base import (
+
+from ..base import (
     ADMIN_PASSWORD,
     ADMIN_USERNAME,
     URL,
