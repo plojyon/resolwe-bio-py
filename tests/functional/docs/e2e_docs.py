@@ -18,7 +18,7 @@ TEST_FILES_DIR = os.path.abspath(
     os.path.normpath(os.path.join(__file__, "../../../files"))
 )
 DOCS_SCRIPTS_DIR = os.path.abspath(
-    os.path.normpath(os.path.join(__file__, "../../../../../docs/files"))
+    os.path.normpath(os.path.join(__file__, "../../../../docs/files"))
 )
 sys.path.insert(0, DOCS_SCRIPTS_DIR)
 
