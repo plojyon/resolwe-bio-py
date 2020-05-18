@@ -5,14 +5,9 @@ Change Log
 All notable changes to this project are documented in this file.
 
 
-==========
-Unreleased
-==========
-
-Fixed
------
-- Fix date format for filtering with ``created__gt`` / ``created__lt``
-  in tutorial script
+===================
+12.1.0 - 2020-05-18
+===================
 
 Added
 -----
@@ -24,6 +19,11 @@ Added
   ``504 Gateway Time-out`` when one wants to fetch all (or hundreds)
   objects from server.
 - Support collection inheritance in ``Data.duplicate()``
+
+Fixed
+-----
+- Fix date format for filtering with ``created__gt`` / ``created__lt``
+  in tutorial script
 
 
 ===================
