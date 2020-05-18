@@ -20,6 +20,7 @@ class Process(BaseResolweResource):
         "category",
         "data_name",
         "description",
+        "entity_always_create",
         "entity_descriptor_schema",
         "entity_input",
         "entity_type",
@@ -47,6 +48,8 @@ class Process(BaseResolweResource):
         """
         #: the type of process ``"type:sub_type:sub_sub_type:..."``
         self.type = None
+        #: entity_always_create
+        self.entity_always_create = None
         #: entity_descriptor_schema
         self.entity_descriptor_schema = None
         #: entity_input
