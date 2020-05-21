@@ -5,9 +5,9 @@ Change Log
 All notable changes to this project are documented in this file.
 
 
-==========
-Unreleased
-==========
+===================
+12.1.1 - 2020-05-21
+===================
 
 Fixed
 -----
