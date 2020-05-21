@@ -5,6 +5,15 @@ Change Log
 All notable changes to this project are documented in this file.
 
 
+==========
+Unreleased
+==========
+
+Fixed
+-----
+- Add cookies to request on redirect
+
+
 ===================
 12.1.0 - 2020-05-18
 ===================

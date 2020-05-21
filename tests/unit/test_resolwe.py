@@ -3,12 +3,11 @@ Unit tests for resdk/resolwe.py file.
 """
 
 
-import io
 import os
 import unittest
 
 import requests
-from mock import MagicMock, mock_open, patch
+from mock import MagicMock, patch
 from slumber.exceptions import SlumberHttpBaseException
 
 from resdk.exceptions import ResolweServerError, ValidationError
@@ -87,15 +86,16 @@ class TestResolwe(unittest.TestCase):
         Resolwe.__init__(resolwe_mock, "a", "b", "http://some/url")
         self.assertEqual(log_mock.getLogger.call_count, 1)
 
-    @patch("resdk.resolwe.requests.get")
-    def test_validate_url(self, requests_get_mock):
+    def test_validate_url(self):
         resolwe = MagicMock(spec=Resolwe)
 
         message = "Server url must start with .*"
         with self.assertRaisesRegex(ValueError, message):
             Resolwe._validate_url(resolwe, "starts.without.http")
 
-        requests_get_mock.side_effect = requests.exceptions.ConnectionError()
+        resolwe.session = MagicMock(
+            get=MagicMock(side_effect=requests.exceptions.ConnectionError())
+        )
         message = "The site can't be reached: .*"
         with self.assertRaisesRegex(ValueError, message):
             Resolwe._validate_url(resolwe, "http://invalid.url")
@@ -105,6 +105,7 @@ class TestResolwe(unittest.TestCase):
     @patch("resdk.resolwe.Resolwe", spec=Resolwe)
     def test_login(self, resolwe_mock, resauth_mock, resolwe_api_mock):
         resolwe_mock.url = "http://some/url"
+        resauth_mock.cookies = {}
         Resolwe._login(resolwe_mock, "a", "b")
         self.assertEqual(resauth_mock.call_count, 1)
         self.assertEqual(resolwe_api_mock.call_count, 1)
@@ -373,13 +374,12 @@ class TestUploadFile(unittest.TestCase):
             "logger": MagicMock(),
         }
 
-    @patch("resdk.resolwe.requests")
     @patch("resdk.resolwe.Resolwe", spec=True)
-    def test_always_ok(self, resolwe_mock, requests_mock):
+    def test_always_ok(self, resolwe_mock):
         resolwe_mock.configure_mock(**self.config)
         # Immitate response form server - always status 200:
         requests_response = {"files": [{"temp": "fake_name"}]}
-        requests_mock.post.return_value = MagicMock(
+        resolwe_mock.session.post.return_value = MagicMock(
             status_code=200, **{"json.return_value": requests_response}
         )
 
@@ -399,9 +399,8 @@ class TestUploadFile(unittest.TestCase):
         self.assertIsNone(response)
         self.assertEqual(resolwe_mock.logger.warning.call_count, 4)
 
-    @patch("resdk.resolwe.requests")
     @patch("resdk.resolwe.Resolwe", spec=True)
-    def test_one_bad_other_ok(self, resolwe_mock, requests_mock):
+    def test_one_bad_other_ok(self, resolwe_mock):
         resolwe_mock.configure_mock(**self.config)
         requests_response = {"files": [{"temp": "fake_name"}]}
         response_ok = MagicMock(
@@ -409,8 +408,11 @@ class TestUploadFile(unittest.TestCase):
         )
         response_fails = MagicMock(status_code=400)
         # Immitate response form server - one status 400, but other 200:
-        requests_mock.post.side_effect = [response_fails, response_ok, response_ok]
-
+        resolwe_mock.session.post.side_effect = [
+            response_fails,
+            response_ok,
+            response_ok,
+        ]
         response = Resolwe._upload_file(resolwe_mock, self.file_path)
 
         self.assertEqual(response, "fake_name")
@@ -445,17 +447,13 @@ class TestDownload(unittest.TestCase):
 
         resolwe_mock.logger.info.assert_called_once_with("No files to download.")
 
-    @patch("resdk.resolwe.open")
     @patch("resdk.resolwe.os")
-    @patch("resdk.resolwe.requests")
     @patch("resdk.resolwe.Resolwe", spec=True)
-    def test_bad_response(self, resolwe_mock, requests_mock, os_mock, open_mock):
+    def test_bad_response(self, resolwe_mock, os_mock):
         resolwe_mock.configure_mock(**self.config)
         os_mock.path.isfile.return_value = True
-        mock_open.return_value = MagicMock(spec=io.IOBase)
-
         response = {"raise_for_status.side_effect": Exception("abc")}
-        requests_mock.get.return_value = MagicMock(ok=False, **response)
+        resolwe_mock.session.get.return_value = MagicMock(ok=False, **response)
 
         with self.assertRaisesRegex(Exception, "abc"):
             Resolwe._download_files(resolwe_mock, self.file_list[:1])
@@ -463,16 +461,12 @@ class TestDownload(unittest.TestCase):
 
     @patch("resdk.resolwe.open")
     @patch("resdk.resolwe.os")
-    @patch("resdk.resolwe.requests")
     @patch("resdk.resolwe.Resolwe", spec=True)
-    def test_good_response(self, resolwe_mock, requests_mock, os_mock, open_mock):
+    def test_good_response(self, resolwe_mock, os_mock, open_mock):
         resolwe_mock.configure_mock(**self.config)
         os_mock.path.isfile.return_value = True
 
-        # When mocking open one wants it to return a "file-like" mock: (spec=io.IOBase)
-        mock_open.return_value = MagicMock(spec=io.IOBase)
-
-        requests_mock.get.return_value = MagicMock(
+        resolwe_mock.session.get.return_value = MagicMock(
             ok=True, **{"iter_content.return_value": range(3)}
         )
 
@@ -559,12 +553,7 @@ class TestResAuth(unittest.TestCase):
         )
         resp = ResAuth.__call__(res_auth, MagicMock(headers={}))
         self.assertDictEqual(
-            resp.headers,
-            {
-                "X-CSRFToken": "my-token",
-                "referer": "abc.com",
-                "Cookie": "csrftoken=my-token; sessionid=my-id",
-            },
+            resp.headers, {"X-CSRFToken": "my-token", "referer": "abc.com"},
         )
 
 

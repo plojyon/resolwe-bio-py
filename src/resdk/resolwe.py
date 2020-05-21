@@ -98,8 +98,11 @@ class Resolwe:
     feature = None
     mapping = None
 
+    session = None
+
     def __init__(self, username=None, password=None, url=None):
         """Initialize attributes."""
+        self.session = requests.Session()
         if url is None:
             # Try to get URL from environmental variable, otherwise fallback to default.
             url = os.environ.get("RESOLWE_HOST_URL", DEFAULT_URL)
@@ -122,7 +125,7 @@ class Resolwe:
             raise ValueError("Server url must start with http(s)://")
 
         try:
-            requests.get(urljoin(url, "/api/"))
+            self.session.get(urljoin(url, "/api/"))
         except requests.exceptions.ConnectionError:
             raise ValueError("The site can't be reached: {}".format(url))
 
@@ -136,7 +139,13 @@ class Resolwe:
 
     def _login(self, username=None, password=None):
         self.auth = ResAuth(username, password, self.url)
-        self.api = ResolweAPI(urljoin(self.url, "/api/"), self.auth, append_slash=False)
+        self.session.cookies = requests.utils.cookiejar_from_dict(self.auth.cookies)
+        self.api = ResolweAPI(
+            urljoin(self.url, "/api/"),
+            self.auth,
+            session=self.session,
+            append_slash=False,
+        )
         self._initialize_queries()
 
     def login(self, username=None, password=None):
@@ -378,7 +387,7 @@ class Resolwe:
                             chunk_number,
                         )
 
-                    response = requests.post(
+                    response = self.session.post(
                         urljoin(self.url, "upload/"),
                         auth=self.auth,
                         # request are smart and make
@@ -450,7 +459,7 @@ class Resolwe:
                 with open(
                     os.path.join(download_dir, file_path, file_name), "wb"
                 ) as file_handle:
-                    response = requests.get(file_url, stream=True, auth=self.auth)
+                    response = self.session.get(file_url, stream=True, auth=self.auth)
 
                     if not response.ok:
                         response.raise_for_status()
@@ -485,6 +494,7 @@ class ResAuth(requests.auth.AuthBase):
     def __init__(self, username=None, password=None, url=DEFAULT_URL):
         """Authenticate user on Resolwe server."""
         self.logger = logging.getLogger(__name__)
+        self.cookies = {}
 
         self.username = username
         self.url = url
@@ -512,14 +522,11 @@ class ResAuth(requests.auth.AuthBase):
         self.sessionid = response.cookies["sessionid"]
         self.csrftoken = response.cookies["csrftoken"]
         self.url = url
-        # self.subscribe_id = str(uuid.uuid4())
+        self.cookies = {"csrftoken": self.csrftoken, "sessionid": self.sessionid}
 
     def __call__(self, request):
         """Set request headers."""
         if self.sessionid and self.csrftoken:
-            request.headers["Cookie"] = "csrftoken={}; sessionid={}".format(
-                self.csrftoken, self.sessionid
-            )
             request.headers["X-CSRFToken"] = self.csrftoken
 
         request.headers["referer"] = self.url
