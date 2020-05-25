@@ -364,8 +364,11 @@ class ResolweQuery:
 
         This can come handy when one wishes to iterate through hundreds or
         thousands of objects and would otherwise get "504 Gateway-timeout".
+
+        The method cannot be used together with the following filters:
+        limit, offset and ordering, and will raise a ``ValueError``.
         """
-        # For now, let's assume that this method will only be used when
+        # For simplicity, let's assume that this method will only be used when
         # limit and offset are not used as query parameters. We can relax
         # these limitations at some later point. Also, ordering is
         # prohibited for now.
