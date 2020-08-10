@@ -359,7 +359,7 @@ class Resolwe:
         return Data(resolwe=self, **model_data)
 
     def _upload_file(self, file_path):
-        """Upload a single file on the platform.
+        """Upload a single file to the server.
 
         File is uploaded in chunks of size CHUNK_SIZE bytes.
 

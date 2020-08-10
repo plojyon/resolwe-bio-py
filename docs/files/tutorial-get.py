@@ -12,7 +12,7 @@ res.data.all()
 res.sample.all()
 
 # Get all Collection objects with "SDK" in their name
-res.collection.filter(name='SDK')
+res.collection.filter(name='RNA-Seq Polyak-2016')
 
 # Get all Processes with category "Align"
 res.process.filter(category='Align')

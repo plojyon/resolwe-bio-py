@@ -7,7 +7,7 @@ Query, inspect and download data
 Login
 =====
 
-By now, you should have an account on the `Genialis platform`_. If not, you can
+By now, you should have an account on the `Genialis Server`_. If not, you can
 `request a Demo`_. Let's connect to the server by creating a
 :obj:`Resolwe <resdk.Resolwe>` object:
 
@@ -17,7 +17,7 @@ By now, you should have an account on the `Genialis platform`_. If not, you can
 If you omit the ``login()`` you will be logged as anonymus user. Note that this
 will strongly limit the things you can do.
 
-.. _`Genialis platform`: https://app.genialis.com
+.. _`Genialis Server`: https://app.genialis.com
 .. _`request a Demo`: http://genial.is/Demo-Request
 
 .. note::
@@ -32,7 +32,7 @@ As you have read in the :ref:`tutorial-basics` section, there are various
 resources: :obj:`Data<resdk.resources.Data>`,
 :obj:`Sample<resdk.resources.Sample>`,
 :obj:`Collection<resdk.resources.Collection>`,
-:obj:`Process<resdk.resources.Process>`... each of each of which has a
+:obj:`Process<resdk.resources.Process>`... each of which has a
 corresponding entry-point on ``Resolwe`` object (in our case, this is the
 ``res`` variable). For example, to view all ``Data`` or ``Sample`` objects:
 

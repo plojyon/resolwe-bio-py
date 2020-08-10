@@ -32,7 +32,7 @@ computer. Uploading a fastq file creates a new ``Data`` on the server
 containing uploaded reads.
 
 The upload process also created a Sample object for the reads data to be
-associated with. You can acess it by:
+associated with. You can access it by:
 
 .. literalinclude:: files/tutorial-create.py
    :lines: 23
@@ -79,7 +79,7 @@ in detail (with `accompanying examples`_) in the
 `Resolwe Bioinformatics documentation`_.
 
 .. _Resolwe Bioinformatics documentation: http://resolwe-bio.readthedocs.io
-.. _Descriptor schemas: http://resolwe-bio.readthedocs.io/en/stable/descriptor.html
+.. _Descriptor schemas: https://resolwe-bio.readthedocs.io/en/latest/descriptor.html
 .. _accompanying examples: https://github.com/genialis/resolwe-bio/tree/master/resolwe_bio/descriptors
 
 Here, we show how to annotate the ``reads`` data object by defining the
@@ -141,7 +141,7 @@ its algorithm that transforms inputs into outputs.
 Lets take a closer look to the code above. We defined the alignment process, by
 its slug ``'alignment-hisat2'``. For inputs we defined data objects ``reads``
 and ``genome``. ``Reads`` object was created with 'upload-fastq-single'
-process, while ``genome`` data object was already on the platform and we just
+process, while ``genome`` data object was already on the server and we just
 used its slug to identify it. The ``alignment-hisat2`` processor will
 automatically take the right files from data objects, specified in inputs and
 create output files: ``bam`` alignment file, ``bai`` index and some more...

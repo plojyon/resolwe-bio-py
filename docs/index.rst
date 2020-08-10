@@ -5,12 +5,12 @@
 Resolwe SDK for Python
 ======================
 
-Resolwe SDK for Python supports interaction with `Genialis platform`_. Genialis platform is based on Resolwe_ server
-and its extension `Resolwe Bioinformatics`_. You can use it to upload
+Resolwe SDK for Python supports interaction with `Genialis Server`_. Genialis Server is based on Resolwe_ workflow engine
+and its plugin `Resolwe Bioinformatics`_. You can use it to upload
 and inspect biomedical data sets, contribute annotations and run
 analysis.
 
-.. _Genialis platform: https://app.genialis.com
+.. _Genialis server: https://app.genialis.com
 .. _Resolwe Bioinformatics: https://github.com/genialis/resolwe-bio
 .. _Resolwe: https://github.com/genialis/resolwe
 
@@ -21,12 +21,12 @@ Install from PyPI::
 
   pip install resdk
 
-.. TODO: Remove this warning when not needed anymore:
+.. TODO: Remove this warning when not needed anymore: Miha, Domen is this still relevant?
 .. warning::
 
    If you use macOS, be aware that the version of `Python shipped with the
    system doesn't support TLSv1.2`_, which is required for connecting to
-   any Genialis platform server (and probably others). To solve the issue,
+   any Genialis Server (and probably others). To solve the issue,
    install the latest version of Python 3.6+ `via official
    installer from Python.org`_ or `with Homebrew`_.
 
