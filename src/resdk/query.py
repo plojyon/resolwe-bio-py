@@ -20,8 +20,14 @@ class ResolweQuery:
     """Query resource endpoints.
 
     A Resolwe instance (for example "res") has several endpoints:
-    res.data, res.collection, res.sample and res.process. Each
-    endpoint is an instance of the ResolweQuery class. ResolweQuery
+
+        - res.data
+        - res.collection
+        - res.sample
+        - res.process
+        - ...
+
+    Each such endpoint is an instance of the ResolweQuery class. ResolweQuery
     supports queries on corresponding objects, for example:
 
     .. code-block:: python
@@ -29,7 +35,7 @@ class ResolweQuery:
         res.data.get(42)  # return Data object with ID 42.
         res.sample.filter(contributor=1)  # return all samples made by contributor 1
 
-    This object is lazy loaded which means that actual is made only
+    This object is lazy loaded which means that actual request is made only
     when needed. This enables composing multiple filters, for example:
 
     .. code-block:: python
@@ -46,53 +52,13 @@ class ResolweQuery:
     are such queries and can be filtered further before transferring
     any data.
 
-    Filters can be made with the following keywords (and operators)
+    To get a list of all supported query parameters, use one that does
+    not exist and you will et a helpful error message with a list of
+    allowed ones.
 
-        * Fields (and operators) for **data** endpoint:
+    .. code-block:: python
 
-            * slug (=, __in=)
-            * contributor (=)
-            * status (=, __in=)
-            * name (=, __in=, __startswith, endswith=)
-            * created (=, __gte, __gt=, __lte=, __lt=, __year__gte=,
-              __month__gte=,...)
-            * modified (=, __gte, __gt=, __lte=, __lt=, __year__gte=,
-              __month__gte=,...)
-            * input (=)
-            * descriptor (=)
-            * started (=, __gte, __gt=, __lte=, __lt=, __year__gte=,
-              __month__gte=,...)
-            * finished (=, __gte, __gt=, __lte=, __lt=, __year__gte=,
-              __month__gte=,...)
-            * output (=)
-            * process (=)
-            * process_name (=, __in=, __startswith=)
-            * type (=)
-            * collection (=, __in=)
-
-        * Fields (and operators) for **collection** and **sample** endpoint:
-            * contributor (=)
-            * name (=, __in=, __startswith=)
-            * description (=)
-            * created (=, __gte, __gt=, __lte=, __lt=, __year__gte=,
-              __month__gte=,...)
-            * modified (=, __gte, __gt=, __lte=, __lt=, __year__gte=,
-              __month__gte=,...)
-            * slug (=, __in=)
-            * descriptor (=)
-            * data (=, __in=)
-            * descriptor_schema (=)
-            * id (=, __in=)
-
-        * Fields (and operators) for **process** endpoint:
-            * contributor (=)
-            * name (=, __in=, __startswith=)
-            * created (=, __gte, __gt=, __lte=, __lt=, __year__gte=,
-              __month__gte=,...)
-            * modified (=, __gte, __gt=, __lte=, __lt=, __year__gte=,
-              __month__gte=,...)
-            * slug (=, __in=)
-            * id (=, __in=)
+        res.data.filter(foo="bar")
 
     """
 
