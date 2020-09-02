@@ -48,7 +48,7 @@ setuptools.setup(
             'wheel',
         ],
         'test': [
-            'black',
+            'black>=20.8b0',
             'check-manifest',
             'flake8~=3.7.0',
             'isort~=4.3.12',
