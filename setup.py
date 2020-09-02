@@ -33,9 +33,7 @@ setuptools.setup(
     install_requires=(
         'requests>=2.6.0',
         'slumber>=0.7.1',
-        # XXX: Temporarily pin wrapt to 1.11.x, since astroid 2.3.3
-        # has requirement wrapt==1.11.*
-        'wrapt==1.11.*',
+        'wrapt',
         'pytz>=2018.4',
         'tzlocal>=1.5.1',
     ),
