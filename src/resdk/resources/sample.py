@@ -91,7 +91,9 @@ class Sample(SampleUtilsMixin, BaseCollection):
         if self._background is None:
             background_relation = list(
                 self.resolwe.relation.filter(
-                    type="background", entity=self.id, label="case",
+                    type="background",
+                    entity=self.id,
+                    label="case",
                 )
             )
 
@@ -232,7 +234,9 @@ class Sample(SampleUtilsMixin, BaseCollection):
         """Return ``True`` if given sample is background to any other and ``False`` otherwise."""
         if self._is_background is None:
             background_relations = self.resolwe.relation.filter(
-                type="background", entity=self.id, label="background",
+                type="background",
+                entity=self.id,
+                label="background",
             )
             # we need to iterate ``background_relations`` (using len) to
             # evaluate ResolweQuery:

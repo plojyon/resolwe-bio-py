@@ -174,7 +174,9 @@ class TestData(unittest.TestCase):
     def test_download_ok(self, data_mock):
         data_mock.configure_mock(id=123, **{"resolwe": MagicMock()})
         data_mock.configure_mock(
-            **{"files.return_value": ["file1.txt", "file2.fq.gz"],}
+            **{
+                "files.return_value": ["file1.txt", "file2.fq.gz"],
+            }
         )
 
         Data.download(data_mock)

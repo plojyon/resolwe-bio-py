@@ -114,7 +114,12 @@ class BaseResdkDocsFunctionalTest(BaseResdkFunctionalTest):
         return annotation
 
     def create_genome_index(self, res, fasta):
-        genome_index = res.run(slug="alignment-star-index", input={"ref_seq": fasta,},)
+        genome_index = res.run(
+            slug="alignment-star-index",
+            input={
+                "ref_seq": fasta,
+            },
+        )
         self.set_slug_and_make_public(
             genome_index, self.genome_index_slug, permissions=["view"]
         )

@@ -214,7 +214,10 @@ class BaseResolweResource(BaseResource):
         "id",
         "version",
     )
-    WRITABLE_FIELDS = BaseResource.WRITABLE_FIELDS + ("name", "slug",)
+    WRITABLE_FIELDS = BaseResource.WRITABLE_FIELDS + (
+        "name",
+        "slug",
+    )
 
     all_permissions = ALL_PERMISSIONS
 

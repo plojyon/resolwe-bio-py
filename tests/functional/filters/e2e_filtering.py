@@ -100,10 +100,14 @@ class TestFeatureFilter(BaseResdkFilteringTest):
         self.endpoint = self.res.feature
 
         self.ft1 = self.res.feature.get(
-            source="ENSEMBL", feature_id="id_001", species="Homo sapiens",
+            source="ENSEMBL",
+            feature_id="id_001",
+            species="Homo sapiens",
         )
         self.ft2 = self.res.feature.get(
-            source="ENSEMBL", feature_id="id_002", species="Mus musculus",
+            source="ENSEMBL",
+            feature_id="id_002",
+            species="Mus musculus",
         )
 
     @unittest.skip("Turn on when one can prepare KnowledgeBase and ES index for it.")

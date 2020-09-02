@@ -337,7 +337,11 @@ class TestRun(unittest.TestCase):
             collection=Collection(id=1, resolwe=MagicMock()),
         )
         resolwe_mock.api.data.post.assert_called_once_with(
-            {"process": {"slug": "process-slug"}, "input": {}, "collection": {"id": 1},}
+            {
+                "process": {"slug": "process-slug"},
+                "input": {},
+                "collection": {"id": 1},
+            }
         )
 
     @patch("resdk.resolwe.Data")
@@ -553,7 +557,8 @@ class TestResAuth(unittest.TestCase):
         )
         resp = ResAuth.__call__(res_auth, MagicMock(headers={}))
         self.assertDictEqual(
-            resp.headers, {"X-CSRFToken": "my-token", "referer": "abc.com"},
+            resp.headers,
+            {"X-CSRFToken": "my-token", "referer": "abc.com"},
         )
 
 

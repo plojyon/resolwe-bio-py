@@ -267,7 +267,8 @@ class TestResolweQuery(unittest.TestCase):
 
         new_query = query.search("foobar")
         self.assertEqual(
-            list(new_query._filters.items()), list({"text": ["foobar"]}.items()),
+            list(new_query._filters.items()),
+            list({"text": ["foobar"]}.items()),
         )
 
 

@@ -39,7 +39,10 @@ PROCESS_OUTPUT_SCHEMA = [
 OUTPUT = {
     "fastq": {"file": "example.fastq.gz"},
     "bases": "75",
-    "options": {"id": "abc", "k": 123,},
+    "options": {
+        "id": "abc",
+        "k": 123,
+    },
 }
 
 
@@ -157,17 +160,27 @@ class TestUtils(unittest.TestCase):
 
     def test_flatten_field(self):
         process_input_schema = [
-            {"name": "x", "type": "basic:integer:", "label": "Input X",},
+            {
+                "name": "x",
+                "type": "basic:integer:",
+                "label": "Input X",
+            },
             {
                 "name": "group_input",
                 "group": [
-                    {"name": "y1", "type": "basic:string:", "label": "Input Y1",},
+                    {
+                        "name": "y1",
+                        "type": "basic:string:",
+                        "label": "Input Y1",
+                    },
                 ],
             },
         ]
         input_ = {
             "x": 123,
-            "group_input": {"y1": "bar",},
+            "group_input": {
+                "y1": "bar",
+            },
         }
         flat = flatten_field(input_, process_input_schema, "input")
         self.assertEqual(

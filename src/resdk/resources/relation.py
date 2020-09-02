@@ -86,7 +86,11 @@ class Relation(BaseResolweResource):
     def add_sample(self, sample, label=None, position=None):
         """Add ``sample`` object to relation."""
         self.partitions.append(
-            {"entity": sample.id, "position": position, "label": label,}
+            {
+                "entity": sample.id,
+                "position": position,
+                "label": label,
+            }
         )
         self.save()
         self._samples = None

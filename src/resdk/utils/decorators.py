@@ -34,7 +34,8 @@ def assert_object_exists(wrapped, instance, args, kwargs):
     if instance.id is None:
         raise ValueError(
             "Instance must be saved before accessing `{}` {}.".format(
-                wrapped.__name__, member,
+                wrapped.__name__,
+                member,
             )
         )
     return wrapped(*args, **kwargs)

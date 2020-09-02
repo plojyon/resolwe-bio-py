@@ -21,7 +21,11 @@ class TestCollection(unittest.TestCase):
             collection=1,
             type="group",
             category="replicates",
-            partitions=[{"entity": 1}, {"entity": 2}, {"entity": 3},],
+            partitions=[
+                {"entity": 1},
+                {"entity": 2},
+                {"entity": 3},
+            ],
         )
 
         collection.resolwe.relation.create.reset_mock()
@@ -64,7 +68,10 @@ class TestCollection(unittest.TestCase):
             collection=1,
             type="compare",
             category="case-control",
-            partitions=[{"entity": 1}, {"entity": 2},],
+            partitions=[
+                {"entity": 1},
+                {"entity": 2},
+            ],
         )
 
         collection.resolwe.relation.create.reset_mock()
@@ -104,7 +111,11 @@ class TestCollection(unittest.TestCase):
             collection=1,
             type="series",
             category="time-series",
-            partitions=[{"entity": 1}, {"entity": 2}, {"entity": 3},],
+            partitions=[
+                {"entity": 1},
+                {"entity": 2},
+                {"entity": 3},
+            ],
         )
 
         collection.resolwe.relation.create.reset_mock()
