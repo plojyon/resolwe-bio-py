@@ -342,3 +342,28 @@ class PermissionsManager:
         if not self._viewers:
             self._viewers = self._get_holders_with_perm(perm="view")
         return self._viewers
+
+    def copy_from(self, source):
+        """Copy permissions from some other object to self."""
+        payload = {
+            "users": defaultdict(lambda: defaultdict(list)),
+            "groups": defaultdict(lambda: defaultdict(list)),
+            "public": defaultdict(list),
+        }
+
+        if not source.permissions._permissions:
+            source.permissions.fetch()
+
+        for entry in source.permissions._permissions:
+            who_type = entry["type"]
+            perms = entry["permissions"]
+            self._validate_perms(perms)
+
+            if who_type == "user":
+                payload["users"]["add"][entry["id"]] = copy.copy(perms)
+            if who_type == "group":
+                payload["groups"]["add"][entry["id"]] = copy.copy(perms)
+            elif who_type == "public":
+                payload[who_type]["add"] = copy.copy(perms)
+
+        self._permissions = self.permissions_api.post(payload)

@@ -5,6 +5,17 @@ Change Log
 All notable changes to this project are documented in this file.
 
 
+==========
+Unreleased
+==========
+
+Added
+-----
+- Add ``<dst>.permissions.copy_from(<src>)`` method that copies permissions
+  from ``<src>`` to ``<dst>`` resource. e.g. To copy permissions from
+  Sample ``s1`` to Sample ``s2``: ``s2.permissions.copy_from(s1)``
+
+
 ===================
 12.1.1 - 2020-05-21
 ===================

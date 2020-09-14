@@ -59,3 +59,13 @@ class TestPermissions(BaseResdkFunctionalTest):
         )
         self.assertEqual(self.test_collection.permissions.viewers[1].first_name, "user")
         self.assertEqual(self.test_collection.permissions.viewers[2].username, "public")
+
+    def test_copy_from(self):
+        # Create collection with only user permissions
+        collection2 = self.user_res.collection.create(name="Test collection 2")
+        collection2.permissions.fetch()
+        self.assertEqual(len(collection2.permissions._permissions), 1)
+
+        self.test_collection.permissions.add_public("view")
+        collection2.permissions.copy_from(self.test_collection)
+        self.assertEqual(len(collection2.permissions._permissions), 3)
