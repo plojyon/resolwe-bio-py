@@ -366,4 +366,5 @@ class PermissionsManager:
             elif who_type == "public":
                 payload[who_type]["add"] = copy.copy(perms)
 
+        self.clear_cache()
         self._permissions = self.permissions_api.post(payload)
