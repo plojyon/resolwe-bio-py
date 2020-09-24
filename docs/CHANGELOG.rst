@@ -5,6 +5,15 @@ Change Log
 All notable changes to this project are documented in this file.
 
 
+==========
+Unreleased
+==========
+
+Added
+-----
+- Support login with email
+
+
 ===================
 12.2.0 - 2020-09-15
 ===================

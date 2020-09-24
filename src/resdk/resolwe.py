@@ -35,6 +35,7 @@ from .resources import (
 from .resources.base import BaseResource
 from .resources.kb import Feature, Mapping
 from .resources.utils import get_collection_id, get_data_id, is_data, iterate_fields
+from .utils import is_email
 
 DEFAULT_URL = "http://localhost:8000"
 
@@ -151,11 +152,11 @@ class Resolwe:
     def login(self, username=None, password=None):
         """Interactive login.
 
-        Ask the user to enter credentials in command prompt. If username
-        and password are given, login without prompt.
+        Ask the user to enter credentials in command prompt. If
+        username / email and password are given, login without prompt.
         """
         if username is None:
-            username = input("Username: ")
+            username = input("Username (or email): ")
         if password is None:
             password = getpass.getpass("Password: ")
         self._login(username=username, password=password)
@@ -502,7 +503,8 @@ class ResAuth(requests.auth.AuthBase):
         if not username and not password:
             return
 
-        payload = {"username": username, "password": password}
+        key = "email" if is_email(username) else "username"
+        payload = {key: username, "password": password}
 
         try:
             response = requests.post(urljoin(url, "/rest-auth/login/"), data=payload)
