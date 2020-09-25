@@ -132,6 +132,8 @@ class BaseResource:
                     payload[field_name] = self._dehydrate_resources(
                         getattr(self, field_name)
                     )
+            if "sample" in payload:
+                payload["entity"] = payload.pop("sample")
 
             if payload:
                 response = self.api(self.id).patch(payload)
@@ -146,6 +148,9 @@ class BaseResource:
                 for field_name in field_names
                 if getattr(self, field_name) is not None
             }
+
+            if "sample" in payload:
+                payload["entity"] = payload.pop("sample")
 
             response = self.api.post(payload)
             self._update_fields(response)

@@ -13,6 +13,10 @@ Added
 -----
 - Support login with email
 
+Fixed
+-----
+- Fix broken sample assignment in ``Data`` resource
+
 
 ===================
 12.2.0 - 2020-09-15
