@@ -16,6 +16,7 @@ Added
 Fixed
 -----
 - Fix broken sample assignment in ``Data`` resource
+- Fix authentication when downloading directory or stdout
 
 
 ===================

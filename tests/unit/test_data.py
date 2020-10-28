@@ -147,21 +147,18 @@ class TestData(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "must be saved before"):
             data.files()
 
-    @patch("resdk.resources.data.requests")
-    def test_dir_files(self, requests_mock):
-        data = Data(id=123, resolwe=MagicMock(url="http://resolwe.url"))
-        requests_mock.get = MagicMock(
-            side_effect=[
-                MagicMock(
-                    content=b'[{"type": "file", "name": "file1.txt"}, '
-                    b'{"type": "directory", "name": "subdir"}]'
-                ),
-                MagicMock(content=b'[{"type": "file", "name": "file2.txt"}]'),
-            ]
-        )
-
+    @patch("resdk.resolwe.Resolwe")
+    def test_dir_files(self, resolwe_mock):
+        resolwe_mock.url = "http://resolwe.url"
+        resolwe_mock.session.get.side_effect = [
+            MagicMock(
+                content=b'[{"type": "file", "name": "file1.txt"}, '
+                b'{"type": "directory", "name": "subdir"}]'
+            ),
+            MagicMock(content=b'[{"type": "file", "name": "file2.txt"}]'),
+        ]
+        data = Data(id=123, resolwe=resolwe_mock)
         files = data._get_dir_files("test_dir")
-
         self.assertEqual(files, ["test_dir/file1.txt", "test_dir/subdir/file2.txt"])
 
     @patch("resdk.resources.data.Data", spec=True)
@@ -190,27 +187,31 @@ class TestData(unittest.TestCase):
             ["123/file1.txt", "123/file2.fq.gz"], "/some/path/"
         )
 
-    @patch("resdk.resources.data.requests")
+    @patch("resdk.resolwe.Resolwe")
     @patch("resdk.resources.data.urljoin")
     @patch("resdk.resources.data.Data", spec=True)
-    def test_stdout_ok(self, data_mock, urljoin_mock, requests_mock):
+    def test_stdout_ok(self, data_mock, urljoin_mock, resolwe_mock):
         # Configure mocks:
-        data_mock.configure_mock(id=123, resolwe=MagicMock(url="a", auth="b"))
+        data_mock.configure_mock(id=123, resolwe=resolwe_mock)
         urljoin_mock.return_value = "some_url"
+        resolwe_mock.configure_mock(url="a", auth="b")
 
         # If response.ok = True:
-        response = MagicMock(ok=True, **{"iter_content.return_value": [b"abc", b"def"]})
-        requests_mock.configure_mock(**{"get.return_value": response})
-
+        resolwe_mock.session.get.return_value = MagicMock(
+            ok=True, **{"iter_content.return_value": [b"abc", b"def"]}
+        )
         out = Data.stdout(data_mock)
 
         self.assertEqual(out, "abcdef")
         urljoin_mock.assert_called_once_with("a", "data/123/stdout.txt")
-        requests_mock.get.assert_called_once_with("some_url", stream=True, auth="b")
+
+        resolwe_mock.session.get.assert_called_once_with(
+            "some_url", stream=True, auth="b"
+        )
 
         # If response.ok = False:
         response = MagicMock(ok=False)
-        requests_mock.configure_mock(**{"get.return_value": response})
+        resolwe_mock.session.get.return_value = response
 
         out = Data.stdout(data_mock)
 

@@ -3,8 +3,6 @@ import json
 import logging
 from urllib.parse import urljoin
 
-import requests
-
 from resdk.constants import CHUNK_SIZE
 
 from ..utils.decorators import assert_object_exists
@@ -250,7 +248,7 @@ class Data(BaseResolweResource):
         dir_url = urljoin(self.resolwe.url, "data/{}/{}".format(self.id, dir_name))
         if not dir_url.endswith("/"):
             dir_url += "/"
-        response = requests.get(dir_url, auth=self.resolwe.auth)
+        response = self.resolwe.session.get(dir_url, auth=self.resolwe.auth)
         response = json.loads(response.content.decode("utf-8"))
 
         for obj in response:
@@ -328,7 +326,7 @@ class Data(BaseResolweResource):
         """
         output = b""
         url = urljoin(self.resolwe.url, "data/{}/stdout.txt".format(self.id))
-        response = requests.get(url, stream=True, auth=self.resolwe.auth)
+        response = self.resolwe.session.get(url, stream=True, auth=self.resolwe.auth)
         if not response.ok:
             response.raise_for_status()
         else:
