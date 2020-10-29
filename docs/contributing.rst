@@ -63,3 +63,63 @@ Building documentation
 .. code-block:: none
 
     python setup.py build_sphinx
+
+Preparing release
+=================
+
+Checkout the latest code and create a release branch::
+
+    git checkout master
+    git pull
+    git checkout -b release-<new-version>
+
+Replace the *Unreleased* heading in ``docs/CHANGELOG.rst`` with the new
+version, followed by release's date (e.g. *13.2.0 - 2018-10-23*).
+
+Commit changes to git::
+
+    git commit -a -m "Prepare release <new-version>"
+
+Push changes to your fork and open a pull request::
+
+    git push --set-upstream <resdk-fork-name> release-<new-version>
+
+Wait for the tests to pass and the pull request to be approved. Merge the code
+to master::
+
+    git checkout master
+    git merge --ff-only release-<new-version>
+    git push <resdk-upstream-name> master <new-version>
+
+Tag the new release from the latest commit::
+
+    git checkout master
+    git tag -sm "Version <new-version>" <new-version>
+
+Push the tag to the main ReSDK's git repository::
+
+    git push <resdk-upstream-name> master <new-version>
+
+Now you can release the code on PyPI. Clean ``build`` directory::
+
+    python setup.py clean -a
+
+Remove previous distributions in ``dist`` directory::
+
+    rm dist/*
+
+Remove previous ``egg-info`` directory::
+
+    rm -r *.egg-info
+
+Create source distribution::
+
+    python setup.py sdist
+
+Build wheel::
+
+    python setup.py bdist_wheel
+
+Upload distribution to PyPI::
+
+    twine upload dist/*
