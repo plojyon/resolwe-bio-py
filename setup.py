@@ -36,6 +36,7 @@ setuptools.setup(
         'wrapt',
         'pytz>=2018.4',
         'tzlocal>=1.5.1',
+        'pandas>=1.0.0',
     ),
     python_requires='>=3.6',
     extras_require={

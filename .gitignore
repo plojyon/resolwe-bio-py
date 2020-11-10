@@ -39,3 +39,6 @@ distribute*.tar.gz
 
 # Ignore testing cache
 .pytest_cache
+
+# Ignore virtualenv folder
+venv/
