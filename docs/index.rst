@@ -64,5 +64,6 @@ Documentation
 
    start
    tutorials
+   topical
    ref
    contributing

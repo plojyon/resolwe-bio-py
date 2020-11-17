@@ -5,6 +5,15 @@ Change Log
 All notable changes to this project are documented in this file.
 
 
+==========
+Unreleased
+==========
+
+Added
+-----
+- Add knowledge base docs
+
+
 ===================
 13.0.0 - 2020-12-17
 ===================
