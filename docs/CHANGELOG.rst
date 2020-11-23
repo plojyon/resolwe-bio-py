@@ -6,6 +6,17 @@ All notable changes to this project are documented in this file.
 
 
 ===================
+12.4.0 - 2020-11-23
+===================
+
+Added
+-----
+- Add docs on how to prepare a release
+- Add ``CollectionTables`` class to ease access to expressions and
+  metadata of a given collection
+
+
+===================
 12.3.0 - 2020-10-29
 ===================
 
