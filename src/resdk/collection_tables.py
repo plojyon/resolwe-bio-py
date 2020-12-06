@@ -10,235 +10,262 @@ Collection Tables
     .. automethod:: __init__
 """
 import os
-from datetime import datetime
 from functools import lru_cache
 from io import BytesIO
-from typing import Callable, Dict, List, NamedTuple, Optional
+from typing import Dict, List, Optional
 from urllib.parse import urljoin
 
 import pandas as pd
 import pytz
+from tqdm import tqdm
 
-from resdk import Resolwe
-from resdk.resources import Collection
-from resdk.utils.table_cache import default_cache_dir, load_cache, save_cache
+from .resolwe import Resolwe
+from .resources import Collection, Data, Sample
+from .utils.table_cache import (
+    cache_dir_resdk,
+    clear_cache_dir_resdk,
+    load_pickle,
+    save_pickle,
+)
 
-TPM = "tpm"
-COUNTS = "rc"
-EXPRESSION_TYPES = [TPM, COUNTS]
-
+EXP = "exp"
+RC = "rc"
 META = "meta"
 
+SAMPLE_FIELDS = ["id", "name", "descriptor", "descriptor_schema"]
+DATA_FIELDS = ["id", "slug", "entity__name", "output", "process__output_schema"]
+
 CHUNK_SIZE = 1000
-
-
-class _TableSample(NamedTuple):
-    sample_slug: str
-    expression_files: Dict[str, str]
-    metadata: dict
 
 
 class CollectionTables:
     """A helper class to fetch collection's expression and meta data.
 
-    This class enables fetching given collection's data and returning it as tables which have samples in rows
-    and gene symbols in columns.
+    This class enables fetching given collection's data and returning it as tables
+    which have samples in rows and expressions/metadata in columns.
 
-    When calling :meth:`CollectionTables.expressions`, :meth:`CollectionTables.counts` and
-    :meth:`CollectionTables.metadata` for the first time the corresponding data gets fetched from the server.
-    This data than gets cached in memory and on disc and is used in consequent calls until the modified
-    attribute changes.
+    When calling :attr:`CollectionTables.exp`, :attr:`CollectionTables.rc` and
+    :attr:`CollectionTables.meta` for the first time the corresponding data gets
+    downloaded from the server. This data than gets cached in memory and on disc and is
+    used in consequent calls. If the data on the server changes the updated version
+    gets re-downloaded.
+
+    A simple example:
+
+    .. code-block:: python
+
+        # get Collection object
+        collection = res.collection.get("collection_slug")
+
+        # fetch collection expressions and metadata
+        tables = CollectionTables(collection)
+        exp = tables.exp
+        rc = tables.rc
+        meta = tables.meta
+
     """
 
-    def __init__(self, collection: Collection, cache_dir=None):
+    def __init__(self, collection: Collection, cache_dir: Optional[str] = None):
         """Initialize class.
 
         :param collection: collection to use
-        :param cache_dir: cache directory location, if not specified system specific cache directory is used
+        :param cache_dir: cache directory location, if not specified system specific
+                          cache directory is used
         """
         self.resolwe = collection.resolwe  # type: Resolwe
         self.collection = collection
-        if self.collection.samples.count() == 0:
-            raise ValueError(f"Collection {self.collection.name} has no samples!")
 
         self.cache_dir = cache_dir
         if self.cache_dir is None:
-            self.cache_dir = default_cache_dir()
+            self.cache_dir = cache_dir_resdk()
         if not os.path.exists(self.cache_dir):
             os.makedirs(self.cache_dir)
 
-        self._table_samples_ = []  # type: List[_TableSample]
-        self._meta = None  # type: Optional[pd.DataFrame]
-        self._expressions = {}  # type: Dict[str, pd.DataFrame]
-        self._gene_map_ = {}  # type: Dict[str, str]
-        self._modified = None  # type: Optional[datetime]
+        self.gene_ids = []  # type: List[str]
 
     @property
-    def modified(self) -> datetime:
-        """Return the newest modification date out of all sample.
-
-        The returned datetime object is used to detect data changes on the server.
-
-        :return: modified datetime in UTC
-        """
-        if self._modified is None:
-            newest_modified = max(s.modified for s in self.collection.samples.iterate())
-            # transform into UTC so changing timezones won't effect cache
-            self._modified = newest_modified.astimezone(pytz.utc)
-        return self._modified
-
     @lru_cache()
-    def metadata(self) -> pd.DataFrame:
-        """Return samples metadata in a table format.
+    def meta(self) -> pd.DataFrame:
+        """Return samples metadata table as a pandas DataFrame object.
 
         :return: table of metadata
         """
-        cache = load_cache(self.cache_dir, self.collection.slug, META, self.modified)
-        if cache is not None:
-            self._meta = cache
-
-        if self._meta is None:
-            self._meta = self._get_metadata()
-
-        save_cache(
-            self._meta, self.cache_dir, self.collection.slug, META, self.modified
-        )
-        return self._meta
-
-    def _get_metadata(self) -> pd.DataFrame:
-        """Flatten samples JSON metadata into a table."""
-        meta = pd.json_normalize([ts.metadata for ts in self._table_samples])
-        meta = meta.set_index("sample_slug").sort_index()
-        return meta
+        return self._load_fetch(META)
 
     @property
-    def _table_samples(self) -> List[_TableSample]:
-        """Return a list of _TableSample objects containing expression files urls and metadata."""
-        if not self._table_samples_:
-            self._table_samples_ = self._get_table_samples()
-        return self._table_samples_
-
-    def _get_table_samples(self):
-        """Fetch expressions files urls and sample metadata."""
-        table_samples = []
-        for sample in self.collection.samples.iterate():
-            # get sample metadata from description
-            metadata = sample.descriptor
-            metadata["sample_slug"] = sample.slug
-
-            # get expressions data objects
-            try:
-                expression = sample.get_expression()
-            except LookupError:
-                raise LookupError(
-                    f"Sample {sample.slug} has not expression data!"
-                ) from None
-
-            # get expression files urls
-            expression_files = {}
-            for exp_type in EXPRESSION_TYPES:
-                exp_files = expression.files(field_name=exp_type)
-                assert (
-                    len(exp_files) == 1
-                ), "Multiple expression files with same expression type!"
-                exp_file = exp_files[0]
-                exp_file_url = "{}/{}".format(expression.id, exp_file)
-                expression_files[exp_type] = exp_file_url
-
-            table_samples.append(
-                _TableSample(
-                    sample_slug=sample.slug,
-                    expression_files=expression_files,
-                    metadata=metadata,
-                )
-            )
-        return table_samples
-
-    @lru_cache(maxsize=16)
-    def expressions(
-        self, preprocess: Optional[Callable[[pd.DataFrame], pd.DataFrame]] = None
-    ) -> pd.DataFrame:
-        """Return TPM data in a table format.
-
-        If a data preprocess is set then its executed and its results returned and cached in memory. The preprocess
-        must be a callable that expects one argument of type DataFrame and return an object of the same type.
-
-        :param preprocess: a callable that preprocess expression data
-        :return: table of TPM
-        """
-        cache = load_cache(self.cache_dir, self.collection.slug, TPM, self.modified)
-        if cache is not None:
-            self._expressions[TPM] = cache
-
-        if TPM not in self._expressions:
-            self._expressions[TPM] = self._download_expressions(TPM)
-
-        save_cache(
-            self._expressions[TPM],
-            self.cache_dir,
-            self.collection.slug,
-            TPM,
-            self.modified,
-        )
-
-        _expressions = self._expressions[TPM]
-        if preprocess is not None:
-            _expressions = preprocess(_expressions.copy())
-        return _expressions
-
     @lru_cache()
-    def counts(self) -> pd.DataFrame:
-        """Return counts in a table format.
+    def exp(self) -> pd.DataFrame:
+        """Return expressions table as a pandas DataFrame object.
+
+        Which type of expressions (TPM, CPM, FPKM, ...) get returned depends on how the
+        data was processed. The expression type can be checked in the returned table
+        attribute `attrs['exp_type']`:
+
+        .. code-block:: python
+
+            exp = tables.exp
+            print(exp.attrs['exp_type'])
+
+        :return: table of expressions
+        """
+        exp = self._load_fetch(EXP)
+        self.gene_ids = exp.columns.tolist()
+        return exp
+
+    @property
+    @lru_cache()
+    def rc(self) -> pd.DataFrame:
+        """Return expression counts table as a pandas DataFrame object.
 
         :return: table of counts
         """
-        cache = load_cache(self.cache_dir, self.collection.slug, COUNTS, self.modified)
-        if cache is not None:
-            self._expressions[COUNTS] = cache
+        rc = self._load_fetch(RC)
+        self.gene_ids = rc.columns.tolist()
+        return rc
 
-        if COUNTS not in self._expressions:
-            self._expressions[COUNTS] = self._download_expressions(COUNTS)
+    @property
+    @lru_cache()
+    def id_to_symbol(self) -> Dict[str, str]:
+        """Map of source gene ids to symbols.
 
-        save_cache(
-            self._expressions[COUNTS],
-            self.cache_dir,
-            self.collection.slug,
-            COUNTS,
-            self.modified,
-        )
-        return self._expressions[COUNTS]
+        This also gets fetched only once and then cached in memory and on disc.
+        :attr:`CollectionTables.exp` or :attr:`CollectionTables.rc` must be called
+        before this as the mapping is specific to just this data. Its intended use is
+        to rename table column labels from gene ids to symbols.
 
-    def _gene_map(self, ensembl_ids: List[str]) -> dict:
-        """Return the mapping of ensemble ids to gene symbols.
+        Example of use:
 
-        :param ensembl_ids: list of ensemble ids
-        :return: dictionary with ensemble ids as keys and gene symbol for corresponding values
+        .. code-block:: python
+
+            exp = exp.rename(columns=tables.id_to_symbol)
+
+        :return: dict with gene ids as keys and gene symbols as values
         """
-        if not self._gene_map_:
-            self._gene_map_ = self._get_gene_map(ensembl_ids)
-        return self._gene_map_
+        species = self._data[0].output["species"]
+        source = self._data[0].output["source"]
 
-    def _get_gene_map(self, ensembl_ids: List[str]) -> dict:
-        """Fetch gene mapping from resolwe server."""
-        sublists = [
-            ensembl_ids[i : i + CHUNK_SIZE]
-            for i in range(0, len(ensembl_ids), CHUNK_SIZE)
-        ]
-        species = self._table_samples[0].metadata["general"]["species"]
-        gene_map = {}
-        for sublist in sublists:
-            features = self.resolwe.feature.filter(
-                species=species, feature_id__in=sublist
+        if not self.gene_ids:
+            raise ValueError("Expression data must be used before!")
+
+        return self._mapping(self.gene_ids, source, species)
+
+    @staticmethod
+    def clear_cache() -> None:
+        """Remove ReSDK cache files from the default cache directory."""
+        clear_cache_dir_resdk()
+
+    @property
+    @lru_cache()
+    def _samples(self) -> List[Sample]:
+        """Fetch sample objects.
+
+        Fetch all samples from given collection and cache the results in memory. Only
+        the needed subset of fields is fetched.
+
+        :return: list od Sample objects
+        """
+        return list(self.collection.samples.filter(fields=SAMPLE_FIELDS))
+
+    @property
+    @lru_cache()
+    def _data(self) -> List[Data]:
+        """Fetch data objects.
+
+        Fetch expression data objects from given collection and cache the results in
+        memory. Only the needed subset of fields is fetched.
+
+        :return: list of Data objects
+        """
+        return list(
+            self.collection.data.filter(type="data:expression:", fields=DATA_FIELDS)
+        )
+
+    @property
+    @lru_cache()
+    def _metadata_version(self) -> str:
+        """Return server metadata version.
+
+        The versioning of metadata on the server is determined by the newest modified
+        datetime of samples.
+
+        :return: metadata version
+        """
+        try:
+            newest_sample = self.collection.samples.filter(
+                ordering="-modified", fields=["id", "modified"]
+            )[0]
+        except IndexError:
+            raise ValueError(
+                f"Collection {self.collection.name} has no samples!"
+            ) from None
+
+        # transform into UTC so changing timezones won't effect cache
+        newest_modified = newest_sample.modified.astimezone(pytz.utc)
+        version = newest_modified.isoformat().replace("+00:00", "Z")
+        return version
+
+    @property
+    @lru_cache()
+    def _expression_version(self) -> str:
+        """Return server expression data version.
+
+        The versioning of expression data on the server is determined by the hash of
+        the tuple of sorted data objects ids.
+
+        :return: expression data version
+        """
+        data_ids = self.collection.data.filter(type="data:expression:", fields=["id"])
+        if len(data_ids) == 0:
+            raise ValueError(
+                f"Collection {self.collection.name} has no expression data!"
             )
-            gene_map.update({f.feature_id: f.name for f in features})
-        return gene_map
+        data_ids = tuple(sorted(d.id for d in data_ids))
+        version = str(hash(data_ids))
+        return version
 
-    def _gene_mapping(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Transform columns of the given table from ensemble ids to gene symbols."""
-        genes = df.columns.tolist()
-        gene_map = self._gene_map(genes)
-        df.columns = df.columns.map(gene_map)
-        return df
+    def _load_fetch(self, data_type: str) -> pd.DataFrame:
+        """Load data from disc or fetch it from server and cache it on disc."""
+        data = load_pickle(self._cache_file(data_type))
+        if data is None:
+            if data_type == META:
+                data = self._download_metadata()
+            else:
+                data = self._download_expressions(data_type)
+            save_pickle(data, self._cache_file(data_type))
+        return data
+
+    def _cache_file(self, data_type: str) -> str:
+        """Return full cache file path."""
+        version = (
+            self._metadata_version if data_type == META else self._expression_version
+        )
+        cache_file = f"{self.collection.slug}_{data_type}_{version}.pickle"
+        return os.path.join(self.cache_dir, cache_file)
+
+    def _download_metadata(self) -> pd.DataFrame:
+        """Download samples JSON metadata and transform into table."""
+        json_metadata = []
+        for sample in self._samples:
+            _json = sample.descriptor
+            _json["sample_name"] = sample.name
+            json_metadata.append(_json)
+        meta = pd.json_normalize(json_metadata)
+        meta = meta.set_index("sample_name").sort_index()
+        return meta
+
+    def _expression_file_url(self, data: Data, exp_type: str) -> str:
+        exp_files = data.files(field_name=exp_type)
+
+        if not exp_files:
+            raise LookupError(
+                f"Data {data.slug} has no expressions of type {exp_type}!"
+            )
+        elif len(exp_files) > 1:
+            raise LookupError(
+                f"Data {data.slug} has multiple expressions of type {exp_type}!"
+            )
+
+        return urljoin(self.resolwe.url, f"data/{data.id}/{exp_files[0]}")
 
     def _download_expressions(self, exp_type: str) -> pd.DataFrame:
         """Download expression files and marge them into a pandas DataFrame.
@@ -247,22 +274,52 @@ class CollectionTables:
         :return: table with expression data, genes in columns, samples in rows
         """
         df_list = []
-        for ts in self._table_samples:
-            full_file_url = urljoin(
-                self.resolwe.url, f"data/{ts.expression_files[exp_type]}"
+        for data in tqdm(self._data, desc="Downloading expressions", ncols=100):
+            response = self.resolwe.session.get(
+                self._expression_file_url(data, exp_type), auth=self.resolwe.auth
             )
-            response = self.resolwe.session.get(full_file_url, auth=self.resolwe.auth)
             response.raise_for_status()
             with BytesIO() as f:
                 f.write(response.content)
                 f.seek(0)
                 df_ = pd.read_csv(f, sep="\t", compression="gzip")
                 df_ = df_.set_index("Gene").T
-                df_.index = [ts.sample_slug]
+                df_.index = [data._original_values["entity"]["name"]]
                 df_list.append(df_)
 
-        df = pd.concat(df_list, axis=0).sort_index()
-        df.index.name = "sample_slug"
-        df.columns.name = None
-        df = self._gene_mapping(df)
+        df = pd.concat(df_list, axis=0).sort_index().sort_index(axis=1)
+        source = self._data[0].output["source"]
+        df.columns.name = source.capitalize() if source == "ENSEMBL" else source
+        df.index.name = "sample_name"
+        df.attrs["exp_type"] = (
+            "rc" if exp_type == RC else self._data[0].output["exp_type"]
+        )
         return df
+
+    def _mapping(self, ids: List[str], source: str, species: str) -> Dict[str, str]:
+        """Fetch and cache gene mapping."""
+        mapping_cache = os.path.join(self.cache_dir, f"{source}_{species}.pickle")
+        mapping = load_pickle(mapping_cache)
+        if mapping is None:
+            mapping = {}
+
+        # download only the genes that are not in cache
+        diff = list(set(ids) - set(mapping.keys()))
+        if diff:
+            diff_mapping = self._download_mapping(diff, source, species)
+            mapping.update(diff_mapping)
+            save_pickle(mapping, mapping_cache, override=True)
+        return mapping
+
+    def _download_mapping(
+        self, ids: List[str], source: str, species: str
+    ) -> Dict[str, str]:
+        """Download gene mapping."""
+        sublists = [ids[i : i + CHUNK_SIZE] for i in range(0, len(ids), CHUNK_SIZE)]
+        mapping = {}
+        for sublist in tqdm(sublists, desc="Downloading gene mapping", ncols=100):
+            features = self.resolwe.feature.filter(
+                source=source, species=species, feature_id__in=sublist
+            )
+            mapping.update({f.feature_id: f.name for f in features})
+        return mapping
