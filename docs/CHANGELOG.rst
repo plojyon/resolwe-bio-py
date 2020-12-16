@@ -6,6 +6,16 @@ All notable changes to this project are documented in this file.
 
 
 ===================
+13.0.0 - 2020-12-17
+===================
+
+Changed
+-----
+- **BACKWARD INCOMPATIBLE:** Update API and add performance
+  enhancements for ``CollectionTables``
+
+
+===================
 12.4.0 - 2020-11-23
 ===================
 
