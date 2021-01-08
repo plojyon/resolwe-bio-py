@@ -13,12 +13,20 @@ from resdk.collection_tables import EXP, META, RC
 
 class TestCollectionTables(unittest.TestCase):
     def setUp(self):
+        self.resolwe = MagicMock()
+        self.resolwe.url = "https://server.com"
+
         self.sample = MagicMock()
+        self.sample.id = 123
+        self.sample.name = "Sample123"
         self.sample.modified = datetime(
             2020, 11, 1, 12, 15, 0, 0, tzinfo=pytz.UTC
         ).astimezone(pytz.timezone("Europe/Ljubljana"))
+        self.sample.descriptor_schema.schema = [
+            {"name": "PFS", "type": "basic:decimal:", "label": "P"}
+        ]
         self.sample.descriptor = {"PFS": 1}
-        self.sample.name = "Sample123"
+
         self.data = MagicMock()
         self.data.id = 12345
         self.data.output.__getitem__.side_effect = {
@@ -26,22 +34,41 @@ class TestCollectionTables(unittest.TestCase):
             "source": "ENSEMBL",
             "exp_type": "TPM",
         }.__getitem__
+
+        self.orange_data = MagicMock()
+        self.orange_data.id = 89
+        self.orange_data.files.return_value = ["table.tsv"]
+        self.orange_data.modified = datetime(
+            2020, 9, 1, 12, 15, 0, 0, tzinfo=pytz.UTC
+        ).astimezone(pytz.timezone("Europe/Ljubljana"))
+
         self.collection = MagicMock()
         self.collection.slug = "slug"
         self.collection.name = "Name"
         self.collection.samples.filter = self.web_request([self.sample])
         self.collection.data.filter = self.web_request([self.data])
-        self.resolwe = MagicMock()
-        self.resolwe.url = "https://server.com"
         self.collection.resolwe = self.resolwe
+
+        self.relation = MagicMock()
+        self.relation.modified = datetime(
+            2020, 10, 1, 12, 15, 0, 0, tzinfo=pytz.UTC
+        ).astimezone(pytz.timezone("Europe/Ljubljana"))
+        self.relation.category = "Category"
+        self.relation.partitions = [
+            {"id": 1, "entity": 123, "position": None, "label": "L1"}
+        ]
+        self.collection.relations.__iter__ = self.web_request(iter([self.relation]))
+        self.collection.relations.get = self.web_request(self.relation)
         self.metadata_df = pd.DataFrame(
             [[0], [1], [4]], index=["0", "1", "2"], columns=["PFS"]
         )
+
         self.expressions_df = pd.DataFrame(
             [[0, 1, 2], [1, 2, 3], [2, 3, 4]],
             index=["0", "1", "2"],
             columns=["ENSG001", "ENSG002", "ENSG003"],
         )
+
         self.gene_map = {"ENSG001": "GA", "ENSG002": "GB", "ENSG003": "GC"}
 
     @staticmethod
@@ -155,6 +182,10 @@ class TestCollectionTables(unittest.TestCase):
         clear_mock.assert_called()
 
     def test_metadata_version(self):
+        self.collection.samples.get = self.web_request(self.sample)
+        self.collection.relations.get = self.web_request(self.relation)
+        self.collection.data.get = self.web_request(self.orange_data)
+
         ct = CollectionTables(self.collection)
         version = ct._metadata_version
         self.assertEqual(version, "2020-11-01T12:15:00Z")
@@ -164,7 +195,7 @@ class TestCollectionTables(unittest.TestCase):
         version = ct._metadata_version
         self.assertTrue(time() - t < 0.1)
 
-        self.collection.samples.filter = MagicMock(return_value=[])
+        self.collection.samples.get = MagicMock(side_effect=LookupError())
         ct1 = CollectionTables(self.collection)
         with self.assertRaises(ValueError):
             version = ct1._metadata_version
@@ -191,11 +222,14 @@ class TestCollectionTables(unittest.TestCase):
     @patch("resdk.collection_tables.save_pickle")
     @patch.object(CollectionTables, "_download_metadata")
     @patch.object(CollectionTables, "_download_expressions")
-    def test_load_fetch(self, exp_mock, mata_mock, save_mock, load_mock):
+    def test_load_fetch(self, exp_mock, meta_mock, save_mock, load_mock):
         exp_mock.return_value = self.expressions_df
-        mata_mock.return_value = self.metadata_df
+        meta_mock.return_value = self.metadata_df
         load_mock.return_value = None
 
+        self.collection.samples.get = self.web_request(self.sample)
+        self.collection.relations.get = self.web_request(self.relation)
+        self.collection.data.get = self.web_request(self.orange_data)
         ct = CollectionTables(self.collection)
         data = ct._load_fetch(META)
         self.assertIs(data, self.metadata_df)
@@ -226,11 +260,67 @@ class TestCollectionTables(unittest.TestCase):
         self.assertIs(data, self.expressions_df)
         exp_mock.assert_not_called()
 
-    def test_download_metadata(self):
+    def test_get_descriptors(self):
+        ct = CollectionTables(self.collection)
+        descriptors = ct._get_descriptors()
+
+        expected = pd.DataFrame([1], columns=["PFS"], index=["Sample123"], dtype=float)
+        expected.index.name = "sample_name"
+
+        assert_frame_equal(descriptors, expected)
+
+    def test_get_relations(self):
+        ct = CollectionTables(self.collection)
+        relations = ct._get_relations()
+
+        expected = pd.DataFrame(["L1"], columns=["Category"], index=["Sample123"])
+        expected.index.name = "sample_name"
+
+        assert_frame_equal(relations, expected)
+
+    def test_get_orange_object(self):
+        # Orange Data is found ad-hoc
+        self.collection.data.get = self.web_request(self.orange_data)
+        ct = CollectionTables(self.collection)
+        obj = ct._get_orange_object()
+        self.assertEqual(obj, self.orange_data)
+
+    def test_get_orange_data(self):
+        response = MagicMock()
+        response.content = b"mS#Sample ID\tCol1\n123\t42"
+        self.collection.resolwe.session.get.return_value = response
+        self.collection.data.get = self.web_request(self.orange_data)
+
+        ct = CollectionTables(self.collection)
+        orange_data = ct._get_orange_data()
+
+        expected = pd.DataFrame([42], columns=["Col1"], index=["Sample123"])
+        expected.index.name = "sample_name"
+
+        assert_frame_equal(orange_data, expected)
+
+    @patch.object(CollectionTables, "_get_descriptors")
+    @patch.object(CollectionTables, "_get_relations")
+    @patch.object(CollectionTables, "_get_orange_data")
+    def test_download_metadata(self, descriptors_mock, relations_mock, orange_mock):
+        descriptors_mock.return_value = self.metadata_df
+        relations_mock.return_value = pd.DataFrame(
+            [["A"], ["B"], ["C"]], index=["0", "1", "2"], columns=["Replicate"]
+        )
+        orange_mock.return_value = pd.DataFrame(
+            [["X"], ["Y"], ["Z"]], index=["0", "1", "2"], columns=["Clinical"]
+        )
+
         ct = CollectionTables(self.collection)
         meta = ct._download_metadata()
-        expected_meta = pd.DataFrame([1], columns=["PFS"], index=["Sample123"])
+
+        expected_content = [["X", "A", 0], ["Y", "B", 1], ["Z", "C", 4]]
+        expected_columns = ["Clinical", "Replicate", "PFS"]
+        expected_meta = pd.DataFrame(
+            expected_content, columns=expected_columns, index=["0", "1", "2"]
+        )
         expected_meta.index.name = "sample_name"
+
         assert_frame_equal(meta, expected_meta)
 
     def test_expression_file_url(self):

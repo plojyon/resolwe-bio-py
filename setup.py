@@ -38,6 +38,8 @@ setuptools.setup(
         'tzlocal>=1.5.1',
         'pandas>=1.0.0',
         'tqdm',
+        'openpyxl',
+        'xlrd',
     ),
     python_requires='>=3.6',
     extras_require={

@@ -19,6 +19,8 @@ import pandas as pd
 import pytz
 from tqdm import tqdm
 
+from resdk.resources.utils import iterate_schema
+
 from .resolwe import Resolwe
 from .resources import Collection, Data, Sample
 from .utils.table_cache import (
@@ -32,8 +34,15 @@ EXP = "exp"
 RC = "rc"
 META = "meta"
 
-SAMPLE_FIELDS = ["id", "name", "descriptor", "descriptor_schema"]
-DATA_FIELDS = ["id", "slug", "entity__name", "output", "process__output_schema"]
+SAMPLE_FIELDS = ["id", "slug", "name", "descriptor", "descriptor_schema"]
+DATA_FIELDS = [
+    "id",
+    "slug",
+    "modified",
+    "entity__name",
+    "output",
+    "process__output_schema",
+]
 
 CHUNK_SIZE = 1000
 
@@ -185,23 +194,47 @@ class CollectionTables:
     def _metadata_version(self) -> str:
         """Return server metadata version.
 
-        The versioning of metadata on the server is determined by the newest modified
-        datetime of samples.
+        The versioning of metadata on the server is determined by the
+        newest of these values:
+
+            - newset modified sample
+            - newset modified relation
+            - newset modified orange Data
 
         :return: metadata version
         """
+        timestamps = []
+        kwargs = {
+            "ordering": "-modified",
+            "fields": ["id", "modified"],
+            "limit": 1,
+        }
+
         try:
-            newest_sample = self.collection.samples.filter(
-                ordering="-modified", fields=["id", "modified"]
-            )[0]
-        except IndexError:
+            newest_sample = self.collection.samples.get(**kwargs)
+            timestamps.append(newest_sample.modified)
+        except LookupError:
             raise ValueError(
                 f"Collection {self.collection.name} has no samples!"
             ) from None
 
+        try:
+            newest_relation = self.collection.relations.get(**kwargs)
+            timestamps.append(newest_relation.modified)
+        except LookupError:
+            pass
+
+        try:
+            orange = self._get_orange_object()
+            timestamps.append(orange.modified)
+        except LookupError:
+            pass
+
+        newest_modified = sorted(timestamps)[-1]
         # transform into UTC so changing timezones won't effect cache
-        newest_modified = newest_sample.modified.astimezone(pytz.utc)
-        version = newest_modified.isoformat().replace("+00:00", "Z")
+        version = (
+            newest_modified.astimezone(pytz.utc).isoformat().replace("+00:00", "Z")
+        )
         return version
 
     @property
@@ -242,15 +275,134 @@ class CollectionTables:
         cache_file = f"{self.collection.slug}_{data_type}_{version}.pickle"
         return os.path.join(self.cache_dir, cache_file)
 
-    def _download_metadata(self) -> pd.DataFrame:
-        """Download samples JSON metadata and transform into table."""
-        json_metadata = []
+    def _get_descriptors(self) -> pd.DataFrame:
+        descriptors = []
         for sample in self._samples:
-            _json = sample.descriptor
-            _json["sample_name"] = sample.name
-            json_metadata.append(_json)
-        meta = pd.json_normalize(json_metadata)
-        meta = meta.set_index("sample_name").sort_index()
+            sample.descriptor["sample_name"] = sample.name
+            descriptors.append(sample.descriptor)
+
+        df = pd.json_normalize(descriptors).set_index("sample_name")
+
+        # Keep only numeric / string types:
+        column_types = {}
+        prefix = "XXX"
+        for (schema, _, path) in iterate_schema(
+            sample.descriptor, sample.descriptor_schema.schema, path=prefix
+        ):
+            field_type = schema["type"]
+            field_name = path[len(prefix) + 1 :]
+
+            # This can happen if this filed has None value in all descriptors
+            if field_name not in df:
+                continue
+
+            if field_type == "basic:string:":
+                column_types[field_name] = str
+            elif field_type == "basic:integer:":
+                # Pandas cannot cast NaN's to int, but it can cast them
+                # to pd.Int64Dtype
+                column_types[field_name] = pd.Int64Dtype()
+            elif field_type == "basic:decimal:":
+                column_types[field_name] = float
+
+        df = df[column_types.keys()].astype(column_types)
+
+        return df
+
+    def _get_relations(self) -> pd.DataFrame:
+        relations = pd.DataFrame(index=[s.name for s in self._samples])
+        relations.index.name = "sample_name"
+
+        id_to_name = {s.id: s.name for s in self._samples}
+
+        for relation in self.collection.relations:
+            relations[relation.category] = pd.Series(
+                index=relations.index, dtype="object"
+            )
+
+            for partition in relation.partitions:
+                value = ""
+                if partition["label"] and partition["position"]:
+                    value = f'{partition["label"]} / {partition["position"]}'
+                elif partition["label"]:
+                    value = partition["label"]
+                elif partition["position"]:
+                    value = partition["position"]
+
+                sample_name = id_to_name[partition["entity"]]
+                relations[relation.category][sample_name] = value
+
+        return relations
+
+    @lru_cache()
+    def _get_orange_object(self) -> Data:
+        return self.collection.data.get(
+            process__slug="upload-orange-metadata",
+            ordering="-modified",
+            fields=DATA_FIELDS,
+            limit=1,
+        )
+
+    def _get_orange_data(self) -> pd.DataFrame:
+        try:
+            orange_meta = self._get_orange_object()
+        except LookupError:
+            return pd.DataFrame()
+
+        file_name = orange_meta.files(field_name="table")[0]
+        url = urljoin(self.resolwe.url, f"data/{orange_meta.id}/{file_name}")
+        response = self.resolwe.session.get(url, auth=self.resolwe.auth)
+        response.raise_for_status()
+
+        with BytesIO() as f:
+            f.write(response.content)
+            f.seek(0)
+            if file_name.endswith("xls"):
+                df = pd.read_excel(f, engine="xlrd")
+            elif file_name.endswith("xlsx"):
+                df = pd.read_excel(f, engine="openpyxl")
+            elif any(file_name.endswith(ext) for ext in ["tab", "tsv"]):
+                df = pd.read_csv(f, sep="\t")
+            elif file_name.endswith("csv"):
+                df = pd.read_csv(f)
+            else:
+                # TODO: logging, warning?
+                return pd.DataFrame()
+
+        if "mS#Sample ID" in df.columns:
+            mapping = {s.id: s.name for s in self._samples}
+            df["sample_name"] = [mapping[value] for value in df["mS#Sample ID"]]
+            df = df.drop(columns=["mS#Sample ID"])
+        elif "mS#Sample slug" in df.columns:
+            mapping = {s.slug: s.name for s in self._samples}
+            df["sample_name"] = [mapping[value] for value in df["mS#Sample slug"]]
+            df = df.drop(columns=["mS#Sample slug"])
+        elif "mS#Sample name" in df.columns:
+            df = df.rename(columns={"mS#Sample name": "sample_name"})
+
+        return df.set_index("sample_name")
+
+    def _download_metadata(self) -> pd.DataFrame:
+        """Download samples metadata and transform into table."""
+        meta = pd.DataFrame(None, index=[s.name for s in self._samples])
+
+        # Add descriptors metadata
+        descriptors = self._get_descriptors()
+        meta = meta.merge(descriptors, how="right", left_index=True, right_index=True)
+
+        # Add relations metadata
+        relations = self._get_relations()
+        how = "outer" if len(meta.columns) else "right"
+        meta = meta.merge(relations, how=how, left_index=True, right_index=True)
+
+        # Add Orange clinical metadata
+        orange_data = self._get_orange_data()
+        if not orange_data.empty:
+            how = "right" if meta.columns.empty else "outer"
+            meta = meta.merge(orange_data, how=how, left_index=True, right_index=True)
+
+        meta.index.name = "sample_name"
+
         return meta
 
     def _expression_file_url(self, data: Data, exp_type: str) -> str:
