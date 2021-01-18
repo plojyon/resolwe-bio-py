@@ -63,7 +63,7 @@ The real power is in the filter capabilities. Here are some examples::
         type="gene",
         species="Homo sapiens",
     )
-    mapping = {g.feature_id: g.name for f in genes}
+    mapping = {g.feature_id: g.name for g in genes}
     gene_symbols = [mapping[gene_id] for gene_id in gene_ids]
 
 .. warning::
