@@ -11,8 +11,8 @@ resdk.start_logging()
 res.data.all()
 res.sample.all()
 
-# Get all Collection objects with "SDK" in their name
-res.collection.filter(name='RNA-Seq Polyak-2016')
+# Get all Collection objects with "RNA-Seq" in their name
+res.collection.filter(name__contains='RNA-Seq')
 
 # Get all Processes with category "Align"
 res.process.filter(category='Align')
