@@ -5,6 +5,16 @@ Change Log
 All notable changes to this project are documented in this file.
 
 
+==========
+Unreleased
+==========
+
+Changed
+-------
+- Faster download of files in ``CollectionTables.rc`` and
+  ``CollectionTables.exp`` by using async download
+
+
 ===================
 13.1.0 - 2021-03-17
 ===================

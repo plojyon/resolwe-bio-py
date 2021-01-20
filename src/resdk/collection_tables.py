@@ -9,12 +9,15 @@ Collection Tables
 
     .. automethod:: __init__
 """
+import asyncio
+import json
 import os
 from functools import lru_cache
 from io import BytesIO
 from typing import Dict, List, Optional
-from urllib.parse import urljoin
+from urllib.parse import urlencode, urljoin
 
+import aiohttp
 import pandas as pd
 import pytz
 from tqdm import tqdm
@@ -45,6 +48,9 @@ DATA_FIELDS = [
 ]
 
 CHUNK_SIZE = 1000
+
+# See _download_expressions function for in-depth explanation of this.
+EXP_ASYNC_CHUNK_SIZE = 50
 
 
 class CollectionTables:
@@ -263,7 +269,12 @@ class CollectionTables:
             if data_type == META:
                 data = self._download_metadata()
             else:
-                data = self._download_expressions(data_type)
+                # XXX: When dropping support for Python 3.6 the below
+                # statement can be replaced with:
+                # data = asyncio.run(self._download_expressions(data_type))
+                loop = asyncio.get_event_loop()
+                data = loop.run_until_complete(self._download_expressions(data_type))
+
             save_pickle(data, self._cache_file(data_type))
         return data
 
@@ -405,7 +416,7 @@ class CollectionTables:
 
         return meta
 
-    def _expression_file_url(self, data: Data, exp_type: str) -> str:
+    def _get_exp_uri(self, data: Data, exp_type: str) -> str:
         exp_files = data.files(field_name=exp_type)
 
         if not exp_files:
@@ -417,27 +428,69 @@ class CollectionTables:
                 f"Data {data.slug} has multiple expressions of type {exp_type}!"
             )
 
-        return urljoin(self.resolwe.url, f"data/{data.id}/{exp_files[0]}")
+        return f"{data.id}/{exp_files[0]}"
 
-    def _download_expressions(self, exp_type: str) -> pd.DataFrame:
+    def _get_exp_urls(self, uris):
+        query_params = urlencode({"uri": uris}, doseq=True)
+        url = urljoin(self.resolwe.url, "resolve_uris") + f"?{query_params}"
+        uris_response = self.resolwe.session.get(url, auth=self.resolwe.auth)
+        uris_response.raise_for_status()
+        return json.loads(uris_response.content.decode("utf-8"))
+
+    async def _download_file(self, url, session, sample_name):
+        async with session.get(url) as response:
+            response.raise_for_status()
+            with BytesIO() as f:
+                f.write(await response.content.read())
+                f.seek(0)
+                df = pd.read_csv(f, sep="\t", compression="gzip")
+                df = df.set_index("Gene").T
+                df.index = [sample_name]
+        return df
+
+    async def _download_expressions(self, exp_type: str) -> pd.DataFrame:
         """Download expression files and marge them into a pandas DataFrame.
+
+        During normal download of a single file a signed url is created on AWS
+        and user is than redirected from Genialis server to the signed url.
+
+        However, this process (signing urls and redirecting) takes time.
+        To speedup things, we create a dedicated endpoint that accepts a bunch
+        of file uris and return a bunch of signed url's. All in one request.
+
+        However, since we use GET request for this uri-to-signed-url endpoint,
+        we are limited with GET request character limit. Therefroe we split
+        the uris in smaller shunks, namely EXP_ASYNC_CHUNK_SIZE.
+
+        TODO: Migrate the backend to accept POST requests and remove the
+        need for chunks altogether.
 
         :param exp_type: expression type
         :return: table with expression data, genes in columns, samples in rows
         """
         df_list = []
-        for data in tqdm(self._data, desc="Downloading expressions", ncols=100):
-            response = self.resolwe.session.get(
-                self._expression_file_url(data, exp_type), auth=self.resolwe.auth
-            )
-            response.raise_for_status()
-            with BytesIO() as f:
-                f.write(response.content)
-                f.seek(0)
-                df_ = pd.read_csv(f, sep="\t", compression="gzip")
-                df_ = df_.set_index("Gene").T
-                df_.index = [data._original_values["entity"]["name"]]
-                df_list.append(df_)
+        for i in tqdm(
+            range(0, len(self._data), EXP_ASYNC_CHUNK_SIZE),
+            desc="Downloading expressions",
+            ncols=100,
+        ):
+            data_subset = self._data[i : i + EXP_ASYNC_CHUNK_SIZE]
+
+            # Mapping from expression file uri to sample name
+            uri_to_name = {
+                self._get_exp_uri(d, exp_type): d._original_values["entity"]["name"]
+                for d in data_subset
+            }
+
+            source_urls = self._get_exp_urls(uri_to_name.keys())
+            urls_names = [(url, uri_to_name[uri]) for uri, url in source_urls.items()]
+
+            async with aiohttp.ClientSession() as session:
+                futures = [
+                    self._download_file(url, session, name) for url, name in urls_names
+                ]
+                exps = await asyncio.gather(*futures)
+                df_list.extend(exps)
 
         df = pd.concat(df_list, axis=0).sort_index().sort_index(axis=1)
         source = self._data[0].output["source"]

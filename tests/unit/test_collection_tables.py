@@ -323,42 +323,20 @@ class TestCollectionTables(unittest.TestCase):
 
         assert_frame_equal(meta, expected_meta)
 
-    def test_expression_file_url(self):
+    def test_get_exp_uri(self):
         self.data.files.return_value = ["exp_file.csv"]
 
         ct = CollectionTables(self.collection)
-        file_url = ct._expression_file_url(self.data, EXP)
-        self.assertEqual(file_url, "https://server.com/data/12345/exp_file.csv")
+        file_url = ct._get_exp_uri(self.data, EXP)
+        self.assertEqual(file_url, "12345/exp_file.csv")
 
         self.data.files.return_value = []
         with self.assertRaises(LookupError):
-            file_url = ct._expression_file_url(self.data, EXP)
+            file_url = ct._get_exp_uri(self.data, EXP)
 
         self.data.files.return_value = ["exp_file1.csv", "exp_file2.csv"]
         with self.assertRaises(LookupError):
-            file_url = ct._expression_file_url(self.data, EXP)
-
-    @patch("resdk.collection_tables.BytesIO", MagicMock)
-    @patch.object(CollectionTables, "_expression_file_url", MagicMock)
-    @patch("pandas.read_csv")
-    def test_download_expressions(self, pandas_mock):
-        exp_df = pd.DataFrame(
-            [["ENSG001", 0], ["ENSG002", 1], ["ENSG003", 2]],
-            columns=["Gene", "Expression"],
-        )
-        pandas_mock.return_value = exp_df
-        return_exp = pd.DataFrame(
-            [[0, 1, 2]], columns=["ENSG001", "ENSG002", "ENSG003"], index=["Sample123"]
-        )
-        return_exp.index.name = "sample_name"
-        return_exp.columns.name = "Ensembl"
-        self.data._original_values.__getitem__.side_effect = {
-            "entity": {"name": "Sample123"}
-        }.__getitem__
-        ct = CollectionTables(self.collection)
-        exp = ct._download_expressions(EXP)
-        assert_frame_equal(exp, return_exp)
-        self.assertEqual(exp.attrs["exp_type"], "TPM")
+            file_url = ct._get_exp_uri(self.data, EXP)
 
     @patch(
         "resdk.collection_tables.cache_dir_resdk", MagicMock(return_value="/tmp/resdk/")

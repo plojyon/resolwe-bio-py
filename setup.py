@@ -31,6 +31,7 @@ setuptools.setup(
     packages=setuptools.find_packages("src"),
     package_dir={"": "src"},
     install_requires=(
+        'aiohttp',
         'requests>=2.6.0',
         'slumber>=0.7.1',
         'wrapt',
