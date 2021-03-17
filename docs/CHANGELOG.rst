@@ -5,13 +5,18 @@ Change Log
 All notable changes to this project are documented in this file.
 
 
-==========
-Unreleased
-==========
+===================
+13.1.0 - 2021-03-17
+===================
 
 Added
 -----
 - Add knowledge base docs
+- Add ``CollectionTables`` docs
+- Additional metadata in ``CollectionTables.meta`:
+
+  - Sample relations
+  - Orange clinical metadata
 
 
 ===================
