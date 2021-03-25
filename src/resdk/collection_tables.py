@@ -14,7 +14,7 @@ import json
 import os
 from functools import lru_cache
 from io import BytesIO
-from typing import Dict, List, Optional
+from typing import Callable, Dict, List, Optional
 from urllib.parse import urljoin
 
 import aiohttp
@@ -53,6 +53,21 @@ CHUNK_SIZE = 1000
 EXP_ASYNC_CHUNK_SIZE = 50
 
 
+class TqdmWithCallable(tqdm):
+    """Tqdm class that also calls a given callable."""
+
+    def __init__(self, *args, **kwargs):
+        """Initialize class."""
+        self.callable = kwargs.pop("callable", None)
+        super().__init__(*args, **kwargs)
+
+    def update(self, n=1):
+        """Update."""
+        super().update(n=n)
+        if self.callable:
+            self.callable(self.n / self.total)
+
+
 class CollectionTables:
     """A helper class to fetch collection's expression and meta data.
 
@@ -80,15 +95,26 @@ class CollectionTables:
 
     """
 
-    def __init__(self, collection: Collection, cache_dir: Optional[str] = None):
+    def __init__(
+        self,
+        collection: Collection,
+        cache_dir: Optional[str] = None,
+        progress_callable: Optional[Callable] = None,
+    ):
         """Initialize class.
 
         :param collection: collection to use
         :param cache_dir: cache directory location, if not specified system specific
                           cache directory is used
+        :param progress_callable: custom callable that can be used to report
+                                  progress. By default, progress is written to
+                                  stderr with tqdm
         """
         self.resolwe = collection.resolwe  # type: Resolwe
         self.collection = collection
+
+        self.tqdm = TqdmWithCallable
+        self.progress_callable = progress_callable
 
         self.cache_dir = cache_dir
         if self.cache_dir is None:
@@ -470,10 +496,12 @@ class CollectionTables:
         :return: table with expression data, genes in columns, samples in rows
         """
         df_list = []
-        for i in tqdm(
+        for i in self.tqdm(
             range(0, len(self._data), EXP_ASYNC_CHUNK_SIZE),
             desc="Downloading expressions",
             ncols=100,
+            file=open(os.devnull, "w") if self.progress_callable else None,
+            callable=self.progress_callable,
         ):
             data_subset = self._data[i : i + EXP_ASYNC_CHUNK_SIZE]
 
@@ -523,7 +551,13 @@ class CollectionTables:
         """Download gene mapping."""
         sublists = [ids[i : i + CHUNK_SIZE] for i in range(0, len(ids), CHUNK_SIZE)]
         mapping = {}
-        for sublist in tqdm(sublists, desc="Downloading gene mapping", ncols=100):
+        for sublist in self.tqdm(
+            sublists,
+            desc="Downloading gene mapping",
+            ncols=100,
+            file=open(os.devnull, "w") if self.progress_callable else None,
+            callable=self.progress_callable,
+        ):
             features = self.resolwe.feature.filter(
                 source=source, species=species, feature_id__in=sublist
             )

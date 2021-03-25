@@ -5,6 +5,16 @@ Change Log
 All notable changes to this project are documented in this file.
 
 
+==========
+Unreleased
+==========
+
+Added
+-----
+- Add ``progress_callable`` argument to ``CollectionTables`` constructor. This
+  enables that progress of expressions download is reported to any callable
+
+
 ===================
 13.2.0 - 2021-05-03
 ===================
