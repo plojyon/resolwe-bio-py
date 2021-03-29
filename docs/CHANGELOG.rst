@@ -13,6 +13,8 @@ Changed
 -------
 - Faster download of files in ``CollectionTables.rc`` and
   ``CollectionTables.exp`` by using async download
+- Setting permissions on Sample / Collection will also propagate them
+  to all included Data / Samples
 
 
 ===================

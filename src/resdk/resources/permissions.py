@@ -57,6 +57,10 @@ class PermissionsManager:
             "users": defaultdict(lambda: defaultdict(list)),
             "groups": defaultdict(lambda: defaultdict(list)),
             "public": defaultdict(list),
+            # Share not only the Entity / Collection but also their content.
+            # Although this is applied to all endpoints (not only to Entity /
+            # Collection) it will have effect only on these.
+            "share_content": "true",
         }
 
         if not isinstance(perms, list):
