@@ -32,6 +32,8 @@ setuptools.setup(
     package_dir={"": "src"},
     install_requires=(
         'aiohttp',
+        # required by aiohttp
+        'chardet<4.0,>=2.0',
         'requests>=2.6.0',
         'slumber>=0.7.1',
         'wrapt',
