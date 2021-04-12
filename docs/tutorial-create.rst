@@ -128,21 +128,21 @@ the `Process catalog`_ of the `Resolwe Bioinformatics documentation`_.
 .. _Resolwe Bioinformatics documentation: http://resolwe-bio.readthedocs.io
 
 After uploading reads file, the next step is to align reads to a genome. We
-will use HISAT2 aligner, which is wrapped in a process with slug
-``alignment-hisat2``. Inputs and outputs of this process are described in
-`HISAT2 process catalog`_. We will define input files and the process will run
+will use STAR aligner, which is wrapped in a process with slug
+``alignment-star``. Inputs and outputs of this process are described in
+`STAR process catalog`_. We will define input files and the process will run
 its algorithm that transforms inputs into outputs.
 
-.. _HISAT2 process catalog: https://resolwe-bio.readthedocs.io/en/latest/catalog-definitions.html#process-alignment-hisat2
+.. _STAR process catalog: https://resolwe-bio.readthedocs.io/en/latest/catalog-definitions.html#process-alignment-star
 
 .. literalinclude:: files/tutorial-create.py
    :lines: 67-76
 
 Lets take a closer look to the code above. We defined the alignment process, by
-its slug ``'alignment-hisat2'``. For inputs we defined data objects ``reads``
+its slug ``'alignment-star'``. For inputs we defined data objects ``reads``
 and ``genome``. ``Reads`` object was created with 'upload-fastq-single'
 process, while ``genome`` data object was already on the server and we just
-used its slug to identify it. The ``alignment-hisat2`` processor will
+used its slug to identify it. The ``alignment-star`` processor will
 automatically take the right files from data objects, specified in inputs and
 create output files: ``bam`` alignment file, ``bai`` index and some more...
 
@@ -177,11 +177,11 @@ output is then again fed into another process and so on. Sometimes, this
 sequence is so commonly used that one wants to simplify it's execution. This
 can be done by using so called "workflow". Workflows are special processes that
 run a stack of processes. On the outside, they look exactly the same as a
-normal process and have a process slug, inputs, outputs... For example, we
-can run workflow "BBDuk - STAR - HTSeq-count" on our reads:
+normal process and have a process slug, inputs... For example, we
+can run workflow "General RNA-seq pipeline" on our reads:
 
 .. literalinclude:: files/tutorial-create.py
-   :lines: 90-102
+   :lines: 90-97
 
 Solving problems
 ================

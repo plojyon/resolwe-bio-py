@@ -88,18 +88,18 @@ alignment.status
 alignment.output
 
 # Run a workflow
-workflow = res.run(
-    slug='workflow-bbduk-star-htseq',
+res.run(
+    slug='workflow-bbduk-star-featurecounts-qc-single',
     input={
         'reads': reads,
-        'star_index': res.data.get('resdk-example-genome-index'),
-        'annotation': res.data.get('resdk-example-annotation'),
-        'stranded': 'reverse',
+        'species': 'Homo sapiens',
     }
 )
 
-# See steps (=ID's) of data produced by this workflow
-workflow.output
+
+
+
+
 
 # Update the data object to get the most recent info
 alignment.update()

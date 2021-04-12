@@ -10,9 +10,9 @@ resdk.start_logging()
 
 res.data.all()
 
-res.data.filter(type='data:genome')
+res.data.filter(type='data:index').count()
 
-res.data.filter(type='data:genome:fasta')
+res.data.filter(type="data:index:star", name__contains="Homo sapiens")
 
 # Get data object by slug
 genome_index = res.data.get('resdk-example-genome-index')

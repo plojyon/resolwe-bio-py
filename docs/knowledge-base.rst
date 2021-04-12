@@ -58,6 +58,7 @@ The real power is in the filter capabilities. Here are some examples::
     ).count()
 
     # Convert all gene IDs in a list ``gene_ids`` to gene symbols::
+    gene_ids = ["ENSG00000139618", "ENSG00000189283"]
     genes = res.feature.filter(
         feature_id__in=gene_ids,
         type="gene",
@@ -91,27 +92,15 @@ attribute. It is one of the following options:
     - ``transcript``: Connection between gene and it's transcripts.
     - ``exon``: Connection between gene / transcript and it's exons.
 
-Again, we will only list some examples and then let your imagination
+Again, we will only list an example and then let your imagination
 fly::
 
     # Find UniProtKB ID for gene with given ENSEMBL ID:
-    mapping = res.mapping.get(
-        relation_type="crossdb",
+    mapping = res.mapping.filter(
         source_id="ENSG00000189283",
         source_db="ENSEMBL",
         target_db="UniProtKB",
         source_species="Homo sapiens",
         target_species="Homo sapiens",
     )
-    uniprot_id = mapping.target_id
-
-    # Find mouse ortholog for Human BRCA2 gene (has ENSG00000139618 ID):
-    mapping = res.mapping.get(
-        relation_type="ortholog",
-        source_id="ENSG00000139618",
-        source_species="Homo sapiens",
-        target_species="Homo sapiens",
-        source_db="ENSEMBL",
-        target_db="ENSEMBL",
-    )
-    mouse_ortholog_id = mapping.target_id
+    uniprot_id = mapping[0].target_id

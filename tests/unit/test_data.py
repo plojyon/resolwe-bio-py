@@ -192,7 +192,10 @@ class TestData(unittest.TestCase):
     @patch("resdk.resources.data.Data", spec=True)
     def test_stdout_ok(self, data_mock, urljoin_mock, resolwe_mock):
         # Configure mocks:
-        data_mock.configure_mock(id=123, resolwe=resolwe_mock)
+        process_mock = MagicMock(type="data:index")
+        data_mock.configure_mock(
+            id=123, status="OK", resolwe=resolwe_mock, process=process_mock
+        )
         urljoin_mock.return_value = "some_url"
         resolwe_mock.configure_mock(url="a", auth="b")
 

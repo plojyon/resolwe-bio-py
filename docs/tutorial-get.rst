@@ -59,6 +59,12 @@ example:
 .. literalinclude:: files/tutorial-get.py
   :lines: 14-18
 
+.. note::
+
+  For a complete list of processes, their categories and definitions, please visit `resolwe-bio docs`_
+
+.. _`resolwe-bio docs`: https://resolwe-bio.readthedocs.io/
+
 But the real power of the ``filter()`` method is in combining multiple
 parameters:
 
@@ -68,6 +74,16 @@ parameters:
 This will return data objects with OK status, created in October 2018, order
 them by descending modified date and return first 3 objects. Quite powerful
 isn't it?
+
+.. note::
+
+  For a complete list of filtering options use a "wrong" filtering
+  argument and you will receive an informative message with all options
+  listed. For example::
+
+    res.data.filter(foo="bar")
+
+
 
 The :obj:`get(**fields) <resdk.ResolweQuery.get>` method searches by the same
 parameters as ``filter`` and returns a single object (``filter`` returns a

@@ -104,21 +104,27 @@ data objects are referenced by *id*, *slug*, and *name*.
 
 	``name`` is an arbitrary, **non unique name** of an object.
 
-Let's say we now want to find some genomes. We don't always know the *id*,
+Let's say we now want to find some genome indices. We don't always know the *id*,
 *slug*, or *name* by heart, but we can use `filters`_ to find them. We will
-query for all genome data objects:
+first count all genome index data objects:
 
 .. _filters: http://resdk.readthedocs.io/en/latest/ref.html#resdk.ResolweQuery
 
 .. literalinclude:: files/start.py
   :lines: 13
 
-There are several unrelated data objects that pass through our filter. We can
-filter the data even further, this time trying to find a genome in a FASTA
-format:
+This is quite a lot of objects! We can filter even further:
 
 .. literalinclude:: files/start.py
   :lines: 15
+
+.. note::
+
+  For a complete list of filtering options use a "wrong" filtering
+  argument and you will receive an informative message with all options
+  listed. For example::
+
+    res.data.filter(foo="bar")
 
 For future work we want to get the genome with a specific slug. We will `get`_
 it and store a reference to it for later:
@@ -155,13 +161,13 @@ Run alignment
 A common analysis in bioinformatics is to align sequencing reads to a reference
 genome. This is done by running a certain *process*. A process uses an
 algorithm or a sequence of algorithms to turn given inputs into outputs. Here
-we will only test the HISAT2 alignment process, but many more processes are
+we will only test the STAR alignment process, but many more processes are
 available (see the `Process catalog`_). This process automatically creates a
 BAM alignment file and BAI index, along with some other files.
 
 .. _Process catalog: http://resolwe-bio.readthedocs.io/en/latest/catalog.html
 
-Let's run HISAT2 on our reads, using our genome:
+Let's run STAR on our reads, using our genome:
 
 .. literalinclude:: files/start.py
   :lines: 30-36

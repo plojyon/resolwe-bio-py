@@ -102,8 +102,15 @@ class Data(BaseResolweResource):
         self.size = None
         #: scheduled
         self.scheduled = None
-        #: process status - Possible values: Uploading(UP), Resolving(RE),
-        #: Waiting(WT), Processing(PR), Done(OK), Error(ER), Dirty (DR)
+        #: process status - Possible values:
+        #: UP (Uploading - for upload processes),
+        #: RE (Resolving - computing input data objects)
+        #: WT (Waiting - waiting for process since the queue is full)
+        #: PP (Preparing - preparing the environment for processing)
+        #: PR (Processing)
+        #: OK (Done)
+        #: ER (Error)
+        #: DR (Dirty - Data is dirty)
         self.status = None
         #: data object's tags
         self.tags = None
@@ -324,9 +331,15 @@ class Data(BaseResolweResource):
         :rtype: string
 
         """
+        if self.process.type.startswith("data:workflow"):
+            raise ValueError("stdout.txt file is not available for workflows.")
         output = b""
         url = urljoin(self.resolwe.url, "data/{}/stdout.txt".format(self.id))
         response = self.resolwe.session.get(url, stream=True, auth=self.resolwe.auth)
+        if not response.ok and self.status in ["UP", "RE", "WT", "PP", "DR"]:
+            raise ValueError(
+                f"stdout.txt file is not available for Data with status {self.status}"
+            )
         if not response.ok:
             response.raise_for_status()
         else:
