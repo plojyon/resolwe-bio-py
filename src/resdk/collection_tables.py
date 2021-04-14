@@ -15,7 +15,7 @@ import os
 from functools import lru_cache
 from io import BytesIO
 from typing import Dict, List, Optional
-from urllib.parse import urlencode, urljoin
+from urllib.parse import urljoin
 
 import aiohttp
 import pandas as pd
@@ -431,11 +431,13 @@ class CollectionTables:
         return f"{data.id}/{exp_files[0]}"
 
     def _get_exp_urls(self, uris):
-        query_params = urlencode({"uri": uris}, doseq=True)
-        url = urljoin(self.resolwe.url, "resolve_uris") + f"?{query_params}"
-        uris_response = self.resolwe.session.get(url, auth=self.resolwe.auth)
-        uris_response.raise_for_status()
-        return json.loads(uris_response.content.decode("utf-8"))
+        response = self.resolwe.session.post(
+            urljoin(self.resolwe.url, "resolve_uris/"),
+            json={"uris": list(uris)},
+            auth=self.resolwe.auth,
+        )
+        response.raise_for_status()
+        return json.loads(response.content.decode("utf-8"))
 
     async def _download_file(self, url, session, sample_name):
         async with session.get(url) as response:
@@ -458,12 +460,11 @@ class CollectionTables:
         To speedup things, we create a dedicated endpoint that accepts a bunch
         of file uris and return a bunch of signed url's. All in one request.
 
-        However, since we use GET request for this uri-to-signed-url endpoint,
-        we are limited with GET request character limit. Therefroe we split
-        the uris in smaller shunks, namely EXP_ASYNC_CHUNK_SIZE.
-
-        TODO: Migrate the backend to accept POST requests and remove the
-        need for chunks altogether.
+        However, these signed urls have expiration time of 60 s. In case of
+        large number of uris requested (> 100 uris) it is likely that url is
+        signed by Resolwe server and not downloaded for 60 seconds or more.
+        Therefore we split the uris in smaller chunks, namely
+        EXP_ASYNC_CHUNK_SIZE.
 
         :param exp_type: expression type
         :return: table with expression data, genes in columns, samples in rows
