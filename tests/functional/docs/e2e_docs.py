@@ -5,14 +5,7 @@ import tempfile
 
 from resdk import Resolwe
 
-from ..base import (
-    ADMIN_PASSWORD,
-    ADMIN_USERNAME,
-    URL,
-    USER_PASSWORD,
-    USER_USERNAME,
-    BaseResdkFunctionalTest,
-)
+from ..base import URL, USER_PASSWORD, USER_USERNAME, BaseResdkFunctionalTest
 
 TEST_FILES_DIR = os.path.abspath(
     os.path.normpath(os.path.join(__file__, "../../../files"))
@@ -36,6 +29,7 @@ class BaseResdkDocsFunctionalTest(BaseResdkFunctionalTest):
     globin_index_slug = "resdk-example-globin-index"
 
     def setUp(self):
+        super().setUp()
         self.tmpdir = tempfile.mkdtemp()
         self.original_cwd = os.getcwd()
         os.chdir(self.tmpdir)
@@ -147,9 +141,8 @@ class BaseResdkDocsFunctionalTest(BaseResdkFunctionalTest):
 
 class TestIndex(BaseResdkDocsFunctionalTest):
     def setUp(self):
-        self.res = Resolwe(ADMIN_USERNAME, ADMIN_PASSWORD, URL)
-        self.reads = self.upload_reads(self.res)
         super().setUp()
+        self.reads = self.upload_reads(self.res)
 
     def test_index(self):
         """Test example code used in ``README.rst`` and ``index.rst``."""
@@ -161,7 +154,7 @@ class TestIndex(BaseResdkDocsFunctionalTest):
 
 class TestStart(BaseResdkDocsFunctionalTest):
     def setUp(self):
-        self.res = Resolwe(ADMIN_USERNAME, ADMIN_PASSWORD, URL)
+        super().setUp()
 
         # Create data for tests:
         self.reads = self.upload_reads(self.res)
@@ -172,7 +165,6 @@ class TestStart(BaseResdkDocsFunctionalTest):
 
         # Set permissions for running processes:
         self.allow_run_process(self.res, "alignment-star")
-        super().setUp()
 
     def test_start(self):
         """Test getting started."""
@@ -187,10 +179,9 @@ class TestStart(BaseResdkDocsFunctionalTest):
 
 class TestTutorialGet(BaseResdkDocsFunctionalTest):
     def setUp(self):
-        self.res = Resolwe(ADMIN_USERNAME, ADMIN_PASSWORD, URL)
+        super().setUp()
 
         self.reads = self.upload_reads(self.res)
-        super().setUp()
 
     def test_tutorial_get(self):
         """Test tutorial-get."""
@@ -205,7 +196,7 @@ class TestTutorialGet(BaseResdkDocsFunctionalTest):
 
 class TestTutorialCreate(BaseResdkDocsFunctionalTest):
     def setUp(self):
-        self.res = Resolwe(ADMIN_USERNAME, ADMIN_PASSWORD, URL)
+        super().setUp()
 
         self.reads = self.upload_reads(self.res)
 
@@ -232,7 +223,6 @@ class TestTutorialCreate(BaseResdkDocsFunctionalTest):
         # Set permissions for using descriptor_schemas:
         self.allow_use_descriptor_schema(self.res, "reads")
         self.allow_use_descriptor_schema(self.res, "sample")
-        super().setUp()
 
     def test_tutorial_create(self):
         """Test tutorial-create."""

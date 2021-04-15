@@ -3,8 +3,6 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import os
 import unittest
 
-import six
-
 from ..base import FILES_PATH, BaseResdkFunctionalTest
 
 
@@ -20,7 +18,7 @@ class BaseResdkFilteringTest(BaseResdkFunctionalTest):
     def _check_filter(self, query_args, expected):
         response = self._get_ids(self.endpoint.filter(**query_args))
         expected = self._get_ids(expected)
-        six.assertCountEqual(self, response, expected)
+        self.assertCountEqual(response, expected)
 
     @staticmethod
     def datetime_to_str(datetime):

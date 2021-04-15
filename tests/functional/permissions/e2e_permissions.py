@@ -8,11 +8,14 @@ class TestPermissions(BaseResdkFunctionalTest):
         super().setUp()
 
         self.test_collection = self.res.collection.create(name="Test collection")
+        self.collection2 = None
 
     def tearDown(self):
         super().tearDown()
 
         self.test_collection.delete(force=True)
+        if self.collection2:
+            self.collection2.delete(force=True)
 
     def test_permissions(self):
         # User doesn't have the permission to view the collection.
@@ -62,10 +65,10 @@ class TestPermissions(BaseResdkFunctionalTest):
 
     def test_copy_from(self):
         # Create collection with only user permissions
-        collection2 = self.user_res.collection.create(name="Test collection 2")
-        collection2.permissions.fetch()
-        self.assertEqual(len(collection2.permissions._permissions), 1)
+        self.collection2 = self.user_res.collection.create(name="Test collection 2")
+        self.collection2.permissions.fetch()
+        self.assertEqual(len(self.collection2.permissions._permissions), 1)
 
         self.test_collection.permissions.add_public("view")
-        collection2.permissions.copy_from(self.test_collection)
-        self.assertEqual(len(collection2.permissions._permissions), 3)
+        self.collection2.permissions.copy_from(self.test_collection)
+        self.assertEqual(len(self.collection2.permissions._permissions), 3)

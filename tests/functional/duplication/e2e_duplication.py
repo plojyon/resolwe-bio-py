@@ -4,24 +4,29 @@ from ..base import BaseResdkFunctionalTest
 
 
 class TestDuplication(BaseResdkFunctionalTest):
-    def test_collection_duplication(self):
-        collection = self.res.collection.create(name="Test collection")
-        duplicate = collection.duplicate()
-        self.assertEqual(duplicate.name, "Copy of Test collection")
+    def setUp(self):
+        super().setUp()
+        self.obj = None
+        self.duplicate = None
 
-        duplicate.delete(force=True)
-        collection.delete(force=True)
+    def tearDown(self):
+        if self.obj:
+            self.obj.delete(force=True)
+        if self.duplicate:
+            self.duplicate.delete(force=True)
+
+    def test_collection_duplication(self):
+        self.obj = self.res.collection.create(name="Test collection")
+        self.duplicate = self.obj.duplicate()
+        self.assertEqual(self.duplicate.name, "Copy of Test collection")
 
     def test_sample_duplication(self):
-        sample = self.res.sample.create(name="Test sample")
-        duplicate = sample.duplicate()
-        self.assertEqual(duplicate.name, "Copy of Test sample")
-
-        duplicate.delete(force=True)
-        sample.delete(force=True)
+        self.obj = self.res.sample.create(name="Test sample")
+        self.duplicate = self.obj.duplicate()
+        self.assertEqual(self.duplicate.name, "Copy of Test sample")
 
     def test_data_duplication(self):
-        data = self.res.run(slug="test-sleep-progress", input={"t": 1})
+        self.obj = self.res.run(slug="test-sleep-progress", input={"t": 1})
         # Let's not wait for processing to finish and
         # check the expected exception to be raised.
         with self.assertRaisesRegex(
@@ -29,4 +34,4 @@ class TestDuplication(BaseResdkFunctionalTest):
         ):
             # Data's `duplicate` raises an exception if status
             # of the object is not done or error.
-            data.duplicate()
+            self.obj.duplicate()

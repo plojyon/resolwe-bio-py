@@ -1,30 +1,37 @@
 import resdk
 
-from ..base import BaseResdkFunctionalTest
+from ..base import ADMIN_USERNAME, USER_USERNAME, BaseResdkFunctionalTest
 
 
 class TestRun(BaseResdkFunctionalTest):
-    def test_run(self):
-        collection = self.res.collection.get(name="Test collection")
+    def setUp(self):
+        super().setUp()
+        self.collection = self.res.collection.create(name="Test collection")
+        self.data = None
 
-        data = self.res.run(
+    def tearDown(self):
+        # self.data is deleted along with collection
+        self.collection.delete(force=True)
+
+    def test_run(self):
+        self.data = self.res.run(
             slug="test-sleep-progress",
             input={"t": 1},
             descriptor_schema="reads",
             descriptor={"description": "Lorem ipsum ..."},
-            collection=collection,
+            collection=self.collection,
             data_name="Test run data",
         )
 
-        self.assertTrue(isinstance(data, resdk.resources.Data))
-        self.assertEqual(data.process.slug, "test-sleep-progress")
-        self.assertEqual(data.input, {"t": 1})
-        self.assertEqual(data.descriptor_schema.slug, "reads")
+        self.assertTrue(isinstance(self.data, resdk.resources.Data))
+        self.assertEqual(self.data.process.slug, "test-sleep-progress")
+        self.assertEqual(self.data.input, {"t": 1})
+        self.assertEqual(self.data.descriptor_schema.slug, "reads")
 
-        self.assertEqual(data.descriptor["description"], "Lorem ipsum ...")
+        self.assertEqual(self.data.descriptor["description"], "Lorem ipsum ...")
 
-        self.assertEqual(data.collection, collection)
-        self.assertEqual(data.name, "Test run data")
+        self.assertEqual(self.data.collection, self.collection)
+        self.assertEqual(self.data.name, "Test run data")
 
 
 class TestDataUsage(BaseResdkFunctionalTest):
@@ -43,6 +50,19 @@ class TestDataUsage(BaseResdkFunctionalTest):
         "sample_count_normalized",
     }
 
+    def setUp(self):
+        super().setUp()
+        self.data1 = self.res.run(slug="test-sleep-progress")
+
+        # Normal user needs to get permissions to run this process
+        process = self.res.process.get(slug="test-sleep-progress")
+        self.make_public(process, permissions=["view"])
+        self.data2 = self.user_res.run(slug="test-sleep-progress")
+
+    def tearDown(self):
+        self.data1.delete(force=True)
+        self.data2.delete(force=True)
+
     def test_normal_user(self):
         usage_info = self.user_res.data_usage()
         self.assertEqual(len(usage_info), 1)
@@ -50,13 +70,13 @@ class TestDataUsage(BaseResdkFunctionalTest):
 
     def test_admin_user(self):
         usage_info = self.res.data_usage()
-        self.assertGreaterEqual(len(usage_info), 2)
+        self.assertEqual(len(usage_info), 2)
         self.assertEqual(set(usage_info[0].keys()), self.expected_fields)
 
     def test_ordering(self):
-        usage_info = self.res.data_usage(ordering=["full_name", "-data_size"])
-        self.assertGreaterEqual(len(usage_info), 2)
+        usage_info = self.res.data_usage(ordering=["username"])
+        self.assertEqual(len(usage_info), 2)
         first = usage_info[0]
         second = usage_info[1]
-        self.assertEqual(first["full_name"], second["full_name"])
-        self.assertGreaterEqual(first["data_size"], second["data_size"])
+        self.assertEqual(first["username"], ADMIN_USERNAME)
+        self.assertEqual(second["username"], USER_USERNAME)
