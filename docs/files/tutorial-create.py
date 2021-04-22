@@ -91,15 +91,15 @@ alignment.output
 res.run(
     slug='workflow-bbduk-star-featurecounts-qc-single',
     input={
-        'reads': reads,
-        'species': 'Homo sapiens',
+        'preprocessing': {'reads': reads},
+        'alignment': {'genome': res.data.get('resdk-example-genome-index')},
+        'quantification': {'annotation': res.data.get('resdk-example-annotation')},
+        'qc': {
+            'globin_reference': res.data.get('resdk-example-globin-index'),
+            'rrna_reference': res.data.get('resdk-example-rrna-index'),
+        },
     }
 )
-
-
-
-
-
 
 # Update the data object to get the most recent info
 alignment.update()

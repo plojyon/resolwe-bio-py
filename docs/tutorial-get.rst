@@ -14,7 +14,7 @@ By now, you should have an account on the `Genialis Server`_. If not, you can
 .. literalinclude:: files/tutorial-get.py
   :lines: 2-9
 
-If you omit the ``login()`` you will be logged as anonymus user. Note that this
+If you omit the ``login()`` you will be logged as anonymous user. Note that this
 will strongly limit the things you can do.
 
 .. _`Genialis Server`: https://app.genialis.com
@@ -34,7 +34,7 @@ resources: :obj:`Data<resdk.resources.Data>`,
 :obj:`Collection<resdk.resources.Collection>`,
 :obj:`Process<resdk.resources.Process>`... each of which has a
 corresponding entry-point on ``Resolwe`` object (in our case, this is the
-``res`` variable). For example, to view all ``Data`` or ``Sample`` objects:
+``res`` variable). For example, to count all ``Data`` or ``Sample`` objects:
 
 .. literalinclude:: files/tutorial-get.py
   :lines: 11-12
@@ -61,7 +61,8 @@ example:
 
 .. note::
 
-  For a complete list of processes, their categories and definitions, please visit `resolwe-bio docs`_
+  For a complete list of processes, their categories and definitions, please
+  visit `resolwe-bio docs`_
 
 .. _`resolwe-bio docs`: https://resolwe-bio.readthedocs.io/
 
@@ -77,13 +78,11 @@ isn't it?
 
 .. note::
 
-  For a complete list of filtering options use a "wrong" filtering
-  argument and you will receive an informative message with all options
-  listed. For example::
+  For a complete list of filtering options use a "wrong" filtering argument
+  and you will receive an informative message with all options listed. For
+  example::
 
     res.data.filter(foo="bar")
-
-
 
 The :obj:`get(**fields) <resdk.ResolweQuery.get>` method searches by the same
 parameters as ``filter`` and returns a single object (``filter`` returns a

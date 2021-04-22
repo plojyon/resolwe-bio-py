@@ -8,8 +8,8 @@ res.login()
 # Enable verbose logging to standard output
 resdk.start_logging()
 
-res.data.all()
-res.sample.all()
+res.data.count()
+res.sample.count()
 
 # Get all Collection objects with "RNA-Seq" in their name
 res.collection.filter(name__contains='RNA-Seq')

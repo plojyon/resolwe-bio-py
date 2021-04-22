@@ -30,6 +30,10 @@ class BaseResdkDocsFunctionalTest(BaseResdkFunctionalTest):
     genome_slug = "resdk-example-genome"
     genome_index_slug = "resdk-example-genome-index"
     annotation_slug = "resdk-example-annotation"
+    rrna_slug = "resdk-example-rrna"
+    rrna_index_slug = "resdk-example-rrna-index"
+    globin_slug = "resdk-example-globin"
+    globin_index_slug = "resdk-example-globin-index"
 
     def setUp(self):
         self.tmpdir = tempfile.mkdtemp()
@@ -48,6 +52,14 @@ class BaseResdkDocsFunctionalTest(BaseResdkFunctionalTest):
             self.genome_index.delete(force=True)
         if hasattr(self, "annotation"):
             self.annotation.delete(force=True)
+        if hasattr(self, "rrna"):
+            self.rrna.delete(force=True)
+        if hasattr(self, "rrna_index"):
+            self.rrna_index.delete(force=True)
+        if hasattr(self, "globin"):
+            self.globin.delete(force=True)
+        if hasattr(self, "globin_index"):
+            self.globin_index.delete(force=True)
 
     def run_tutorial_script(self, script_name, replace_lines=None):
         """Run a script from tutorial folder.
@@ -84,16 +96,16 @@ class BaseResdkDocsFunctionalTest(BaseResdkFunctionalTest):
         )
         return reads
 
-    def upload_genome(self, res):
+    def upload_genome(self, res, fasta, slug):
         genome = res.run(
             slug="upload-fasta-nucl",
             input={
-                "src": os.path.join(TEST_FILES_DIR, "genome.fasta.gz"),
+                "src": os.path.join(TEST_FILES_DIR, fasta),
                 "species": "Dictyostelium discoideum",
                 "build": "dd-05-2009",
             },
         )
-        self.set_slug_and_make_public(genome, self.genome_slug, permissions=["view"])
+        self.set_slug_and_make_public(genome, slug, permissions=["view"])
 
         return genome
 
@@ -113,16 +125,14 @@ class BaseResdkDocsFunctionalTest(BaseResdkFunctionalTest):
 
         return annotation
 
-    def create_genome_index(self, res, fasta):
+    def create_genome_index(self, res, fasta, slug):
         genome_index = res.run(
             slug="alignment-star-index",
             input={
                 "ref_seq": fasta,
             },
         )
-        self.set_slug_and_make_public(
-            genome_index, self.genome_index_slug, permissions=["view"]
-        )
+        self.set_slug_and_make_public(genome_index, slug, permissions=["view"])
 
         return genome_index
 
@@ -155,8 +165,10 @@ class TestStart(BaseResdkDocsFunctionalTest):
 
         # Create data for tests:
         self.reads = self.upload_reads(self.res)
-        self.genome = self.upload_genome(self.res)
-        self.genome_index = self.create_genome_index(self.res, self.genome)
+        self.genome = self.upload_genome(self.res, "genome.fasta.gz", self.genome_slug)
+        self.genome_index = self.create_genome_index(
+            self.res, self.genome, self.genome_index_slug
+        )
 
         # Set permissions for running processes:
         self.allow_run_process(self.res, "alignment-star")
@@ -196,9 +208,22 @@ class TestTutorialCreate(BaseResdkDocsFunctionalTest):
         self.res = Resolwe(ADMIN_USERNAME, ADMIN_PASSWORD, URL)
 
         self.reads = self.upload_reads(self.res)
-        self.genome = self.upload_genome(self.res)
-        self.genome_index = self.create_genome_index(self.res, self.genome)
+
         self.annotation = self.upload_annotation(self.res)
+
+        self.genome = self.upload_genome(self.res, "genome.fasta.gz", self.genome_slug)
+        self.genome_index = self.create_genome_index(
+            self.res, self.genome, self.genome_index_slug
+        )
+
+        self.rrna = self.upload_genome(self.res, "rrna.fasta", self.rrna_slug)
+        self.rrna_index = self.create_genome_index(
+            self.res, self.rrna, self.rrna_index_slug
+        )
+        self.globin = self.upload_genome(self.res, "globin.fasta", self.globin_slug)
+        self.globin_index = self.create_genome_index(
+            self.res, self.globin, self.globin_index_slug
+        )
 
         # Set permissions for running processes:
         self.allow_run_process(self.res, "upload-fastq-single")
@@ -248,6 +273,10 @@ class TestTutorialResources(BaseResdkFunctionalTest):
             BaseResdkDocsFunctionalTest.genome_slug,
             BaseResdkDocsFunctionalTest.annotation_slug,
             BaseResdkDocsFunctionalTest.genome_index_slug,
+            BaseResdkDocsFunctionalTest.rrna_slug,
+            BaseResdkDocsFunctionalTest.rrna_index_slug,
+            BaseResdkDocsFunctionalTest.globin_slug,
+            BaseResdkDocsFunctionalTest.globin_index_slug,
         ]
         for data_slug in data_slugs:
             res.data.get(slug=data_slug, fields="id")

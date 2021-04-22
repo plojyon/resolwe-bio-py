@@ -8,7 +8,7 @@ res.login()
 # Enable verbose logging to standard output
 resdk.start_logging()
 
-res.data.all()
+res.data.count()
 
 res.data.filter(type='data:index').count()
 
@@ -37,7 +37,7 @@ bam = res.run(
 
 bam.status
 
-# Get the latest meta data from the server
+# Get the latest info about the object from the server
 bam.update()
 bam.status
 

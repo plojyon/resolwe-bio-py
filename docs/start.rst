@@ -61,8 +61,8 @@ recognize the interpreter by '>>>'. Now we can connect to the Genialis Server:
 
 .. note::
 
-  If you omit the ``login()`` line you will be logged as anonymus user.
-  Note that anonymus users do not have access to the ful set of features.
+  If you omit the ``login()`` line you will be logged as anonymous user.
+  Note that anonymous users do not have access to the ful set of features.
 
 .. note::
 
@@ -83,7 +83,7 @@ a data object is. Everything that is uploaded or created (via processes) on a
 server is a data object. The data object contains a complete record of the
 processing that has occurred. It stores the inputs (files, arguments,
 parameters...), the process (the algorithm) and the outputs (files, images,
-numbers...). Let's retrieve all data objects from the server:
+numbers...). Let's count all data objects on the server that we can access:
 
 .. literalinclude:: files/start.py
   :lines: 11

@@ -181,7 +181,7 @@ normal process and have a process slug, inputs... For example, we
 can run workflow "General RNA-seq pipeline" on our reads:
 
 .. literalinclude:: files/tutorial-create.py
-   :lines: 90-97
+   :lines: 90-102
 
 Solving problems
 ================

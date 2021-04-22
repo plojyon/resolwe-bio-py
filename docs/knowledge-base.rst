@@ -5,7 +5,7 @@ Knowledge base
 ==============
 
 Genialis Knowledge base (KB) is a collection of "features" (genes,
-transcripts, exons, ...) and "mappings" between these features. It comes
+transcripts, ...) and "mappings" between these features. It comes
 very handy when performing various tasks with genomic features e.g.:
 
     - find all aliases of gene ``BRCA2``
@@ -17,9 +17,9 @@ very handy when performing various tasks with genomic features e.g.:
 
 Feature
 =======
-``Feature`` object represents a genomic feature: a gene, a transcript, an
-exon, etc. You can query ``Feature`` objects by ``feature``
-endpoint, similarly like ``Data``, ``Sample`` or any other ReSDK resource::
+``Feature`` object represents a genomic feature: a gene, a transcript, etc.
+You can query ``Feature`` objects by ``feature`` endpoint, similarly like
+``Data``, ``Sample`` or any other ReSDK resource::
 
     feature = res.feature.get(feature_id="BRCA2")
 
