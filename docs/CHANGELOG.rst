@@ -5,9 +5,9 @@ Change Log
 All notable changes to this project are documented in this file.
 
 
-==========
-Unreleased
-==========
+===================
+13.2.0 - 2021-05-03
+===================
 
 Changed
 -------
@@ -15,6 +15,11 @@ Changed
   ``CollectionTables.exp`` by using async download
 - Setting permissions on Sample / Collection will also propagate them
   to all included Data / Samples
+
+Fixed
+-----
+- Fix some minor inconsistencies in docs
+- Fix and strengthen e2e tests
 
 
 ===================
