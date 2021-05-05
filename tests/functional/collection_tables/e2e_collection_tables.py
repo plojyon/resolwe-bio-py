@@ -6,11 +6,16 @@ from ..base import BaseResdkFunctionalTest
 
 
 class TestCollectionTables(BaseResdkFunctionalTest):
+    def setUp(self):
+        pass
+
     @classmethod
     def setUpClass(cls):
         cls.test_server_url = "https://app.genialis.com"
         cls.test_collection_slug = "resdk-test-collection-tables"
-        cls.res = resdk.Resolwe(url=cls.test_server_url)
+        cls.res = resdk.Resolwe(
+            url=cls.test_server_url, username="resdk-e2e-test", password="safe4ever"
+        )
         cls.collection = cls.res.collection.get(cls.test_collection_slug)
         cls.ct = resdk.CollectionTables(cls.collection)
 
