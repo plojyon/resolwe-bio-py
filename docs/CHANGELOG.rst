@@ -5,14 +5,19 @@ Change Log
 All notable changes to this project are documented in this file.
 
 
-==========
-Unreleased
-==========
+===================
+13.3.0 - 2021-05-18
+===================
 
 Added
 -----
 - Add ``progress_callable`` argument to ``CollectionTables`` constructor. This
   enables that progress of expressions download is reported to any callable
+- Add check that prevents crating ``CollectionTables`` with heterogeneous
+  collections
+- Add ``expression_source`` and ``expression_process_slug`` filters to
+  ``CollectionTables`` constructor. This enables to use just a specific,
+  homogeneous part of the collection
 
 
 ===================
