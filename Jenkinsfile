@@ -77,7 +77,6 @@ throttle(["resolwe_bio_py"]) {
                         "jvrakor",
                         "mzganec",
                         "acopar",
-                        "hadalin",
                         "romunov",
                         "gregorjerse",
                         "robertcv",
