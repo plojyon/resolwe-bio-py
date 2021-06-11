@@ -26,6 +26,7 @@ from .resources import (
     Collection,
     Data,
     DescriptorSchema,
+    Geneset,
     Group,
     Process,
     Relation,
@@ -81,11 +82,16 @@ class Resolwe:
         Group: "group",
         Feature: "feature",
         Mapping: "mapping",
+        Geneset: "geneset",
     }
     # Map ResolweQuery name to it's slug_field
     slug_field_mapping = {
         "user": "username",
         "group": "name",
+    }
+    # Map ResolweQuery name to it's default query filter
+    query_filter_mapping = {
+        "geneset": {"type": "data:geneset"},
     }
 
     data = None
@@ -98,6 +104,7 @@ class Resolwe:
     group = None
     feature = None
     mapping = None
+    geneset = None
 
     session = None
 
@@ -134,9 +141,10 @@ class Resolwe:
         """Initialize ResolweQuery's."""
         for resource, query_name in self.resource_query_mapping.items():
             slug_field = self.slug_field_mapping.get(query_name, "slug")
-            setattr(
-                self, query_name, ResolweQuery(self, resource, slug_field=slug_field)
-            )
+            query = ResolweQuery(self, resource, slug_field=slug_field)
+            if query_name in self.query_filter_mapping:
+                query = query.filter(**self.query_filter_mapping[query_name])
+            setattr(self, query_name, query)
 
     def _login(self, username=None, password=None):
         self.auth = ResAuth(username, password, self.url)

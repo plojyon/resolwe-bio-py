@@ -40,6 +40,9 @@ Resource classes
 .. autoclass:: resdk.resources.Group
    :members:
 
+.. autoclass:: resdk.resources.Geneset
+   :members:
+
 .. automodule:: resdk.resources.kb
 
 Permissions
@@ -64,6 +67,7 @@ Utility functions
 from .collection import Collection
 from .data import Data
 from .descriptor import DescriptorSchema
+from .geneset import Geneset
 from .process import Process
 from .relation import Relation
 from .sample import Sample
@@ -73,6 +77,7 @@ __all__ = (
     "Collection",
     "Data",
     "DescriptorSchema",
+    "Geneset",
     "Group",
     "Sample",
     "Process",
