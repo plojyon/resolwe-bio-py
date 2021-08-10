@@ -502,6 +502,7 @@ class CollectionTables:
             how = "right" if meta.columns.empty else "outer"
             meta = meta.merge(orange_data, how=how, left_index=True, right_index=True)
 
+        meta = meta.sort_index()
         meta.index.name = "sample_name"
 
         return meta
