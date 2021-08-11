@@ -1,0 +1,46 @@
+name: ReSDK CI
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+      matrix:
+        tox-env: [py36, py37, py38, docs, linters, packaging]
+        include:
+          - tox-env: py36
+            python-version: 3.6
+          - tox-env: py37
+            python-version: 3.7
+          - tox-env: py38
+            python-version: 3.8
+          - tox-env: linters
+            python-version: 3.8
+          - tox-env: packaging
+            python-version: 3.8
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip tox
+      - name: Run Tests
+        run: >
+          tox -e ${{ matrix.tox-env }}
+      - name: Upload coverage to Codecov
+        if: matrix.tox-env == 'py36' || matrix.tox-env == 'py37' || matrix.tox-env == 'py38'
+        uses: codecov/codecov-action@v1
+        with:
+          file: .coverage
