@@ -4,8 +4,8 @@ Resolwe SDK for Python
 
 |build| |build-e2e| |coverage| |docs| |pypi_version| |pypi_pyversions|
 
-.. |build| image:: https://travis-ci.org/genialis/resolwe-bio-py.svg?branch=master
-    :target: https://travis-ci.org/genialis/resolwe-bio-py
+.. |build| image:: https://github.com/genialis/resolwe-bio-py/workflows/ReSDK%20CI/badge.svg?branch=master
+    :target: https://github.com/genialis/resolwe-bio-py/actions?query=branch%3Amaster
     :alt: Build Status
 
 .. |build-e2e| image:: https://public.ci.genialis.io/buildStatus/icon/resolwe-bio-py/master
