@@ -6,6 +6,24 @@ All notable changes to this project are documented in this file.
 
 
 ===================
+13.4.0 - 2021-08-12
+===================
+
+Added
+-----
+- Add ``Geneset`` resource. This should significantly simplify the
+  manipulation of genesets.
+
+Changed
+-------
+- Replace Travis CI with GitHub actions
+
+Fixed
+-----
+- Fix mismatched meta and expression data index
+
+
+===================
 13.3.0 - 2021-05-18
 ===================
 
