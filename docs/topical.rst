@@ -9,3 +9,4 @@ Here you can browse through topical documentation about various parts of ReSDK.
 
    knowledge-base
    collection-tables
+   geneset
