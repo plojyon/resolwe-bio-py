@@ -157,9 +157,15 @@ class Geneset(Data):
         :param other: Geneset object
         :return: new Geneset object
         """
+        # Make sure that self._genes is populated:
+        _ = self.genes
+
         operator_func = getattr(self._genes, operator)
         if not isinstance(other, Geneset) or operator_func is None:
             return NotImplemented
+        # Make sure that other._genes is populated:
+        _ = other.genes
+
         if self.source != other.source:
             raise ValueError("Cannot compare Genesets with different sources")
         if self.species != other.species:
