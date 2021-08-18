@@ -1,6 +1,7 @@
 """Geneset resource."""
 import json
 import logging
+from collections import Counter
 from urllib.parse import urljoin
 
 from .data import Data
@@ -20,15 +21,15 @@ class Geneset(Data):
         """Initialize attributes."""
         self.logger = logging.getLogger(__name__)
 
-        self._genes = None
-        # Make sure genes are stored in a set object
-        if genes is not None:
-            self._genes = set(genes)
+        super().__init__(resolwe, **model_data)
 
+        self._genes = None
         self._source = source
         self._species = species
 
-        super().__init__(resolwe, **model_data)
+        # Make sure genes are stored in a set object
+        if genes is not None:
+            self.genes = genes
 
     @property
     def genes(self):
@@ -42,13 +43,22 @@ class Geneset(Data):
                 response = self.resolwe.session.get(url, auth=self.resolwe.auth)
                 response = json.loads(response.content.decode("utf-8"))
                 self._genes = set(response["json"]["genes"])
-        return self._genes
+        return sorted(self._genes)
 
     @genes.setter
     def genes(self, genes):
         """Set genes."""
         self._assert_allow_change("genes")
         if genes is not None:
+
+            # Make sure submitted list only includes unique elements:
+            if len(set(genes)) != len(genes):
+                counter = Counter(list(genes))
+                duplicates = [gene for gene, count in counter.items() if count >= 2]
+                duplicates = ", ".join(sorted(duplicates))
+                raise ValueError(
+                    f"Gene list should only contain unique elements. There are duplicates: {duplicates}"
+                )
             self._genes = set(genes)
 
     @property
