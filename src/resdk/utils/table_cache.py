@@ -59,7 +59,8 @@ def load_pickle(pickle_file: str) -> Any:
     :return: un-pickled object
     """
     if os.path.exists(pickle_file):
-        return pickle.load(open(pickle_file, "rb"))
+        with open(pickle_file, "rb") as handle:
+            return pickle.load(handle)
 
 
 def save_pickle(obj: Any, pickle_file: str, override=False) -> None:
@@ -71,4 +72,5 @@ def save_pickle(obj: Any, pickle_file: str, override=False) -> None:
     :return:
     """
     if not os.path.exists(pickle_file) or override:
-        pickle.dump(obj, open(pickle_file, "wb"))
+        with open(pickle_file, "wb") as handle:
+            pickle.dump(obj, handle)

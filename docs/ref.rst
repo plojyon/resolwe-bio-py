@@ -10,7 +10,7 @@ SDK Reference
 
 .. automodule:: resdk.resources
 
-.. automodule:: resdk.collection_tables
+.. automodule:: resdk.tables
 
 .. automodule:: resdk.exceptions
 

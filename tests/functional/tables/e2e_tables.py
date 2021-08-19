@@ -4,14 +4,12 @@ import tempfile
 import numpy as np
 
 import resdk
+from resdk.tables import RNATables
 
 from ..base import BaseResdkFunctionalTest
 
 
-class TestCollectionTables(BaseResdkFunctionalTest):
-    def setUp(self):
-        pass
-
+class TestTables(BaseResdkFunctionalTest):
     @classmethod
     def setUpClass(cls):
         cls.cache_dir = tempfile.mkdtemp()
@@ -21,7 +19,7 @@ class TestCollectionTables(BaseResdkFunctionalTest):
             url=cls.test_server_url, username="resdk-e2e-test", password="safe4ever"
         )
         cls.collection = cls.res.collection.get(cls.test_collection_slug)
-        cls.ct = resdk.CollectionTables(cls.collection, cache_dir=cls.cache_dir)
+        cls.ct = RNATables(cls.collection, cache_dir=cls.cache_dir)
 
     @classmethod
     def tearDownClass(cls):

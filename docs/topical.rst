@@ -8,5 +8,5 @@ Here you can browse through topical documentation about various parts of ReSDK.
    :maxdepth: 1
 
    knowledge-base
-   collection-tables
+   resdk-tables
    geneset

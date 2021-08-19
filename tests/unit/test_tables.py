@@ -7,11 +7,10 @@ import pytz
 from mock import MagicMock, patch
 from pandas.testing import assert_frame_equal
 
-from resdk import CollectionTables
-from resdk.collection_tables import EXP, META, RC
+from resdk.tables import RNATables
 
 
-class TestCollectionTables(unittest.TestCase):
+class TestTables(unittest.TestCase):
     def setUp(self):
         self.resolwe = MagicMock()
         self.resolwe.url = "https://server.com"
@@ -79,19 +78,17 @@ class TestCollectionTables(unittest.TestCase):
 
         return slow
 
-    @patch(
-        "resdk.collection_tables.cache_dir_resdk", MagicMock(return_value="/tmp/resdk/")
-    )
+    @patch("resdk.tables.base.cache_dir_resdk", MagicMock(return_value="/tmp/resdk/"))
     @patch("os.path.exists")
     def test_init(self, exists_mock):
-        ct = CollectionTables(self.collection)
+        ct = RNATables(self.collection)
 
         self.assertIs(ct.collection, self.collection)
         self.assertEqual(ct.cache_dir, "/tmp/resdk/")
         exists_mock.assert_called_with("/tmp/resdk/")
 
         # using different cache dir
-        ct = CollectionTables(self.collection, cache_dir="/tmp/cache_dir/")
+        ct = RNATables(self.collection, cache_dir="/tmp/cache_dir/")
         self.assertEqual(ct.cache_dir, "/tmp/cache_dir/")
         exists_mock.assert_called_with("/tmp/cache_dir/")
 
@@ -99,7 +96,7 @@ class TestCollectionTables(unittest.TestCase):
         """Test detecton of heterogeneous collections.
 
         Check is done in __init__, so it is sufficient to initialize
-        CollectionTables with an appropriate collection.
+        RNATables with an appropriate collection.
         """
         # Different processes
         data2 = MagicMock()
@@ -109,7 +106,7 @@ class TestCollectionTables(unittest.TestCase):
         self.collection.data.filter = self.web_request([self.data, data2])
 
         with self.assertRaisesRegex(ValueError, r"Expressions of all samples.*"):
-            CollectionTables(self.collection)
+            RNATables(self.collection)
 
         # Different source
         data2 = MagicMock()
@@ -119,18 +116,18 @@ class TestCollectionTables(unittest.TestCase):
         self.collection.data.filter = self.web_request([self.data, data2])
 
         with self.assertRaisesRegex(ValueError, r"Alignment of all samples.*"):
-            CollectionTables(self.collection)
+            RNATables(self.collection)
 
-    @patch.object(CollectionTables, "_load_fetch")
+    @patch.object(RNATables, "_load_fetch")
     def test_meta(self, load_mock):
         load_mock.side_effect = self.web_request(self.metadata_df)
 
-        ct = CollectionTables(self.collection)
+        ct = RNATables(self.collection)
         t = time()
         meta = ct.meta
         self.assertTrue(time() - t > 0.1)
         self.assertIs(meta, self.metadata_df)
-        load_mock.assert_called_with(META)
+        load_mock.assert_called_with(RNATables.META)
 
         # use cache
         t = time()
@@ -138,16 +135,16 @@ class TestCollectionTables(unittest.TestCase):
         self.assertTrue(time() - t < 0.1)
         self.assertIs(meta, self.metadata_df)
 
-    @patch.object(CollectionTables, "_load_fetch")
+    @patch.object(RNATables, "_load_fetch")
     def test_exp(self, load_mock):
         load_mock.side_effect = self.web_request(self.expressions_df)
 
-        ct = CollectionTables(self.collection)
+        ct = RNATables(self.collection)
         t = time()
         exp = ct.exp
         self.assertTrue(time() - t > 0.1)
         self.assertIs(exp, self.expressions_df)
-        load_mock.assert_called_with(EXP)
+        load_mock.assert_called_with(RNATables.EXP)
         self.assertListEqual(ct.gene_ids, ["ENSG001", "ENSG002", "ENSG003"])
 
         # use cache
@@ -156,16 +153,16 @@ class TestCollectionTables(unittest.TestCase):
         self.assertTrue(time() - t < 0.1)
         self.assertIs(exp, self.expressions_df)
 
-    @patch.object(CollectionTables, "_load_fetch")
+    @patch.object(RNATables, "_load_fetch")
     def test_rc(self, load_mock):
         load_mock.side_effect = self.web_request(self.expressions_df)
 
-        ct = CollectionTables(self.collection)
+        ct = RNATables(self.collection)
         t = time()
         rc = ct.rc
         self.assertTrue(time() - t > 0.1)
         self.assertIs(rc, self.expressions_df)
-        load_mock.assert_called_with(RC)
+        load_mock.assert_called_with(RNATables.RC)
         self.assertListEqual(ct.gene_ids, ["ENSG001", "ENSG002", "ENSG003"])
 
         # use cache
@@ -174,15 +171,15 @@ class TestCollectionTables(unittest.TestCase):
         self.assertTrue(time() - t < 0.1)
         self.assertIs(rc, self.expressions_df)
 
-    @patch.object(CollectionTables, "_mapping")
+    @patch.object(RNATables, "_mapping")
     def test_id_to_symbol(self, mapping_mock):
         mapping_mock.side_effect = self.web_request(self.gene_map)
 
-        ct = CollectionTables(self.collection)
+        ct = RNATables(self.collection)
         with self.assertRaises(ValueError):
             mapping = ct.id_to_symbol
 
-        ct = CollectionTables(self.collection)
+        ct = RNATables(self.collection)
         ct.gene_ids = ["ENSG001", "ENSG002", "ENSG003"]
         t = time()
         mapping = ct.id_to_symbol
@@ -202,9 +199,9 @@ class TestCollectionTables(unittest.TestCase):
         self.assertTrue(time() - t < 0.1)
         self.assertIs(mapping, self.gene_map)
 
-    @patch("resdk.collection_tables.clear_cache_dir_resdk")
+    @patch("resdk.tables.base.clear_cache_dir_resdk")
     def test_clear_cache(self, clear_mock):
-        CollectionTables.clear_cache()
+        RNATables.clear_cache()
         clear_mock.assert_called()
 
     def test_metadata_version(self):
@@ -212,7 +209,7 @@ class TestCollectionTables(unittest.TestCase):
         self.collection.relations.get = self.web_request(self.relation)
         self.collection.data.get = self.web_request(self.orange_data)
 
-        ct = CollectionTables(self.collection)
+        ct = RNATables(self.collection)
         version = ct._metadata_version
         self.assertEqual(version, "2020-11-01T12:15:00Z")
 
@@ -222,42 +219,40 @@ class TestCollectionTables(unittest.TestCase):
         self.assertTrue(time() - t < 0.1)
 
         self.collection.samples.get = MagicMock(side_effect=LookupError())
-        ct1 = CollectionTables(self.collection)
+        ct1 = RNATables(self.collection)
         with self.assertRaises(ValueError):
             version = ct1._metadata_version
 
-    def test_expressions_version(self):
-        ct = CollectionTables(self.collection)
-        version = ct._expression_version
+    def test_data_version(self):
+        ct = RNATables(self.collection)
+        version = ct._data_version
         self.assertEqual(version, str(hash(tuple([12345]))))
 
         # use cache
         t = time()
-        version = ct._expression_version
+        version = ct._data_version
         self.assertTrue(time() - t < 0.1)
 
         self.collection.data.filter = MagicMock(return_value=[])
-        ct = CollectionTables(self.collection)
+        ct = RNATables(self.collection)
         with self.assertRaises(ValueError):
-            version = ct._expression_version
+            version = ct._data_version
 
-    @patch(
-        "resdk.collection_tables.cache_dir_resdk", MagicMock(return_value="/tmp/resdk/")
-    )
-    @patch("resdk.collection_tables.load_pickle")
-    @patch("resdk.collection_tables.save_pickle")
-    @patch.object(CollectionTables, "_download_metadata")
-    @patch.object(CollectionTables, "_download_expressions")
-    def test_load_fetch(self, exp_mock, meta_mock, save_mock, load_mock):
-        exp_mock.return_value = self.expressions_df
+    @patch("resdk.tables.base.cache_dir_resdk", MagicMock(return_value="/tmp/resdk/"))
+    @patch("resdk.tables.base.load_pickle")
+    @patch("resdk.tables.base.save_pickle")
+    @patch.object(RNATables, "_download_metadata")
+    @patch.object(RNATables, "_download_data")
+    def test_load_fetch(self, data_mock, meta_mock, save_mock, load_mock):
+        data_mock.return_value = self.expressions_df
         meta_mock.return_value = self.metadata_df
         load_mock.return_value = None
 
         self.collection.samples.get = self.web_request(self.sample)
         self.collection.relations.get = self.web_request(self.relation)
         self.collection.data.get = self.web_request(self.orange_data)
-        ct = CollectionTables(self.collection)
-        data = ct._load_fetch(META)
+        ct = RNATables(self.collection)
+        data = ct._load_fetch(RNATables.META)
         self.assertIs(data, self.metadata_df)
         save_mock.assert_called_with(
             self.metadata_df,
@@ -265,32 +260,32 @@ class TestCollectionTables(unittest.TestCase):
         )
 
         save_mock.reset_mock()
-        data = ct._load_fetch(EXP)
+        data = ct._load_fetch(RNATables.EXP)
         self.assertIs(data, self.expressions_df)
-        exp_mock.assert_called_with(EXP)
+        data_mock.assert_called_with(RNATables.EXP)
         save_mock.assert_called_with(
             self.expressions_df,
             f"/tmp/resdk/slug_exp_None_None_{str(hash((12345,)))}.pickle",
         )
 
-        exp_mock.reset_mock()
+        data_mock.reset_mock()
         save_mock.reset_mock()
-        data = ct._load_fetch(RC)
+        data = ct._load_fetch(RNATables.RC)
         self.assertIs(data, self.expressions_df)
-        exp_mock.assert_called_with(RC)
+        data_mock.assert_called_with(RNATables.RC)
         save_mock.assert_called_with(
             self.expressions_df,
             f"/tmp/resdk/slug_rc_None_None_{str(hash((12345,)))}.pickle",
         )
 
-        exp_mock.reset_mock()
+        data_mock.reset_mock()
         load_mock.return_value = self.expressions_df
-        data = ct._load_fetch(EXP)
+        data = ct._load_fetch(RNATables.EXP)
         self.assertIs(data, self.expressions_df)
-        exp_mock.assert_not_called()
+        data_mock.assert_not_called()
 
     def test_get_descriptors(self):
-        ct = CollectionTables(self.collection)
+        ct = RNATables(self.collection)
         descriptors = ct._get_descriptors()
 
         expected = pd.DataFrame([1], columns=["PFS"], index=["Sample123"], dtype=float)
@@ -299,7 +294,7 @@ class TestCollectionTables(unittest.TestCase):
         assert_frame_equal(descriptors, expected)
 
     def test_get_relations(self):
-        ct = CollectionTables(self.collection)
+        ct = RNATables(self.collection)
         relations = ct._get_relations()
 
         expected = pd.DataFrame(["L1"], columns=["Category"], index=["Sample123"])
@@ -310,7 +305,7 @@ class TestCollectionTables(unittest.TestCase):
     def test_get_orange_object(self):
         # Orange Data is found ad-hoc
         self.collection.data.get = self.web_request(self.orange_data)
-        ct = CollectionTables(self.collection)
+        ct = RNATables(self.collection)
         obj = ct._get_orange_object()
         self.assertEqual(obj, self.orange_data)
 
@@ -320,7 +315,7 @@ class TestCollectionTables(unittest.TestCase):
         self.collection.resolwe.session.get.return_value = response
         self.collection.data.get = self.web_request(self.orange_data)
 
-        ct = CollectionTables(self.collection)
+        ct = RNATables(self.collection)
         orange_data = ct._get_orange_data()
 
         expected = pd.DataFrame([42], columns=["Col1"], index=["Sample123"])
@@ -328,9 +323,9 @@ class TestCollectionTables(unittest.TestCase):
 
         assert_frame_equal(orange_data, expected)
 
-    @patch.object(CollectionTables, "_get_descriptors")
-    @patch.object(CollectionTables, "_get_relations")
-    @patch.object(CollectionTables, "_get_orange_data")
+    @patch.object(RNATables, "_get_descriptors")
+    @patch.object(RNATables, "_get_relations")
+    @patch.object(RNATables, "_get_orange_data")
     def test_download_metadata(self, descriptors_mock, relations_mock, orange_mock):
         descriptors_mock.return_value = self.metadata_df
         relations_mock.return_value = pd.DataFrame(
@@ -340,7 +335,7 @@ class TestCollectionTables(unittest.TestCase):
             [["X"], ["Y"], ["Z"]], index=["0", "1", "2"], columns=["Clinical"]
         )
 
-        ct = CollectionTables(self.collection)
+        ct = RNATables(self.collection)
         meta = ct._download_metadata()
 
         expected_content = [["X", "A", 0], ["Y", "B", 1], ["Z", "C", 4]]
@@ -352,32 +347,30 @@ class TestCollectionTables(unittest.TestCase):
 
         assert_frame_equal(meta, expected_meta)
 
-    def test_get_exp_uri(self):
+    def test_get_data_uri(self):
         self.data.files.return_value = ["exp_file.csv"]
 
-        ct = CollectionTables(self.collection)
-        file_url = ct._get_exp_uri(self.data, EXP)
+        ct = RNATables(self.collection)
+        file_url = ct._get_data_uri(self.data, RNATables.EXP)
         self.assertEqual(file_url, "12345/exp_file.csv")
 
         self.data.files.return_value = []
         with self.assertRaises(LookupError):
-            file_url = ct._get_exp_uri(self.data, EXP)
+            file_url = ct._get_data_uri(self.data, RNATables.EXP)
 
         self.data.files.return_value = ["exp_file1.csv", "exp_file2.csv"]
         with self.assertRaises(LookupError):
-            file_url = ct._get_exp_uri(self.data, EXP)
+            file_url = ct._get_data_uri(self.data, RNATables.EXP)
 
-    @patch(
-        "resdk.collection_tables.cache_dir_resdk", MagicMock(return_value="/tmp/resdk/")
-    )
-    @patch("resdk.collection_tables.load_pickle")
-    @patch("resdk.collection_tables.save_pickle")
-    @patch.object(CollectionTables, "_download_mapping")
+    @patch("resdk.tables.base.cache_dir_resdk", MagicMock(return_value="/tmp/resdk/"))
+    @patch("resdk.tables.rna.load_pickle")
+    @patch("resdk.tables.rna.save_pickle")
+    @patch.object(RNATables, "_download_mapping")
     def test_mapping(self, download_mock, save_mock, load_mock):
         load_mock.return_value = None
         download_mock.return_value = self.gene_map
 
-        ct = CollectionTables(self.collection)
+        ct = RNATables(self.collection)
         mapping = ct._mapping(
             ["ENSG001", "ENSG002", "ENSG003"], "ENSEMBL", "Homo sapiens"
         )
@@ -409,7 +402,7 @@ class TestCollectionTables(unittest.TestCase):
             create_feature(fid, name) for fid, name in self.gene_map.items()
         ]
 
-        ct = CollectionTables(self.collection)
+        ct = RNATables(self.collection)
         mapping = ct._download_mapping(
             ["ENSG001", "ENSG002", "ENSG003"], "ENSEMBL", "Homo sapiens"
         )
