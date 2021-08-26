@@ -536,10 +536,10 @@ class CollectionTables:
             with BytesIO() as f:
                 f.write(await response.content.read())
                 f.seek(0)
-                df = pd.read_csv(f, sep="\t", compression="gzip")
-                df = df.set_index("Gene").T
-                df.index = [sample_name]
-        return df
+                sample_exp = pd.read_csv(f, sep="\t", compression="gzip")
+                sample_exp = sample_exp.set_index("Gene")["Expression"]
+                sample_exp.name = sample_name
+        return sample_exp
 
     async def _download_expressions(self, exp_type: str) -> pd.DataFrame:
         """Download expression files and marge them into a pandas DataFrame.
@@ -560,7 +560,7 @@ class CollectionTables:
         :param exp_type: expression type
         :return: table with expression data, genes in columns, samples in rows
         """
-        df_list = []
+        samples_exp = []
         for i in self.tqdm(
             range(0, len(self._data), EXP_ASYNC_CHUNK_SIZE),
             desc="Downloading expressions",
@@ -584,16 +584,18 @@ class CollectionTables:
                     self._download_file(url, session, name) for url, name in urls_names
                 ]
                 exps = await asyncio.gather(*futures)
-                df_list.extend(exps)
+                samples_exp.extend(exps)
 
-        df = pd.concat(df_list, axis=0).sort_index().sort_index(axis=1)
+        expressions = pd.concat(samples_exp, axis=1).T.sort_index().sort_index(axis=1)
         source = self._data[0].output["source"]
-        df.columns.name = source.capitalize() if source == "ENSEMBL" else source
-        df.index.name = "sample_name"
-        df.attrs["exp_type"] = (
+        expressions.columns.name = (
+            source.capitalize() if source == "ENSEMBL" else source
+        )
+        expressions.index.name = "sample_name"
+        expressions.attrs["exp_type"] = (
             "rc" if exp_type == RC else self._data[0].output["exp_type"]
         )
-        return df
+        return expressions
 
     def _mapping(self, ids: List[str], source: str, species: str) -> Dict[str, str]:
         """Fetch and cache gene mapping."""
