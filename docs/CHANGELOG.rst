@@ -6,6 +6,27 @@ All notable changes to this project are documented in this file.
 
 
 ===================
+13.5.0 - 2021-09-13
+===================
+
+Added
+-----
+- ``CollectionTables`` functionality is now generalized to also
+  accommodate different types of data: RNA and methylation. Calling
+  ``CollectionTables`` remains backwards compatible, but will issue a
+  deprecation warning. Users are encouraged to use new modules as
+
+    - resdk.tables.RNATables
+    - resdk.tables.MethylationTables
+
+Changed
+-------
+- ``CollectionTables`` is now faster in merging expressions, especially
+  if there are different sets of genes in different samples
+- Return ``Genset.genes`` as sorted list instead of set
+
+
+===================
 13.4.0 - 2021-08-12
 ===================
 
