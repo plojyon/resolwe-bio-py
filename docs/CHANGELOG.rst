@@ -6,6 +6,16 @@ All notable changes to this project are documented in this file.
 
 
 ===================
+13.5.1 - 2021-09-16
+===================
+
+Fixed
+-----
+- Fix ReSDK Tables so they can cache also very large collections
+  (greater than 4Gb in memory)
+
+
+===================
 13.5.0 - 2021-09-13
 ===================
 

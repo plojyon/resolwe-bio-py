@@ -1,3 +1,4 @@
+import pickle
 import unittest
 
 import pandas as pd
@@ -71,7 +72,9 @@ class TestCache(unittest.TestCase):
         save_pickle(table_mock, "pickle_file_path.pickle")
 
         path_mock.assert_called_with("pickle_file_path.pickle")
-        pickle_mock.assert_called_with(table_mock, ANY)
+        pickle_mock.assert_called_with(
+            table_mock, ANY, protocol=pickle.HIGHEST_PROTOCOL
+        )
 
         pickle_mock.reset_mock()
         path_mock.return_value = True
@@ -79,4 +82,6 @@ class TestCache(unittest.TestCase):
         pickle_mock.assert_not_called()
 
         save_pickle(table_mock, "pickle_file_path.pickle", override=True)
-        pickle_mock.assert_called_with(table_mock, ANY)
+        pickle_mock.assert_called_with(
+            table_mock, ANY, protocol=pickle.HIGHEST_PROTOCOL
+        )
