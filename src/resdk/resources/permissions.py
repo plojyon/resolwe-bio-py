@@ -25,18 +25,13 @@ class PermissionsManager:
         if not isinstance(users, list):
             users = [users]
 
-        return [
-            self.resolwe.user.get(user) if not is_user(user) else user for user in users
-        ]
+        return [user.id if is_user(user) else user for user in users]
 
     def _fetch_group(self, groups):
         if not isinstance(groups, list):
             groups = [groups]
 
-        return [
-            self.resolwe.group.get(group) if not is_group(group) else group
-            for group in groups
-        ]
+        return [group.id if is_group(group) else group for group in groups]
 
     def _validate_perms(self, perms):
         """Check that given list of permissions is valid for current object type."""
@@ -70,7 +65,7 @@ class PermissionsManager:
 
         if who_type in ["users", "groups"]:
             for single in who:
-                payload[who_type][action][single.id] = copy.copy(perms)
+                payload[who_type][action][single] = copy.copy(perms)
 
         elif who_type == "public":
             payload[who_type][action] = copy.copy(perms)

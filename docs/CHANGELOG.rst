@@ -5,6 +5,15 @@ Change Log
 All notable changes to this project are documented in this file.
 
 
+==========
+Unreleased
+==========
+
+Changed
+-------
+- Simplify user and group handling while assigning permissions
+
+
 ===================
 13.5.1 - 2021-09-16
 ===================
