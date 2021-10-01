@@ -60,7 +60,7 @@ def load_pickle(pickle_file: str) -> Any:
     """
     if os.path.exists(pickle_file):
         with open(pickle_file, "rb") as handle:
-            return pickle.load(handle, protocol=pickle.HIGHEST_PROTOCOL)
+            return pickle.load(handle)
 
 
 def save_pickle(obj: Any, pickle_file: str, override=False) -> None:

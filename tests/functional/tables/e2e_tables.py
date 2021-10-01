@@ -1,5 +1,7 @@
+import os
 import shutil
 import tempfile
+import time
 
 import numpy as np
 
@@ -10,20 +12,18 @@ from ..base import BaseResdkFunctionalTest
 
 
 class TestTables(BaseResdkFunctionalTest):
-    @classmethod
-    def setUpClass(cls):
-        cls.cache_dir = tempfile.mkdtemp()
-        cls.test_server_url = "https://app.genialis.com"
-        cls.test_collection_slug = "resdk-test-collection-tables"
-        cls.res = resdk.Resolwe(
-            url=cls.test_server_url, username="resdk-e2e-test", password="safe4ever"
+    def setUp(self):
+        self.cache_dir = tempfile.mkdtemp()
+        self.test_server_url = "https://app.genialis.com"
+        self.test_collection_slug = "resdk-test-collection-tables"
+        self.res = resdk.Resolwe(
+            url=self.test_server_url, username="resdk-e2e-test", password="safe4ever"
         )
-        cls.collection = cls.res.collection.get(cls.test_collection_slug)
-        cls.ct = RNATables(cls.collection, cache_dir=cls.cache_dir)
+        self.collection = self.res.collection.get(self.test_collection_slug)
+        self.ct = RNATables(self.collection, cache_dir=self.cache_dir)
 
-    @classmethod
-    def tearDownClass(cls):
-        shutil.rmtree(cls.cache_dir)
+    def tearDown(self):
+        shutil.rmtree(self.cache_dir)
 
     def test_meta(self):
         self.assertEqual(self.ct.meta.shape, (8, 9))
@@ -47,3 +47,29 @@ class TestTables(BaseResdkFunctionalTest):
     def test_consistent_index(self):
         self.assertTrue(all(self.ct.exp.index == self.ct.meta.index))
         self.assertTrue(all(self.ct.rc.index == self.ct.meta.index))
+
+    def test_caching(self):
+        # Call rc first time with self.ct to populate the cache
+        t0 = time.time()
+        rc1 = self.ct.rc
+        t1 = time.time() - t0
+
+        # Make sure that cache file is created
+        cache_file = self.ct._cache_file(self.ct.RC)
+        self.assertTrue(os.path.isfile(cache_file))
+
+        # Make new table instance (to prevent loading from memory)
+        ct2 = RNATables(self.collection, cache_dir=self.cache_dir)
+        # Call rc second time, with it should load from disk cache
+        t0 = time.time()
+        rc2 = ct2.rc
+        t2 = time.time() - t0
+        self.assertTrue((rc1 == rc2).all(axis=None))
+        self.assertTrue(t2 < t1)
+
+        # Call rc second time with rc2 to test loading from memory
+        t0 = time.time()
+        rc3 = ct2.rc
+        t3 = time.time() - t0
+        self.assertTrue((rc2 == rc3).all(axis=None))
+        self.assertTrue(t3 < t2)
