@@ -128,10 +128,10 @@ class BaseTables(abc.ABC):
 
         :return: list od Sample objects
         """
-        sample_ids = [d.sample.id for d in self._data]
-        return list(
-            self.collection.samples.filter(id__in=sample_ids, fields=SAMPLE_FIELDS)
-        )
+        sample_ids = set([d.sample.id for d in self._data])
+
+        query = self.collection.samples.filter(fields=SAMPLE_FIELDS)
+        return [s for s in query if s.id in sample_ids]
 
     @property
     @lru_cache()
