@@ -5,13 +5,20 @@ Change Log
 All notable changes to this project are documented in this file.
 
 
-==========
-Unreleased
-==========
+===================
+13.6.0 - 2021-10-20
+===================
 
 Changed
 -------
-- Simplify user and group handling while assigning permissions
+- Sync permissions handling with backend changes. This means that
+  setting permissions will only be possible with this version of ReSDK
+  (or higher) as of 2021-10-20.
+
+Fixed
+-----
+- Fix ReSDK Tables caching: loading of cached tables fails in resdk
+  ``13.5.1``
 
 
 ===================
