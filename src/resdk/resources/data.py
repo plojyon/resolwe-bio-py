@@ -50,6 +50,7 @@ class Data(BaseResolweResource):
         "collection",
         "descriptor",
         "descriptor_schema",
+        "process_resources",
         "sample",
         "tags",
     )
@@ -98,6 +99,8 @@ class Data(BaseResolweResource):
         self.process_warning = None
         #: actual output values
         self.output = None
+        #: process_resources
+        self.process_resources = None
         #: size
         self.size = None
         #: scheduled

@@ -9,6 +9,13 @@ All notable changes to this project are documented in this file.
 Unreleased
 ==========
 
+Added
+-----
+- Enable setting ``process_resources`` as an attribute on ``Data`` as
+  well as on input to method ``run``. This makes it possible to raise
+  process resources (cores, memory, storage) beyond what is specified in
+  the process definition.
+
 Changed
 -------
 - Sync with permission changes in Resolwe. This introduces new methods

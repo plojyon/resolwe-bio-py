@@ -303,6 +303,7 @@ class Resolwe:
         descriptor_schema=None,
         collection=None,
         data_name="",
+        process_resources=None,
     ):
         """Run process and return the corresponding Data object.
 
@@ -322,6 +323,7 @@ class Resolwe:
         :param int/resource collection: Collection resource or it's id
             into which data object should be included
         :param str data_name: Default name of data object
+        :param dict process_resources: Process resources
 
         :return: data object that was just created
         :rtype: Data object
@@ -346,6 +348,15 @@ class Resolwe:
 
         if data_name:
             data["name"] = data_name
+
+        if process_resources is not None:
+            if not isinstance(process_resources, dict):
+                raise ValueError("Argument process_resources must be a dictionary.")
+            if set(process_resources.keys()) - set(["cores", "memory", "storage"]):
+                raise ValueError(
+                    "Argument process_resources can only have cores, memory or storage keys."
+                )
+            data["process_resources"] = process_resources
 
         model_data = self.api.data.post(data)
         return Data(resolwe=self, **model_data)
