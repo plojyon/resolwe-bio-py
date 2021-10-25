@@ -255,7 +255,7 @@ class ResolweQuery:
                 )
 
             arg = args[0]
-            kwargs = {"id": arg} if str(arg).isdigit() else {self.slug_field: arg}
+            kwargs = {"id": arg} if isinstance(arg, int) else {self.slug_field: arg}
 
         if self.slug_field in kwargs:
             if issubclass(self.resource, (Process, DescriptorSchema)):
