@@ -12,12 +12,16 @@ example.download(
     download_dir='./',
 )
 
+# create a new collection object in your running instance of Resolwe (res)
+test_collection = res.collection.create(name='Test collection')
+
 # Upload FASTQ reads
 reads = res.run(
     slug='upload-fastq-single',
     input={
         'src': './reads.fastq.gz',
-    }
+    },
+    collection=test_collection,
 )
 
 reads.sample
@@ -54,14 +58,10 @@ reads.sample.descriptor = {
 
 reads.sample.save()
 
-# create a new collection object in your running instance of Resolwe (res)
-test_collection = res.collection.create(name='Test collection')
 
 
 
-# add sample to collection
-reads.sample.collection = test_collection
-reads.sample.save()
+
 
 
 # Get genome

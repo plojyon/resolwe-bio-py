@@ -56,7 +56,7 @@ class TestDataUsage(BaseResdkFunctionalTest):
 
         # Normal user needs to get permissions to run this process
         process = self.res.process.get(slug="test-sleep-progress")
-        self.make_public(process, permissions=["view"])
+        process.permissions.set_public("view")
         self.data2 = self.user_res.run(slug="test-sleep-progress")
 
     def tearDown(self):

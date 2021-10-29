@@ -15,6 +15,16 @@ To begin, we need some sample data to work with. You may use your own reads
   To avoid copy-pasting of the commands, you can
   :download:`download all the code <files/tutorial-create.py>` used in this section.
 
+Organize resources
+==================
+
+Before all else, one needs to prepare space for work. In our case, this
+means creating a "container" where the produced data will reside. So
+let's create a collection and than put some data inside!
+
+.. literalinclude:: files/tutorial-create.py
+   :lines: 15-16
+
 Upload files
 ============
 
@@ -23,19 +33,20 @@ We will upload fastq single end reads with the `upload-fastq-single`_ process.
 .. _upload-fastq-single: http://resolwe-bio.readthedocs.io/en/latest/catalog-definitions.html#process-upload-fastq-single
 
 .. literalinclude:: files/tutorial-create.py
-   :lines: 15-21
+   :lines: 18-25
 
 What just happened? First, we chose a process to run, using its slug
 ``upload-fastq-single``. Each process requires some inputs---in this case there
 is only one input with name ``src``, which is the location of reads on our
 computer. Uploading a fastq file creates a new ``Data`` on the server
-containing uploaded reads.
+containing uploaded reads. Additionally, we ensured that the new
+``Data`` is put inside ``test_collection``.
 
 The upload process also created a Sample object for the reads data to be
 associated with. You can access it by:
 
 .. literalinclude:: files/tutorial-create.py
-   :lines: 23
+   :lines: 27
 
 .. note::
 
@@ -51,7 +62,7 @@ Both ``Data`` with reads and ``Sample`` are owned by you and you have
 permissions to modify them. For example:
 
 .. literalinclude:: files/tutorial-create.py
-   :lines: 25-27
+   :lines: 29-31
 
 Note the ``save()`` part! Without this, the change is only applied locally (on
 your computer). But calling ``save()`` also takes care that all changes are
@@ -87,13 +98,13 @@ descriptor information that populates the annotation fields as defined in the
 'reads' descriptor schema:
 
 .. literalinclude:: files/tutorial-create.py
-   :lines: 29-38
+   :lines: 33-42
 
 We can annotate the sample object using a similar process with a 'sample'
 descriptor schema:
 
 .. literalinclude:: files/tutorial-create.py
-   :lines: 40-55
+   :lines: 44-59
 
 .. warning::
 
@@ -107,15 +118,6 @@ descriptor schema:
 We can also define descriptors and descriptor schema directly when calling
 ``res.run`` function. This is described in the section about the ``run()``
 method below.
-
-Organize resources
-==================
-
-After uploading a set of reads/samples, one typically wants to group and
-organize them. So let's create a collection and put some data inside!
-
-.. literalinclude:: files/tutorial-create.py
-   :lines: 57-64
 
 Run analyses
 ============
@@ -154,16 +156,16 @@ have an OK status or outputs when returned.
 .. literalinclude:: files/tutorial-create.py
    :lines: 78-85
 
-Status ``OK`` indicates that processing has finished successfuly, but you will
+Status ``OK`` indicates that processing has finished successfully, but you will
 also find other statuses. They are given with two-letter abbreviations. To
 understand their meanings, check the
 :obj:`status reference <resdk.resources.Data.status>`. When processing is done,
-all outputs are witten to disk and you can inspect them:
+all outputs are written to disk and you can inspect them:
 
 .. literalinclude:: files/tutorial-create.py
    :lines: 87-88
 
-Unitl now, we used ``run()`` method twice: to upload reads (yes, uploading
+Until now, we used ``run()`` method twice: to upload reads (yes, uploading
 files is just a matter of using an upload process) and to run alignment. You
 can check the full signature of the :obj:`run() <resdk.Resolwe.run>` method.
 

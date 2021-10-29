@@ -43,6 +43,32 @@ class TestPermissions(BaseResdkFunctionalTest):
         with self.assertRaises(ResolweServerError):
             user_collection.save()
 
+    def test_permissions_new_syntax(self):
+        # User doesn't have the permission to view the collection.
+        with self.assertRaises(LookupError):
+            self.user_res.collection.get(self.test_collection.id)
+
+        self.test_collection.permissions.set_user(USER_USERNAME, "view")
+
+        # User can see the collection, but cannot edit it.
+        user_collection = self.user_res.collection.get(self.test_collection.id)
+        user_collection.name = "Different name"
+        with self.assertRaises(ResolweServerError):
+            user_collection.save()
+
+        self.test_collection.permissions.set_user(USER_USERNAME, "edit")
+
+        # User can edit the collection.
+        user_collection.name = "Different name"
+        user_collection.save()
+
+        self.test_collection.permissions.set_user(USER_USERNAME, "view")
+
+        # Edit permission is removed again.
+        user_collection.name = "Different name 2"
+        with self.assertRaises(ResolweServerError):
+            user_collection.save()
+
     def test_get_holders_with_perm(self):
         self.test_collection.permissions.add_user(USER_USERNAME, ["edit", "view"])
         self.test_collection.permissions.add_public("view")

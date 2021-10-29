@@ -33,7 +33,7 @@ class Process(BaseResolweResource):
         "type",
     )
 
-    all_permissions = ["view", "share", "owner"]
+    all_permissions = ["none", "view", "share", "owner"]
 
     def __init__(self, resolwe, **model_data):
         """Initialize attributes."""

@@ -27,6 +27,7 @@ class BaseResdkDocsFunctionalTest(BaseResdkFunctionalTest):
     rrna_index_slug = "resdk-example-rrna-index"
     globin_slug = "resdk-example-globin"
     globin_index_slug = "resdk-example-globin-index"
+    collection_slug = "resdk-example-collection"
 
     def setUp(self):
         super().setUp()
@@ -34,26 +35,15 @@ class BaseResdkDocsFunctionalTest(BaseResdkFunctionalTest):
         self.original_cwd = os.getcwd()
         os.chdir(self.tmpdir)
 
+        self.collection = self.res.collection.create(slug=self.collection_slug)
+        self.collection.permissions.set_public("view")
+
     def tearDown(self):
         os.chdir(self.original_cwd)
         shutil.rmtree(self.tmpdir)
 
-        if hasattr(self, "reads"):
-            self.reads.sample.delete(force=True)
-        if hasattr(self, "genome"):
-            self.genome.delete(force=True)
-        if hasattr(self, "genome_index"):
-            self.genome_index.delete(force=True)
-        if hasattr(self, "annotation"):
-            self.annotation.delete(force=True)
-        if hasattr(self, "rrna"):
-            self.rrna.delete(force=True)
-        if hasattr(self, "rrna_index"):
-            self.rrna_index.delete(force=True)
-        if hasattr(self, "globin"):
-            self.globin.delete(force=True)
-        if hasattr(self, "globin_index"):
-            self.globin_index.delete(force=True)
+        if hasattr(self, "collection"):
+            self.collection.delete(force=True)
 
     def run_tutorial_script(self, script_name, replace_lines=None):
         """Run a script from tutorial folder.
@@ -83,11 +73,11 @@ class BaseResdkDocsFunctionalTest(BaseResdkFunctionalTest):
         reads = res.run(
             slug="upload-fastq-single",
             input={"src": os.path.join(TEST_FILES_DIR, "reads.fastq.gz")},
+            collection=self.collection.id,
         )
-        self.set_slug_and_make_public(reads, self.reads_slug, permissions=["view"])
-        self.set_slug_and_make_public(
-            reads.sample, self.sample_slug, permissions=["view"]
-        )
+        self.set_slug(reads, self.reads_slug)
+        self.set_slug(reads.sample, self.sample_slug)
+
         return reads
 
     def upload_genome(self, res, fasta, slug):
@@ -98,8 +88,9 @@ class BaseResdkDocsFunctionalTest(BaseResdkFunctionalTest):
                 "species": "Dictyostelium discoideum",
                 "build": "dd-05-2009",
             },
+            collection=self.collection.id,
         )
-        self.set_slug_and_make_public(genome, slug, permissions=["view"])
+        self.set_slug(genome, slug)
 
         return genome
 
@@ -112,10 +103,9 @@ class BaseResdkDocsFunctionalTest(BaseResdkFunctionalTest):
                 "species": "Dictyostelium discoideum",
                 "build": "dd-05-2009",
             },
+            collection=self.collection.id,
         )
-        self.set_slug_and_make_public(
-            annotation, self.annotation_slug, permissions=["view"]
-        )
+        self.set_slug(annotation, self.annotation_slug)
 
         return annotation
 
@@ -125,18 +115,19 @@ class BaseResdkDocsFunctionalTest(BaseResdkFunctionalTest):
             input={
                 "ref_seq": fasta,
             },
+            collection=self.collection.id,
         )
-        self.set_slug_and_make_public(genome_index, slug, permissions=["view"])
+        self.set_slug(genome_index, slug)
 
         return genome_index
 
     def allow_run_process(self, res, slug):
         process = res.process.get(slug=slug)
-        self.make_public(process, permissions=["view"])
+        process.permissions.set_public("view")
 
     def allow_use_descriptor_schema(self, res, slug):
-        process = res.descriptor_schema.get(slug=slug)
-        self.make_public(process, permissions=["view"])
+        descriptor_schema = res.descriptor_schema.get(slug=slug)
+        descriptor_schema.permissions.set_public("view")
 
 
 class TestIndex(BaseResdkDocsFunctionalTest):
@@ -232,7 +223,7 @@ class TestTutorialCreate(BaseResdkDocsFunctionalTest):
                 (3, "res = resdk.Resolwe(url='{}')\n".format(URL)),
                 (4, "res.login('{}', '{}')\n".format(USER_USERNAME, USER_PASSWORD)),
                 (
-                    18,
+                    21,
                     "        'src': '{}'\n".format(
                         os.path.join(TEST_FILES_DIR, "reads.fastq.gz")
                     ),
@@ -249,7 +240,7 @@ class TestTutorialCreate(BaseResdkDocsFunctionalTest):
 
 class TestTutorialResources(BaseResdkFunctionalTest):
     def test_tutorial_resources(self):
-        """Verify existance of resources required for tutorial."""
+        """Verify existence of resources required for tutorial."""
         res = Resolwe(url="https://app.genialis.com")
 
         sample_slugs = [

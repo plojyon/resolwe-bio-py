@@ -1,5 +1,6 @@
 """Permissions manager class."""
 import copy
+import warnings
 from collections import defaultdict
 
 from ..constants import ALL_PERMISSIONS
@@ -9,7 +10,7 @@ from .utils import is_group, is_user
 class PermissionsManager:
     """Helper class to manage permissions of the :class:`BaseResource`."""
 
-    #: (lazy loaded) list of permissons on current object
+    #: (lazy loaded) list of permissions on current object
     _permissions = None
     _viewers = None
     _editors = None
@@ -46,30 +47,55 @@ class PermissionsManager:
                     )
                 )
 
+    def _normalize_perm(self, perm):
+        """Check that given list of permissions is valid for current object type."""
+        if perm is None:
+            perm = "none"
+        perm = str(perm).lower()
+        if perm not in self.all_permissions:
+            valid_perms = ", ".join(["'{}'".format(p) for p in self.all_permissions])
+            raise ValueError(
+                "Invalid permission '{}' for type '{}'. Valid permissions are: {}".format(
+                    perm, self.__class__.__name__, valid_perms
+                )
+            )
+        return perm
+
     def _set_permissions(self, action, perms, who_type, who=None):
         """Generate permissions payload and post it to the API."""
-        payload = {
-            "users": defaultdict(lambda: defaultdict(list)),
-            "groups": defaultdict(lambda: defaultdict(list)),
-            "public": defaultdict(list),
-            # Share not only the Entity / Collection but also their content.
-            # Although this is applied to all endpoints (not only to Entity /
-            # Collection) it will have effect only on these.
-            "share_content": "true",
-        }
-
         if not isinstance(perms, list):
             perms = [perms]
 
         self._validate_perms(perms)
 
         if who_type in ["users", "groups"]:
+            payload = {
+                who_type: defaultdict(lambda: defaultdict(list)),
+            }
             for single in who:
                 payload[who_type][action][single] = copy.copy(perms)
 
         elif who_type == "public":
+            payload = {
+                who_type: defaultdict(list),
+            }
             payload[who_type][action] = copy.copy(perms)
 
+        else:
+            raise KeyError("`who_type` must be 'users', 'groups' or 'public'.")
+
+        self._permissions = self.permissions_api.post(payload)
+
+    def _set_permissions_new(self, perm, who_type, who=None):
+        """Generate permissions payload and post it to the API."""
+        perm = self._normalize_perm(perm)
+
+        payload = {}
+        if who_type in ["users", "groups"]:
+            for single in who:
+                payload.setdefault(who_type, {})[single] = perm
+        elif who_type == "public":
+            payload[who_type] = perm
         else:
             raise KeyError("`who_type` must be 'users', 'groups' or 'public'.")
 
@@ -86,6 +112,75 @@ class PermissionsManager:
         """Fetch permissions from server."""
         if self._permissions is None:
             self._permissions = self.permissions_api.get()
+
+    def set_user(self, user, perm):
+        """Set ``perm`` permission to ``user``.
+
+        When assigning permissions, only the highest permission needs to
+        be given. Permission hierarchy is:
+
+            - none (no permissions)
+            - view
+            - edit
+            - share
+            - owner
+
+        Some examples::
+
+            collection = res.collection.get(...)
+            # Add share, edit and view permission to John:
+            collection.permissions.set_user('john', 'share')
+            # Remove share and edit permission from John:
+            collection.permissions.set_user('john', 'view')
+            # Remove all permissions from John:
+            collection.permissions.set_user('john', 'none')
+
+        """
+        self._set_permissions_new(perm, "users", self._fetch_users(user))
+
+    def set_group(self, group, perm):
+        """Set ``perm`` permission to ``group``.
+
+        When assigning permissions, only the highest permission needs to
+        be given. Permission hierarchy is:
+
+            - none (no permissions)
+            - view
+            - edit
+            - share
+            - owner
+
+        Some examples::
+
+            collection = res.collection.get(...)
+            # Add share, edit and view permission to BioLab:
+            collection.permissions.set_group('biolab', 'share')
+            # Remove share and edit permission from BioLab:
+            collection.permissions.set_group('biolab', 'view')
+            # Remove all permissions from BioLab:
+            collection.permissions.set_group('biolab', 'none')
+
+        """
+        self._set_permissions_new(perm, "groups", self._fetch_group(group))
+
+    def set_public(self, perm):
+        """Set ``perm`` permission for public.
+
+        Public can only get two sorts of permissions:
+
+            - none (no permissions)
+            - view
+
+        Some examples::
+
+            collection = res.collection.get(...)
+            # Add view permission to public:
+            collection.permissions.set_public('view')
+            # Remove view permission from public:
+            collection.permissions.set_public('none')
+
+        """
+        self._set_permissions_new(perm, "public")
 
     def add_user(self, user, perms):
         """Add ``perms`` permissions to ``user``.
@@ -114,6 +209,10 @@ class PermissionsManager:
             collection.permissions.add_user([john, mary], ['view', 'edit'])
 
         """
+        warnings.warn(
+            "Method `add_user` will be removed in Q1 of 2022. Use `set_user` instead.",
+            DeprecationWarning,
+        )
         self._set_permissions("add", perms, "users", self._fetch_users(user))
 
     def remove_user(self, user, perms):
@@ -143,6 +242,10 @@ class PermissionsManager:
             collection.permissions.remove_user([john, mary], ['view', 'edit'])
 
         """
+        warnings.warn(
+            "Method `remove_user` will be removed in Q1 of 2022. Use `set_user` instead.",
+            DeprecationWarning,
+        )
         self._set_permissions("remove", perms, "users", self._fetch_users(user))
 
     def add_group(self, group, perms):
@@ -172,6 +275,10 @@ class PermissionsManager:
             collection.permissions.add_group([my_lab, your_lab], ['view', 'edit'])
 
         """
+        warnings.warn(
+            "Method `add_group` will be removed in Q1 of 2022. Use `set_group` instead.",
+            DeprecationWarning,
+        )
         self._set_permissions("add", perms, "groups", self._fetch_group(group))
 
     def remove_group(self, group, perms):
@@ -202,6 +309,10 @@ class PermissionsManager:
             collection.permissions.remove_group([my_lab, your_lab], ['view', 'edit'])
 
         """
+        warnings.warn(
+            "Method `remove_group` will be removed in Q1 of 2022. Use `set_group` instead.",
+            DeprecationWarning,
+        )
         self._set_permissions("remove", perms, "groups", self._fetch_group(group))
 
     def add_public(self, perms):
@@ -218,6 +329,10 @@ class PermissionsManager:
             collection.permissions.add_public('view')
 
         """
+        warnings.warn(
+            "Method `add_public` will be removed in Q1 of 2022. Use `set_public` instead.",
+            DeprecationWarning,
+        )
         self._set_permissions("add", perms, "public")
 
     def remove_public(self, perms):
@@ -234,6 +349,10 @@ class PermissionsManager:
             collection.permissions.remove_public('view')
 
         """
+        warnings.warn(
+            "Method `remove_public` will be removed in Q1 of 2022. Use `set_public` instead.",
+            DeprecationWarning,
+        )
         self._set_permissions("remove", perms, "public")
 
     def _get_perms_by_type(self, perm_type):
@@ -250,7 +369,7 @@ class PermissionsManager:
                 perms.remove(known_perm)
                 perms.insert(0, known_perm)
 
-        return ", ".join(perms)
+        return ", ".join(map(str, perms))
 
     def __repr__(self):
         """Show permissions."""

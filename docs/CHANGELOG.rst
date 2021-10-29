@@ -5,6 +5,24 @@ Change Log
 All notable changes to this project are documented in this file.
 
 
+==========
+Unreleased
+==========
+
+Changed
+-------
+- Sync with permission changes in Resolwe. This introduces new methods
+  for setting permissions::
+
+  - ``add_public()`` and ``remove_public()`` are replaced by ``set_public()``
+  - ``add_user()`` and ``remove_user()`` are replaced by ``set_user()``
+  - ``add_group()`` and ``remove_group()`` are replaced by ``set_group()``
+
+  For details about their usage see function docs. Old methods still
+  work and will be kept until Q1 2022 but they will raise a deprecation
+  warning.
+
+
 ===================
 13.6.0 - 2021-10-20
 ===================
