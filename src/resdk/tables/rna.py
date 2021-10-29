@@ -11,6 +11,7 @@ RNATables
 
 """
 import os
+import warnings
 from functools import lru_cache
 from typing import Callable, Dict, List, Optional
 
@@ -154,7 +155,7 @@ class RNATables(BaseTables):
 
     @property
     @lru_cache()
-    def id_to_symbol(self) -> Dict[str, str]:
+    def readable_columns(self) -> Dict[str, str]:
         """Map of source gene ids to symbols.
 
         This also gets fetched only once and then cached in memory and
@@ -178,6 +179,17 @@ class RNATables(BaseTables):
             raise ValueError("Expression data must be used before!")
 
         return self._mapping(self.gene_ids, source, species)
+
+    @property
+    @lru_cache()
+    def id_to_symbol(self) -> Dict[str, str]:
+        """Map of source gene ids to symbols."""
+        warnings.warn(
+            "Attribute `id_to_symbol` will be removed in Q1 of 2022. "
+            "Use `readable_columns` instead.",
+            DeprecationWarning,
+        )
+        return self.readable_columns
 
     @property
     @lru_cache()
@@ -210,11 +222,11 @@ class RNATables(BaseTables):
         cache_file = f"{self.collection.slug}_{data_type}_{self.expression_source}_{self.expression_process_slug}_{version}.pickle"
         return os.path.join(self.cache_dir, cache_file)
 
-    def _parse_file(self, file_obj, sample_name, data_type):
+    def _parse_file(self, file_obj, sample_id, data_type):
         """Parse file object and return a one DataFrame line."""
         sample_data = pd.read_csv(file_obj, sep="\t", compression="gzip")
         sample_data = sample_data.set_index("Gene")["Expression"]
-        sample_data.name = sample_name
+        sample_data.name = sample_id
         return sample_data
 
     async def _download_data(self, data_type: str) -> pd.DataFrame:

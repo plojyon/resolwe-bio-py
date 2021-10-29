@@ -27,21 +27,21 @@ class TestTables(BaseResdkFunctionalTest):
 
     def test_meta(self):
         self.assertEqual(self.ct.meta.shape, (8, 9))
-        self.assertIn("Copy of SUM149_JQ1_12H_R1", self.ct.meta.index)
+        self.assertIn(39000, self.ct.meta.index)
         self.assertIn("general.species", self.ct.meta.columns)
 
     def test_rc(self):
         self.assertEqual(self.ct.rc.shape, (8, 58487))
-        self.assertIn("Copy of SUM149_JQ1_12H_R1", self.ct.rc.index)
+        self.assertIn(39000, self.ct.rc.index)
         self.assertIn("ENSG00000000003", self.ct.rc.columns)
-        self.assertEqual(self.ct.rc.iloc[0, 0], 1580)
+        self.assertEqual(self.ct.rc.iloc[0, 0], 792)
         self.assertIsInstance(self.ct.rc.iloc[0, 0], np.int64)
 
     def test_exp(self):
         self.assertEqual(self.ct.exp.shape, (8, 58487))
-        self.assertIn("Copy of SUM149_JQ1_12H_R1", self.ct.exp.index)
+        self.assertIn(39000, self.ct.exp.index)
         self.assertIn("ENSG00000000003", self.ct.exp.columns)
-        self.assertAlmostEqual(self.ct.exp.iloc[0, 0], 32.924003, places=3)
+        self.assertAlmostEqual(self.ct.exp.iloc[0, 0], 19.447467, places=3)
         self.assertIsInstance(self.ct.exp.iloc[0, 0], np.float64)
 
     def test_consistent_index(self):

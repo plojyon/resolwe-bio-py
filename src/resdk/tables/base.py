@@ -14,9 +14,11 @@ import abc
 import asyncio
 import json
 import os
+import warnings
+from collections import Counter
 from functools import lru_cache
 from io import BytesIO
-from typing import Callable, List, Optional
+from typing import Callable, Dict, List, Optional
 from urllib.parse import urljoin
 
 import aiohttp
@@ -134,6 +136,19 @@ class BaseTables(abc.ABC):
         return [s for s in query if s.id in sample_ids]
 
     @property
+    def readable_index(self) -> Dict[int, str]:
+        """Get mapping from index values to readable names."""
+        names = [s.name for s in self._samples]
+        if len(set(names)) != len(names):
+            repeated = [item for item, count in Counter(names).items() if count > 1]
+            repeated = ", ".join(repeated)
+            warnings.warn(
+                f"The following names are repeated in index: {repeated}", UserWarning
+            )
+
+        return {s.id: s.name for s in self._samples}
+
+    @property
     @lru_cache()
     def _data(self) -> List[Data]:
         """Fetch data objects.
@@ -240,10 +255,10 @@ class BaseTables(abc.ABC):
     def _get_descriptors(self) -> pd.DataFrame:
         descriptors = []
         for sample in self._samples:
-            sample.descriptor["sample_name"] = sample.name
+            sample.descriptor["sample_id"] = sample.id
             descriptors.append(sample.descriptor)
 
-        df = pd.json_normalize(descriptors).set_index("sample_name")
+        df = pd.json_normalize(descriptors).set_index("sample_id")
 
         # Keep only numeric / string types:
         column_types = {}
@@ -272,15 +287,13 @@ class BaseTables(abc.ABC):
         return df
 
     def _get_relations(self) -> pd.DataFrame:
-        relations = pd.DataFrame(index=[s.name for s in self._samples])
-        relations.index.name = "sample_name"
-
-        id_to_name = {s.id: s.name for s in self._samples}
+        relations = pd.DataFrame(index=[s.id for s in self._samples])
+        relations.index.name = "sample_id"
 
         for relation in self.collection.relations.filter():
             # Only consider relations that include only samples in self.samples
             relation_entities_ids = set([p["entity"] for p in relation.partitions])
-            if not relation_entities_ids.issubset({d.sample.id for d in self._data}):
+            if not relation_entities_ids.issubset({s.id for s in self._samples}):
                 pass
 
             relations[relation.category] = pd.Series(
@@ -296,9 +309,7 @@ class BaseTables(abc.ABC):
                 elif partition["position"]:
                     value = partition["position"]
 
-                sample_name = id_to_name.get(partition["entity"], None)
-                if sample_name:
-                    relations[relation.category][sample_name] = value
+                relations[relation.category][partition["entity"]] = value
 
         return relations
 
@@ -338,39 +349,40 @@ class BaseTables(abc.ABC):
                 return pd.DataFrame()
 
         if "mS#Sample ID" in df.columns:
-            mapping = {s.id: s.name for s in self._samples}
-            df["sample_name"] = [mapping[value] for value in df["mS#Sample ID"]]
-            df = df.drop(columns=["mS#Sample ID"])
+            df = df.rename(columns={"mS#Sample ID": "sample_id"})
         elif "mS#Sample slug" in df.columns:
-            mapping = {s.slug: s.name for s in self._samples}
-            df["sample_name"] = [mapping[value] for value in df["mS#Sample slug"]]
+            mapping = {s.slug: s.id for s in self._samples}
+            df["sample_id"] = [mapping[value] for value in df["mS#Sample slug"]]
             df = df.drop(columns=["mS#Sample slug"])
         elif "mS#Sample name" in df.columns:
-            df = df.rename(columns={"mS#Sample name": "sample_name"})
+            mapping = {s.name: s.id for s in self._samples}
+            if len(mapping) != len(self._samples):
+                raise ValueError(
+                    "Duplicate sample names. Cannot map orange table data to other matadata"
+                )
+            df["sample_id"] = [mapping[value] for value in df["mS#Sample name"]]
+            df = df.drop(columns=["mS#Sample name"])
 
-        return df.set_index("sample_name")
+        return df.set_index("sample_id")
 
     def _download_metadata(self) -> pd.DataFrame:
         """Download samples metadata and transform into table."""
-        meta = pd.DataFrame(None, index=[s.name for s in self._samples])
+        meta = pd.DataFrame(None, index=[s.id for s in self._samples])
 
         # Add descriptors metadata
         descriptors = self._get_descriptors()
-        meta = meta.merge(descriptors, how="right", left_index=True, right_index=True)
+        meta = meta.merge(descriptors, how="left", left_index=True, right_index=True)
 
         # Add relations metadata
         relations = self._get_relations()
-        how = "outer" if len(meta.columns) else "right"
-        meta = meta.merge(relations, how=how, left_index=True, right_index=True)
+        meta = meta.merge(relations, how="left", left_index=True, right_index=True)
 
         # Add Orange clinical metadata
         orange_data = self._get_orange_data()
-        if not orange_data.empty:
-            how = "right" if meta.columns.empty else "outer"
-            meta = meta.merge(orange_data, how=how, left_index=True, right_index=True)
+        meta = meta.merge(orange_data, how="left", left_index=True, right_index=True)
 
         meta = meta.sort_index()
-        meta.index.name = "sample_name"
+        meta.index.name = "sample_id"
 
         return meta
 
@@ -397,17 +409,17 @@ class BaseTables(abc.ABC):
         return json.loads(response.content.decode("utf-8"))
 
     @abc.abstractmethod
-    def _parse_file(self, file_obj, sample_name, data_type):
+    def _parse_file(self, file_obj, sample_id, data_type):
         """Parse file object and return a one DataFrame line."""
         pass
 
-    async def _download_file(self, url, session, sample_name, data_type):
+    async def _download_file(self, url, session, sample_id, data_type):
         async with session.get(url) as response:
             response.raise_for_status()
             with BytesIO() as f:
                 f.write(await response.content.read())
                 f.seek(0)
-                sample_data = self._parse_file(f, sample_name, data_type)
+                sample_data = self._parse_file(f, sample_id, data_type)
         return sample_data
 
     async def _download_data(self, data_type: str) -> pd.DataFrame:
@@ -439,23 +451,22 @@ class BaseTables(abc.ABC):
         ):
             data_subset = self._data[i : i + EXP_ASYNC_CHUNK_SIZE]
 
-            # Mapping from file uri to sample name
-            uri_to_name = {
-                self._get_data_uri(d, data_type): d._original_values["entity"]["name"]
-                for d in data_subset
+            # Mapping from file uri to sample id
+            uri_to_id = {
+                self._get_data_uri(d, data_type): d.sample.id for d in data_subset
             }
 
-            source_urls = self._get_data_urls(uri_to_name.keys())
-            urls_names = [(url, uri_to_name[uri]) for uri, url in source_urls.items()]
+            source_urls = self._get_data_urls(uri_to_id.keys())
+            urls_ids = [(url, uri_to_id[uri]) for uri, url in source_urls.items()]
 
             async with aiohttp.ClientSession() as session:
                 futures = [
-                    self._download_file(url, session, name, data_type)
-                    for url, name in urls_names
+                    self._download_file(url, session, id_, data_type)
+                    for url, id_ in urls_ids
                 ]
                 data = await asyncio.gather(*futures)
                 samples_data.extend(data)
 
         df = pd.concat(samples_data, axis=1).T.sort_index().sort_index(axis=1)
-        df.index.name = "sample_name"
+        df.index.name = "sample_id"
         return df

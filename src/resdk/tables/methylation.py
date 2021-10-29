@@ -99,7 +99,7 @@ class MethylationTables(BaseTables):
         cache_file = f"{self.collection.slug}_{data_type}_{version}.pickle"
         return os.path.join(self.cache_dir, cache_file)
 
-    def _parse_file(self, file_obj, sample_name, data_type):
+    def _parse_file(self, file_obj, sample_id, data_type):
         """Parse file object and return one DataFrame line."""
         sample_data = pd.read_csv(
             file_obj,
@@ -108,5 +108,5 @@ class MethylationTables(BaseTables):
             usecols=["probe_ids", data_type],
             index_col="probe_ids",
         )[data_type]
-        sample_data.name = sample_name
+        sample_data.name = sample_id
         return sample_data

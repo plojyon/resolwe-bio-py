@@ -28,6 +28,7 @@ class TestTables(unittest.TestCase):
 
         self.data = MagicMock()
         self.data.id = 12345
+        self.data.sample.id = self.sample.id
         self.data.process.slug = "process-slug"
         self.data.output.__getitem__.side_effect = {
             "species": "Homo sapiens",
@@ -58,9 +59,7 @@ class TestTables(unittest.TestCase):
             {"id": 1, "entity": 123, "position": None, "label": "L1"}
         ]
         self.collection.relations.filter = self.web_request([self.relation])
-        self.metadata_df = pd.DataFrame(
-            [[0], [1], [4]], index=["0", "1", "2"], columns=["PFS"]
-        )
+        self.metadata_df = pd.DataFrame([[0]], index=[123], columns=["PFS"])
 
         self.expressions_df = pd.DataFrame(
             [[0, 1, 2], [1, 2, 3], [2, 3, 4]],
@@ -288,8 +287,8 @@ class TestTables(unittest.TestCase):
         ct = RNATables(self.collection)
         descriptors = ct._get_descriptors()
 
-        expected = pd.DataFrame([1], columns=["PFS"], index=["Sample123"], dtype=float)
-        expected.index.name = "sample_name"
+        expected = pd.DataFrame([1], columns=["PFS"], index=[123], dtype=float)
+        expected.index.name = "sample_id"
 
         assert_frame_equal(descriptors, expected)
 
@@ -297,8 +296,8 @@ class TestTables(unittest.TestCase):
         ct = RNATables(self.collection)
         relations = ct._get_relations()
 
-        expected = pd.DataFrame(["L1"], columns=["Category"], index=["Sample123"])
-        expected.index.name = "sample_name"
+        expected = pd.DataFrame(["L1"], columns=["Category"], index=[123])
+        expected.index.name = "sample_id"
 
         assert_frame_equal(relations, expected)
 
@@ -318,32 +317,32 @@ class TestTables(unittest.TestCase):
         ct = RNATables(self.collection)
         orange_data = ct._get_orange_data()
 
-        expected = pd.DataFrame([42], columns=["Col1"], index=["Sample123"])
-        expected.index.name = "sample_name"
+        expected = pd.DataFrame([42], columns=["Col1"], index=[123])
+        expected.index.name = "sample_id"
 
         assert_frame_equal(orange_data, expected)
 
     @patch.object(RNATables, "_get_descriptors")
     @patch.object(RNATables, "_get_relations")
     @patch.object(RNATables, "_get_orange_data")
-    def test_download_metadata(self, descriptors_mock, relations_mock, orange_mock):
+    def test_download_metadata(self, orange_mock, relations_mock, descriptors_mock):
         descriptors_mock.return_value = self.metadata_df
         relations_mock.return_value = pd.DataFrame(
-            [["A"], ["B"], ["C"]], index=["0", "1", "2"], columns=["Replicate"]
+            [["A"]], index=[123], columns=["Replicate"]
         )
         orange_mock.return_value = pd.DataFrame(
-            [["X"], ["Y"], ["Z"]], index=["0", "1", "2"], columns=["Clinical"]
+            [["X"]], index=[123], columns=["Clinical"]
         )
 
         ct = RNATables(self.collection)
         meta = ct._download_metadata()
 
-        expected_content = [["X", "A", 0], ["Y", "B", 1], ["Z", "C", 4]]
-        expected_columns = ["Clinical", "Replicate", "PFS"]
+        expected_content = [[0, "A", "X"]]
+        expected_columns = ["PFS", "Replicate", "Clinical"]
         expected_meta = pd.DataFrame(
-            expected_content, columns=expected_columns, index=["0", "1", "2"]
+            expected_content, columns=expected_columns, index=[123]
         )
-        expected_meta.index.name = "sample_name"
+        expected_meta.index.name = "sample_id"
 
         assert_frame_equal(meta, expected_meta)
 
