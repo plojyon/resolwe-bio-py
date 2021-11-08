@@ -55,6 +55,9 @@ the :ref:`reference`, here we list the most commonly used ones::
     # Sample metadata
     sum149.meta
 
+    # Sample QC metrics
+    sum149.qc
+
     # Dictionary that maps gene ID's into gene symbols
     sum149.id_to_symbol
     # This is handy to rename column names (gene ID's) to gene symbols

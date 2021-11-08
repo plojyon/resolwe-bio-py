@@ -93,11 +93,17 @@ class MethylationTables(BaseTables):
         """Return full cache file path."""
         if data_type == self.META:
             version = self._metadata_version
+        elif data_type == self.QC:
+            version = self._qc_version
         else:
             version = self._data_version
 
         cache_file = f"{self.collection.slug}_{data_type}_{version}.pickle"
         return os.path.join(self.cache_dir, cache_file)
+
+    def _download_qc(self) -> pd.DataFrame:
+        """Download sample QC data and transform into table."""
+        return pd.DataFrame()
 
     def _parse_file(self, file_obj, sample_id, data_type):
         """Parse file object and return one DataFrame line."""

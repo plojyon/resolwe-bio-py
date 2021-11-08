@@ -30,6 +30,12 @@ class TestTables(BaseResdkFunctionalTest):
         self.assertIn(39000, self.ct.meta.index)
         self.assertIn("general.species", self.ct.meta.columns)
 
+    def test_qc(self):
+        self.assertEqual(self.ct.qc.shape, (8, 12))
+        self.assertIn(39000, self.ct.qc.index)
+        self.assertIn("total_read_count_raw", self.ct.qc.columns)
+        self.assertEqual(int(self.ct.qc.loc[39000, "total_read_count_raw"]), 42738650)
+
     def test_rc(self):
         self.assertEqual(self.ct.rc.shape, (8, 58487))
         self.assertIn(39000, self.ct.rc.index)

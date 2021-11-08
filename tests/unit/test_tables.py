@@ -135,6 +135,28 @@ class TestTables(unittest.TestCase):
         self.assertIs(meta, self.metadata_df)
 
     @patch.object(RNATables, "_load_fetch")
+    def test_qc(self, load_mock):
+        qc_df = pd.DataFrame(
+            [[None, 30], [12, 42]],
+            index=["0", "1"],
+            columns=["total_read_count_raw", "total_read_count_trimmed"],
+        )
+        load_mock.side_effect = self.web_request(qc_df)
+
+        ct = RNATables(self.collection)
+        t = time()
+        meta = ct.meta
+        self.assertTrue(time() - t > 0.1)
+        self.assertIs(meta, qc_df)
+        load_mock.assert_called_with(RNATables.META)
+
+        # use cache
+        t = time()
+        meta = ct.meta
+        self.assertTrue(time() - t < 0.1)
+        self.assertIs(meta, qc_df)
+
+    @patch.object(RNATables, "_load_fetch")
     def test_exp(self, load_mock):
         load_mock.side_effect = self.web_request(self.expressions_df)
 
@@ -221,6 +243,23 @@ class TestTables(unittest.TestCase):
         ct1 = RNATables(self.collection)
         with self.assertRaises(ValueError):
             version = ct1._metadata_version
+
+    def test_qc_version(self):
+        self.collection.data.filter = self.web_request([self.data])
+
+        ct = RNATables(self.collection)
+        version = ct._qc_version
+        self.assertEqual(version, str(hash(tuple([12345]))))
+
+        # use cache
+        t = time()
+        version = ct._qc_version
+        self.assertTrue(time() - t < 0.1)
+
+        self.collection.data.filter = self.web_request([])
+        ct1 = RNATables(self.collection)
+        with self.assertRaises(ValueError):
+            version = ct1._qc_version
 
     def test_data_version(self):
         ct = RNATables(self.collection)
