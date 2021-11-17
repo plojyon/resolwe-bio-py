@@ -5,9 +5,9 @@ Change Log
 All notable changes to this project are documented in this file.
 
 
-==========
-Unreleased
-==========
+===================
+13.7.0 - 2021-11-17
+===================
 
 Added
 -----
@@ -28,6 +28,9 @@ Changed
   For details about their usage see function docs. Old methods still
   work and will be kept until Q1 2022 but they will raise a deprecation
   warning.
+- Index of ``resdk.tables`` is now based on sample ID rather than on sample
+  name. To ease the naming ``readable_index`` property is added - it maps
+  sample ID's to sample names.
 
 
 ===================
