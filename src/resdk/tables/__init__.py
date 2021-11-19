@@ -17,9 +17,11 @@ Table classes
 
 """
 from .methylation import MethylationTables  # noqa
+from .microarray import MATables  # noqa
 from .rna import RNATables  # noqa
 
 __all__ = (
+    "MATables",
     "MethylationTables",
     "RNATables",
 )

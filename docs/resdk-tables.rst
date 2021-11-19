@@ -5,10 +5,11 @@ ReSDK Tables
 ============
 
 ReSDK tables are helper classes for aggregating collection data in
-tabular format. Currently, we have two flavours:
+tabular format. Currently, we have three flavours:
 
     - :ref:`rna-tables`
     - :ref:`methylation-tables`
+    - :ref:`microarray-tables`
 
 
 .. _rna-tables:
@@ -120,3 +121,18 @@ access of beta and m-values of methylation data::
 
     # Methylation m-values
     meth.mval
+
+
+.. _microarray-tables:
+
+MATables
+========
+
+Similar as ``RNATables`` provide access to raw counts and normalized
+expression values of RNA data, ``MATables`` allow for fast
+access of expression values per probe of microarray::
+
+    ma = resdk.tables.MATables(<collection-with-microarray-data>)
+
+    # Microarray expressions values (columns are probe ID's)
+    ma.exp
