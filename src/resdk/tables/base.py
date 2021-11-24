@@ -169,11 +169,26 @@ class BaseTables(abc.ABC):
 
         :return: list of Data objects
         """
-        kwargs = {
-            "type": self.process_type,
-            "fields": DATA_FIELDS,
-        }
-        return list(self.collection.data.filter(**kwargs))
+        data = []
+        sample_ids, repeated_sample_ids = set(), set()
+        for datum in self.collection.data.filter(
+            type=self.process_type, ordering="-created", fields=DATA_FIELDS
+        ):
+            if datum.sample.id in sample_ids:
+                repeated_sample_ids.add(datum.sample.id)
+                continue
+            sample_ids.add(datum.sample.id)
+            data.append(datum)
+
+        if repeated_sample_ids:
+            repeated = ", ".join(map(str, repeated_sample_ids))
+            warnings.warn(
+                f"The following samples have multiple data of type {self.process_type}: "
+                f"{repeated}. Using only the newest data of this sample.",
+                UserWarning,
+            )
+
+        return data
 
     @property
     @lru_cache()

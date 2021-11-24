@@ -5,6 +5,16 @@ Change Log
 All notable changes to this project are documented in this file.
 
 
+==========
+Unreleased
+==========
+
+Changed
+-------
+- In ResdkTables, warn user if multiple Data of same
+  ``ResdkTables.process_type`` are in one sample. If they are, use
+  only the newest one.
+
 ===================
 13.7.0 - 2021-11-17
 ===================
