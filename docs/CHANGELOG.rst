@@ -5,12 +5,13 @@ Change Log
 All notable changes to this project are documented in this file.
 
 
-==========
-Unreleased
-==========
+===================
+13.8.0 - 2021-12-07
+===================
 
 Added
 -----
+- Support retrieval of QC values in ReSDK tables via ``qc`` attribute
 - Add ``resdk.tables.MATables`` for microarray data support
 
 Changed
