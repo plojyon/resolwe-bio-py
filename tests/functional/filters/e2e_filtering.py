@@ -88,7 +88,7 @@ class TestProcessFilter(BaseResdkFilteringTest):
         )
         # Use ``assertGreater`` to avoid updating this test each time
         # after new workflow is added / removed.
-        self.assertGreater(len(workflows), 30)
+        self.assertGreater(len(workflows), 20)
 
 
 class TestFeatureFilter(BaseResdkFilteringTest):
