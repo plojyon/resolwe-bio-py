@@ -37,17 +37,19 @@ async def _batch_download(resolwe, uris, parser) -> pd.DataFrame:
     try:
         uri_to_url = _uri_to_url(resolwe, uris)
     except HTTPError:
-        # If one of the uri's is not found, 403 error is raised.
-        # TODO: Fix backend to return at least the signed urls of the files that can be found.
         return pd.DataFrame()
 
     async with aiohttp.ClientSession() as session:
         futures = [
-            _download_file(uri, url, session, parser) for uri, url in uri_to_url.items()
+            _download_file(uri, url, session, parser)
+            for uri, url in uri_to_url.items()
+            if url
         ]
         data = await asyncio.gather(*futures)
 
-    return pd.concat(data, axis=1).T.sort_index()
+    if data:
+        return pd.concat(data, axis=1).T.sort_index()
+    return pd.DataFrame()
 
 
 def batch_download(resolwe, uris, parser) -> pd.DataFrame:
