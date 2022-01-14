@@ -5,6 +5,15 @@ Change Log
 All notable changes to this project are documented in this file.
 
 
+==========
+Unreleased
+==========
+
+Changed
+-------
+- Deprecate ``resdk.CollectionTables``, use ``resdk.tables.RNATables`` instead
+
+
 ===================
 13.8.0 - 2021-12-07
 ===================

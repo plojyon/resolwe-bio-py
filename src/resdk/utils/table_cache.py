@@ -1,4 +1,4 @@
-"""Cache util functions for CollectionTables."""
+"""Cache util functions for ReSDKTables."""
 import os
 import pickle
 import sys
