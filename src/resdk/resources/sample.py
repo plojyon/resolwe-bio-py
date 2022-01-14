@@ -1,6 +1,5 @@
 """Sample resource."""
 import logging
-import warnings
 
 from resdk.shortcuts.sample import SampleUtilsMixin
 
@@ -77,13 +76,6 @@ class Sample(SampleUtilsMixin, BaseCollection):
         """Update descriptor and descriptor_schema."""
         self.api(self.id).patch({"descriptor": descriptor})
         self.descriptor = descriptor
-
-    def confirm_is_annotated(self):
-        """Mark sample as annotated (descriptor is completed)."""
-        warnings.warn(
-            "Method `confirm_is_annotated` will be removed in the future.",
-            DeprecationWarning,
-        )
 
     @property
     def background(self):
