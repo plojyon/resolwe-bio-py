@@ -22,32 +22,6 @@ class TestPermissions(BaseResdkFunctionalTest):
         with self.assertRaises(LookupError):
             self.user_res.collection.get(self.test_collection.id)
 
-        self.test_collection.permissions.add_user(USER_USERNAME, "view")
-
-        # User can see the collection, but cannot edit it.
-        user_collection = self.user_res.collection.get(self.test_collection.id)
-        user_collection.name = "Different name"
-        with self.assertRaises(ResolweServerError):
-            user_collection.save()
-
-        self.test_collection.permissions.add_user(USER_USERNAME, "edit")
-
-        # User can edit the collection.
-        user_collection.name = "Different name"
-        user_collection.save()
-
-        self.test_collection.permissions.remove_user(USER_USERNAME, "edit")
-
-        # Edit permission is removed again.
-        user_collection.name = "Different name 2"
-        with self.assertRaises(ResolweServerError):
-            user_collection.save()
-
-    def test_permissions_new_syntax(self):
-        # User doesn't have the permission to view the collection.
-        with self.assertRaises(LookupError):
-            self.user_res.collection.get(self.test_collection.id)
-
         self.test_collection.permissions.set_user(USER_USERNAME, "view")
 
         # User can see the collection, but cannot edit it.
@@ -70,8 +44,8 @@ class TestPermissions(BaseResdkFunctionalTest):
             user_collection.save()
 
     def test_get_holders_with_perm(self):
-        self.test_collection.permissions.add_user(USER_USERNAME, ["edit", "view"])
-        self.test_collection.permissions.add_public("view")
+        self.test_collection.permissions.set_user(USER_USERNAME, "edit")
+        self.test_collection.permissions.set_public("view")
 
         self.assertEqual(len(self.test_collection.permissions.owners), 1)
         self.assertEqual(self.test_collection.permissions.owners[0].get_name(), "admin")
@@ -95,6 +69,6 @@ class TestPermissions(BaseResdkFunctionalTest):
         self.collection2.permissions.fetch()
         self.assertEqual(len(self.collection2.permissions._permissions), 1)
 
-        self.test_collection.permissions.add_public("view")
+        self.test_collection.permissions.set_public("view")
         self.collection2.permissions.copy_from(self.test_collection)
         self.assertEqual(len(self.collection2.permissions._permissions), 3)

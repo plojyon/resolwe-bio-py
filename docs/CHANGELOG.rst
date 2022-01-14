@@ -14,6 +14,11 @@ Changed
 - Deprecate ``resdk.CollectionTables``, use ``resdk.tables.RNATables`` instead
 - Update ``resdk.resourcec.kb.Feature.query_endpoint`` to sync with change in
   Resolwe-bio
+- Deprecate the following methods for setting permissions:
+
+  - ``add_public()`` and ``remove_public()``
+  - ``add_user()`` and ``remove_user()``
+  - ``add_group()`` and ``remove_group()``
 
 
 ===================
