@@ -12,6 +12,8 @@ Unreleased
 Changed
 -------
 - Deprecate ``resdk.CollectionTables``, use ``resdk.tables.RNATables`` instead
+- Update ``resdk.resourcec.kb.Feature.query_endpoint`` to sync with change in
+  Resolwe-bio
 
 
 ===================

@@ -6,7 +6,7 @@ class Feature(BaseResource):
     """Knowledge base Feature resource."""
 
     endpoint = "kb.feature.admin"
-    query_endpoint = "kb.feature.search"
+    query_endpoint = "kb.feature"
     query_method = "POST"
 
     READ_ONLY_FIELDS = BaseResource.READ_ONLY_FIELDS + (
