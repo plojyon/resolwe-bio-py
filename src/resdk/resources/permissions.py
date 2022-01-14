@@ -1,6 +1,5 @@
 """Permissions manager class."""
 import copy
-from collections import defaultdict
 
 from ..constants import ALL_PERMISSIONS
 from .utils import is_group, is_user
@@ -32,19 +31,6 @@ class PermissionsManager:
             groups = [groups]
 
         return [group.id if is_group(group) else group for group in groups]
-
-    def _validate_perms(self, perms):
-        """Check that given list of permissions is valid for current object type."""
-        for perm in perms:
-            if perm not in self.all_permissions:
-                valid_perms = ", ".join(
-                    ["'{}'".format(p) for p in self.all_permissions]
-                )
-                raise ValueError(
-                    "Invalid permission '{}' for type '{}'. Valid permissions are: {}".format(
-                        perm, self.__class__.__name__, valid_perms
-                    )
-                )
 
     def _normalize_perm(self, perm):
         """Check that given list of permissions is valid for current object type."""
@@ -264,26 +250,22 @@ class PermissionsManager:
 
     def copy_from(self, source):
         """Copy permissions from some other object to self."""
-        payload = {
-            "users": defaultdict(lambda: defaultdict(list)),
-            "groups": defaultdict(lambda: defaultdict(list)),
-            "public": defaultdict(list),
-        }
-
         if not source.permissions._permissions:
             source.permissions.fetch()
 
+        payload = {}
         for entry in source.permissions._permissions:
             who_type = entry["type"]
-            perms = entry["permissions"]
-            self._validate_perms(perms)
+            # We only need the highest permission + they are sorted --> take last one
+            perm = entry["permissions"][-1]
+            perm = self._normalize_perm(perm)
 
             if who_type == "user":
-                payload["users"]["add"][entry["id"]] = copy.copy(perms)
+                payload.setdefault("users", {})[entry["id"]] = perm
             if who_type == "group":
-                payload["groups"]["add"][entry["id"]] = copy.copy(perms)
+                payload["groups"][entry["id"]] = perm
             elif who_type == "public":
-                payload[who_type]["add"] = copy.copy(perms)
+                payload[who_type] = perm
 
         self.clear_cache()
         self._permissions = self.permissions_api.post(payload)
