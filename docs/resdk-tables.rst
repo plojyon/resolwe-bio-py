@@ -37,10 +37,11 @@ First, connect to a Resolwe server, pick a collection and create
 and instance of ``RNATables``::
 
     import resdk
+    from resdk.tables import RNATables
     res = resdk.Resolwe(url='https://app.genialis.com/')
     res.login()
     collection = res.collection.get("sum149-fresh-for-rename")
-    sum149 = resdk.tables.RNATables(collection)
+    sum149 = RNATables(collection)
 
 Object ``sum149`` is an instance of ``RNATables`` and has many attributes. For a complete list see
 the :ref:`reference`, here we list the most commonly used ones::
