@@ -10,3 +10,4 @@ Here you can browse through topical documentation about various parts of ReSDK.
    knowledge-base
    resdk-tables
    geneset
+   metadata

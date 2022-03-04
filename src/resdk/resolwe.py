@@ -28,6 +28,7 @@ from .resources import (
     DescriptorSchema,
     Geneset,
     Group,
+    Metadata,
     Process,
     Relation,
     Sample,
@@ -83,6 +84,7 @@ class Resolwe:
         Feature: "feature",
         Mapping: "mapping",
         Geneset: "geneset",
+        Metadata: "metadata",
     }
     # Map ResolweQuery name to it's slug_field
     slug_field_mapping = {
@@ -92,6 +94,7 @@ class Resolwe:
     # Map ResolweQuery name to it's default query filter
     query_filter_mapping = {
         "geneset": {"type": "data:geneset"},
+        "metadata": {"type": "data:metadata"},
     }
 
     data = None
@@ -105,6 +108,7 @@ class Resolwe:
     feature = None
     mapping = None
     geneset = None
+    metadata = None
 
     session = None
 

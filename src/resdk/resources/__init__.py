@@ -43,6 +43,9 @@ Resource classes
 .. autoclass:: resdk.resources.Geneset
    :members:
 
+.. autoclass:: resdk.resources.Metadata
+   :members:
+
 .. automodule:: resdk.resources.kb
 
 Permissions
@@ -68,6 +71,7 @@ from .collection import Collection
 from .data import Data
 from .descriptor import DescriptorSchema
 from .geneset import Geneset
+from .metadata import Metadata
 from .process import Process
 from .relation import Relation
 from .sample import Sample
@@ -79,6 +83,7 @@ __all__ = (
     "DescriptorSchema",
     "Geneset",
     "Group",
+    "Metadata",
     "Sample",
     "Process",
     "Relation",
