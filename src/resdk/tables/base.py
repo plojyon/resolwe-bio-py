@@ -370,7 +370,7 @@ class BaseTables(abc.ABC):
     @lru_cache()
     def _get_orange_object(self) -> Data:
         return self.collection.data.get(
-            process__slug="upload-orange-metadata",
+            type="data:metadata:unique",
             ordering="-modified",
             fields=DATA_FIELDS,
             limit=1,
