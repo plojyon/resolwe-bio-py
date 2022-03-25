@@ -134,7 +134,8 @@ throttle(["resolwe_bio_py"]) {
                             "GENESIS_POSTGRESQL_NAME=${env.BUILD_TAG}",
                             "GENESIS_MANAGER_REDIS_PREFIX=genialis-base.manager.${env.BUILD_TAG}",
                             "GENESIS_RESDK_PATH=${workspace_dir}",
-                            "TOX_WORKDIR=${tox_workdir}"
+                            "TOX_WORKDIR=${tox_workdir}",
+                            'GENESIS_REST_THROTTLING={"login": "100000/hour", "credentials": "100000/hour", "email": "100000/hour"}',
                         ]) {
                             lock (resource: "resolwe-bio-py-e2e-lock-redis10") {
                                 withEnv([
