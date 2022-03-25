@@ -6,6 +6,19 @@ All notable changes to this project are documented in this file.
 
 
 ===================
+14.1.0 - 2022-03-25
+===================
+
+Added
+-----
+- Add ``Metadata`` resource
+
+Fixed
+-----
+- Fix the way ``RNATables`` are imported in the docs
+
+
+===================
 14.0.0 - 2022-01-19
 ===================
 
