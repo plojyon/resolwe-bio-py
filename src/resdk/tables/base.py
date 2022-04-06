@@ -402,17 +402,31 @@ class BaseTables(abc.ABC):
                 # TODO: logging, warning?
                 return pd.DataFrame()
 
-        if "mS#Sample ID" in df.columns:
+        if "Sample ID" in df.columns:
+            df = df.rename(columns={"Sample ID": "sample_id"})
+        elif "mS#Sample ID" in df.columns:
             df = df.rename(columns={"mS#Sample ID": "sample_id"})
+        elif "Sample slug" in df.columns:
+            mapping = {s.slug: s.id for s in self._samples}
+            df["sample_id"] = [mapping[value] for value in df["Sample slug"]]
+            df = df.drop(columns=["Sample slug"])
         elif "mS#Sample slug" in df.columns:
             mapping = {s.slug: s.id for s in self._samples}
             df["sample_id"] = [mapping[value] for value in df["mS#Sample slug"]]
             df = df.drop(columns=["mS#Sample slug"])
+        elif "Sample name" in df.columns or "Sample name" in df.columns:
+            mapping = {s.name: s.id for s in self._samples}
+            if len(mapping) != len(self._samples):
+                raise ValueError(
+                    "Duplicate sample names. Cannot map orange table data to other metadata"
+                )
+            df["sample_id"] = [mapping[value] for value in df["Sample name"]]
+            df = df.drop(columns=["Sample name"])
         elif "mS#Sample name" in df.columns:
             mapping = {s.name: s.id for s in self._samples}
             if len(mapping) != len(self._samples):
                 raise ValueError(
-                    "Duplicate sample names. Cannot map orange table data to other matadata"
+                    "Duplicate sample names. Cannot map orange table data to other metadata"
                 )
             df["sample_id"] = [mapping[value] for value in df["mS#Sample name"]]
             df = df.drop(columns=["mS#Sample name"])

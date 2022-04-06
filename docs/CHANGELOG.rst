@@ -5,6 +5,15 @@ Change Log
 All notable changes to this project are documented in this file.
 
 
+==========
+Unreleased
+==========
+
+Fixed
+-----
+- Fix parsing of new metadata format in ``resdk.tables.BaseTables.meta``
+
+
 ===================
 14.1.0 - 2022-03-25
 ===================
