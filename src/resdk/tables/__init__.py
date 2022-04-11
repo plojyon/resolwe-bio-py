@@ -19,9 +19,11 @@ Table classes
 from .methylation import MethylationTables  # noqa
 from .microarray import MATables  # noqa
 from .rna import RNATables  # noqa
+from .variant import VariantTables  # noqa
 
 __all__ = (
     "MATables",
     "MethylationTables",
     "RNATables",
+    "VariantTables",
 )
