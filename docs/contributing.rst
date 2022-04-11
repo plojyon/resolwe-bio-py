@@ -7,7 +7,7 @@ Contributing
 Installing prerequisites
 ========================
 
-Make sure you have Python_ 3.6+ installed on your system. If you don't
+Make sure you have Python_ 3.7+ installed on your system. If you don't
 have it yet, follow `these instructions
 <https://docs.python.org/3/using/index.html>`__.
 

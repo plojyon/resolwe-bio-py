@@ -12,6 +12,8 @@ Unreleased
 Added
 -----
 - Support upload directly to S3 bucket
+- Add support for ``Python3.9``, ``Python3.10`` and drop support for
+  ``Python3.6``
 
 Fixed
 -----
