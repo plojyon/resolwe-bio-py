@@ -15,6 +15,7 @@ Added
 - Add support for ``Python3.9``, ``Python3.10`` and drop support for
   ``Python3.6``
 - Add ``resdk.tables.VariantTables`` class to handle variant data
+- Add ``resdk.tables.MLTables`` class to handle ML-ready data
 
 Fixed
 -----
