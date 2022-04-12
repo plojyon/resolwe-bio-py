@@ -13,11 +13,12 @@ import logging
 import ntpath
 import os
 import re
-import uuid
 from urllib.parse import urljoin
 
 import requests
 import slumber
+
+from resdk.uploader import Uploader
 
 from .constants import CHUNK_SIZE
 from .exceptions import ValidationError, handle_http_exception
@@ -115,6 +116,7 @@ class Resolwe:
     def __init__(self, username=None, password=None, url=None):
         """Initialize attributes."""
         self.session = requests.Session()
+        self.uploader = Uploader(self)
         if url is None:
             # Try to get URL from environmental variable, otherwise fallback to default.
             url = os.environ.get("RESOLWE_HOST_URL", DEFAULT_URL)
@@ -160,6 +162,7 @@ class Resolwe:
             append_slash=False,
         )
         self._initialize_queries()
+        self.uploader.invalidate_cache()
 
     def login(self, username=None, password=None):
         """Interactive login.
@@ -216,7 +219,7 @@ class Resolwe:
         if not os.path.isfile(path):
             raise ValueError("File {} not found.".format(path))
 
-        file_temp = self._upload_file(path)
+        file_temp = self.uploader.upload(path)
 
         if not file_temp:
             raise Exception("Upload failed for {}.".format(path))
@@ -381,64 +384,6 @@ class Resolwe:
 
         model_data = self.api.data.get_or_create.post(data)
         return Data(resolwe=self, **model_data)
-
-    def _upload_file(self, file_path):
-        """Upload a single file to the server.
-
-        File is uploaded in chunks of size CHUNK_SIZE bytes.
-
-        :param str file_path: File path
-
-        """
-        response = None
-        chunk_number = 0
-        session_id = str(uuid.uuid4())
-        file_uid = str(uuid.uuid4())
-        file_size = os.path.getsize(file_path)
-        base_name = os.path.basename(file_path)
-
-        with open(file_path, "rb") as file_:
-            while True:
-                chunk = file_.read(CHUNK_SIZE)
-                if not chunk:
-                    break
-
-                for i in range(5):
-                    if i > 0 and response is not None:
-                        self.logger.warning(
-                            "Chunk upload failed (error %s): repeating for chunk number %s",
-                            response.status_code,
-                            chunk_number,
-                        )
-
-                    response = self.session.post(
-                        urljoin(self.url, "upload/"),
-                        auth=self.auth,
-                        # request are smart and make
-                        # 'CONTENT_TYPE': 'multipart/form-data;''
-                        files={"file": (base_name, chunk)},
-                        # stuff in data will be in response.POST on server
-                        data={
-                            "_chunkSize": CHUNK_SIZE,
-                            "_totalSize": file_size,
-                            "_chunkNumber": chunk_number,
-                            "_currentChunkSize": len(chunk),
-                        },
-                        headers={"Session-Id": session_id, "X-File-Uid": file_uid},
-                    )
-
-                    if response.status_code in [200, 201]:
-                        break
-                else:
-                    # Upload of a chunk failed (5 retries)
-                    return None
-
-                progress = 100.0 * (chunk_number * CHUNK_SIZE + len(chunk)) / file_size
-                message = "{:.0f} % Uploaded {}".format(progress, file_path)
-                self.logger.info(message)
-                chunk_number += 1
-
-        return response.json()["files"][0]["temp"]
 
     def _download_files(self, files, download_dir=None):
         """Download files.

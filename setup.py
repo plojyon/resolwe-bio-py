@@ -4,8 +4,8 @@ See: https://github.com/genialis/resolwe-bio-py
 
 """
 import os.path
-import setuptools
 
+import setuptools
 
 # Get long description from README.
 with open('README.rst') as f:
@@ -43,6 +43,8 @@ setuptools.setup(
         'tqdm',
         'openpyxl',
         'xlrd',
+        'boto3[crt]~=1.21',
+        'boto3-stubs[s3]~=1.21',
     ),
     python_requires='>=3.6',
     extras_require={
@@ -81,6 +83,8 @@ setuptools.setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
     ],
     keywords='bioinformatics resolwe bio pipelines dataflow django python sdk',
 )

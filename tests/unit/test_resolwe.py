@@ -13,6 +13,7 @@ from slumber.exceptions import SlumberHttpBaseException
 from resdk.exceptions import ResolweServerError, ValidationError
 from resdk.resolwe import ResAuth, Resolwe, ResolweResource
 from resdk.resources import Collection, Data, Process
+from resdk.uploader import Uploader
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
@@ -106,6 +107,7 @@ class TestResolwe(unittest.TestCase):
     def test_login(self, resolwe_mock, resauth_mock, resolwe_api_mock):
         resolwe_mock.url = "http://some/url"
         resauth_mock.cookies = {}
+        resolwe_mock.uploader = MagicMock(spec=Uploader)
         Resolwe._login(resolwe_mock, "a", "b")
         self.assertEqual(resauth_mock.call_count, 1)
         self.assertEqual(resolwe_api_mock.call_count, 1)
@@ -150,23 +152,25 @@ class TestProcessFileField(unittest.TestCase):
     @patch("resdk.resolwe.Resolwe", autospec=True)
     def test_invalid_file_name(self, resolwe_mock, os_mock):
         os_mock.configure_mock(**{"path.isfile.return_value": False})
+        resolwe_mock.uploader = MagicMock(spec=Uploader)
 
         message = r"File .* not found."
         with self.assertRaisesRegex(ValueError, message):
             Resolwe._process_file_field(resolwe_mock, "/bad/path/to/file")
-        self.assertEqual(resolwe_mock._upload_file.call_count, 0)
+        self.assertEqual(resolwe_mock.uploader.upload.call_count, 0)
 
     @patch("resdk.resolwe.os")
     @patch("resdk.resolwe.Resolwe", spec=True)
     def test_if_upload_fails(self, resolwe_mock, os_mock):
         # Good file, upload fails
         os_mock.configure_mock(**{"path.isfile.return_value": True})
-        resolwe_mock._upload_file = MagicMock(return_value=None)
+        resolwe_mock.uploader = MagicMock(spec=Uploader)
+        resolwe_mock.uploader.upload = MagicMock(return_value=None)
 
         message = r"Upload failed for .*"
         with self.assertRaisesRegex(Exception, message):
             Resolwe._process_file_field(resolwe_mock, "/good/path/to/file")
-        self.assertEqual(resolwe_mock._upload_file.call_count, 1)
+        self.assertEqual(resolwe_mock.uploader.upload.call_count, 1)
 
     @patch("resdk.resolwe.ntpath")
     @patch("resdk.resolwe.os")
@@ -174,7 +178,8 @@ class TestProcessFileField(unittest.TestCase):
     def test_if_upload_ok(self, resolwe_mock, os_mock, ntpath_mock):
         # Good file, upload fails
         os_mock.configure_mock(**{"path.isfile.return_value": True})
-        resolwe_mock._upload_file = MagicMock(return_value="temporary_file")
+        resolwe_mock.uploader = MagicMock(spec=Uploader)
+        resolwe_mock.uploader.upload = MagicMock(return_value="temporary_file")
         ntpath_mock.basename.return_value = "Basename returned!"
 
         output = Resolwe._process_file_field(resolwe_mock, "/good/path/to/file.txt")
@@ -182,7 +187,7 @@ class TestProcessFileField(unittest.TestCase):
             output, {"file": "Basename returned!", "file_temp": "temporary_file"}
         )
 
-        resolwe_mock._upload_file.assert_called_once_with("/good/path/to/file.txt")
+        resolwe_mock.uploader.upload.assert_called_once_with("/good/path/to/file.txt")
 
     @patch("resdk.resolwe.Resolwe", spec=True)
     def test_url(self, resolwe_mock):
@@ -354,6 +359,7 @@ class TestRun(unittest.TestCase):
                 "data.post.return_value": {"data": "some_data"},
             }
         )
+        resolwe_mock.uploader = MagicMock(spec=Uploader)
         data_mock.return_value = "Data object"
 
         data = Resolwe.run(
@@ -364,7 +370,7 @@ class TestRun(unittest.TestCase):
             collection=1,
         )
         # Confirm that no files to upload in input:
-        self.assertEqual(resolwe_mock._upload_file.call_count, 0)
+        self.assertEqual(resolwe_mock.uploader.upload.call_count, 0)
         data_mock.assert_called_with(data="some_data", resolwe=resolwe_mock)
         self.assertEqual(data, "Data object")
 
@@ -387,8 +393,7 @@ class TestUploadFile(unittest.TestCase):
             status_code=200, **{"json.return_value": requests_response}
         )
 
-        response = Resolwe._upload_file(resolwe_mock, self.file_path)
-
+        response = Uploader(resolwe_mock)._upload_local(self.file_path)
         self.assertEqual(response, "fake_name")
 
     @patch("resdk.resolwe.requests")
@@ -398,7 +403,8 @@ class TestUploadFile(unittest.TestCase):
         # Immitate response form server - always status 400
         requests_mock.post.return_value = MagicMock(status_code=400)
 
-        response = Resolwe._upload_file(resolwe_mock, self.file_path)
+        response = Uploader(resolwe_mock)._upload_local(self.file_path)
+        # response = Resolwe._upload_file(resolwe_mock, self.file_path)
 
         self.assertIsNone(response)
         self.assertEqual(resolwe_mock.logger.warning.call_count, 4)
@@ -406,6 +412,7 @@ class TestUploadFile(unittest.TestCase):
     @patch("resdk.resolwe.Resolwe", spec=True)
     def test_one_bad_other_ok(self, resolwe_mock):
         resolwe_mock.configure_mock(**self.config)
+        resolwe_mock.uploader = MagicMock(spec=Uploader)
         requests_response = {"files": [{"temp": "fake_name"}]}
         response_ok = MagicMock(
             status_code=200, **{"json.return_value": requests_response}
@@ -417,7 +424,7 @@ class TestUploadFile(unittest.TestCase):
             response_ok,
             response_ok,
         ]
-        response = Resolwe._upload_file(resolwe_mock, self.file_path)
+        response = Uploader(resolwe_mock)._upload_local(self.file_path)
 
         self.assertEqual(response, "fake_name")
         self.assertEqual(resolwe_mock.logger.warning.call_count, 1)

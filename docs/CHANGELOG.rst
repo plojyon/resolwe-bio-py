@@ -9,6 +9,10 @@ All notable changes to this project are documented in this file.
 Unreleased
 ==========
 
+Added
+-----
+- Support upload directly to S3 bucket
+
 Fixed
 -----
 - Fix parsing of new metadata format in ``resdk.tables.BaseTables.meta``
