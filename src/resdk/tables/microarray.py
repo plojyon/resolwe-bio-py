@@ -10,7 +10,6 @@ MATables
     .. automethod:: __init__
 
 """
-import os
 from functools import lru_cache
 from typing import Callable, List, Optional
 
@@ -78,18 +77,6 @@ class MATables(BaseTables):
         exp = self._load_fetch(self.EXP)
         self.probe_ids = exp.columns.tolist()
         return exp
-
-    def _cache_file(self, data_type: str) -> str:
-        """Return full cache file path."""
-        if data_type == self.META:
-            version = self._metadata_version
-        elif data_type == self.QC:
-            version = self._qc_version
-        else:
-            version = self._data_version
-
-        cache_file = f"{self.collection.slug}_{data_type}_{version}.pickle"
-        return os.path.join(self.cache_dir, cache_file)
 
     def _download_qc(self) -> pd.DataFrame:
         """Download sample QC data and transform into table."""
