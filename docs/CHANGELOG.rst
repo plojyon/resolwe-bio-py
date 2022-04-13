@@ -17,6 +17,9 @@ Fixed
 -----
 - Fix parsing of new metadata format in ``resdk.tables.BaseTables.meta``
 
+Changed
+-------
+- ``Metadata.set_index(df)`` add column if sample name / slug is in ``df`` index
 
 ===================
 14.1.0 - 2022-03-25

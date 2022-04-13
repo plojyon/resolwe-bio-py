@@ -89,9 +89,19 @@ class Metadata(Data):
         return self._df_bytes
 
     def set_index(self, df):
-        """Set index of df to Sample ID."""
+        """Set index of df to Sample ID.
+
+        If there is a column with ``Sample ID`` just set that as index. If there is
+        ``Sample name`` or ``Sample slug`` column, map sample name / slug to sample ID's
+        and set ID's as an index. If no suitable column in there, raise an error.
+        Works also if any of the above options is already an index with appropriate name.
+        """
         for match_column in self.sample_identifier_columns:
             if match_column in df.columns:
+                break
+            if match_column == df.index.name:
+                # Add new column with index name
+                df[match_column] = df.index
                 break
         else:
             options = ", ".join(self.sample_identifier_columns)

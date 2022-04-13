@@ -73,8 +73,14 @@ than call ``save()``::
 
     m = Metadata(resolwe=<resolwe>)
     m.collection = <my-collection>
-    m.df = <my-df>
+    my_df = m.set_index(<my-df>)
+    m.df = my_df
     m.save()
+
+where ``m.set_index(<my-df>)`` is a helper function that finds ``Sample name/slug/ID``
+column or index name, maps it to ``Sample ID`` and sets it as index.
+This function is recommended to use because the validation step is trying to
+match ``m.df`` index with ``m.collection`` sample ID's.
 
 Deleting Metadata works the same as for any other resource. Be careful,
 this cannot be undone and you need to have sufficient permissions::

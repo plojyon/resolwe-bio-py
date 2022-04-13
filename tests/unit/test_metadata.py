@@ -92,6 +92,12 @@ class TestMetadata(unittest.TestCase):
         df_out = m.set_index(df)
         pd.testing.assert_frame_equal(self.df, df_out.drop(columns=["Sample name"]))
 
+        # If Sample name is in index, map to sample ID and set that as index
+        df = pd.DataFrame({"Response": ["PD", "CR"], "Sample name": ["S1", "S2"]})
+        df = df.set_index("Sample name")
+        df_out = m.set_index(df)
+        pd.testing.assert_frame_equal(self.df, df_out.drop(columns=["Sample name"]))
+
     def test_validate(self):
         with self.assertRaisesRegex(
             ValueError, "Setting df attribute before setting collection is not allowed."
