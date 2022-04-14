@@ -172,7 +172,10 @@ class BaseTables(abc.ABC):
         data = []
         sample_ids, repeated_sample_ids = set(), set()
         for datum in self.collection.data.filter(
-            type=self.process_type, ordering="-created", fields=DATA_FIELDS
+            type=self.process_type,
+            status="OK",
+            ordering="-created",
+            fields=DATA_FIELDS,
         ):
             if datum.sample.id in sample_ids:
                 repeated_sample_ids.add(datum.sample.id)
