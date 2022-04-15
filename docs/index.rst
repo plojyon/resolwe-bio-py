@@ -21,22 +21,6 @@ Install from PyPI::
 
   pip install resdk
 
-.. TODO: Remove this warning when not needed anymore: Miha, Domen is this still relevant?
-.. warning::
-
-   If you use macOS, be aware that the version of `Python shipped with the
-   system doesn't support TLSv1.2`_, which is required for connecting to
-   any Genialis Server (and probably others). To solve the issue,
-   install the latest version of Python 3.6+ `via official
-   installer from Python.org`_ or `with Homebrew`_.
-
-.. _`Python shipped with the system doesn't support TLSv1.2`:
-    http://pyfound.blogspot.si/2017/01/time-to-upgrade-your-python-tls-v12.html
-.. _`via official installer from Python.org`:
-    https://www.python.org/downloads/mac-osx/
-.. _`with Homebrew`:
-    http://docs.python-guide.org/en/latest/starting/install/osx/
-
 If you would like to contribute to the SDK code base, follow the
 :ref:`installation steps for developers <contributing>`.
 
