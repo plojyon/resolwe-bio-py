@@ -36,24 +36,6 @@ from resdk.utils.table_cache import (
     save_pickle,
 )
 
-SAMPLE_FIELDS = [
-    "id",
-    "slug",
-    "name",
-    "descriptor",
-    "descriptor_schema",
-]
-DATA_FIELDS = [
-    "id",
-    "slug",
-    "modified",
-    "entity__name",
-    "entity__id",
-    "output",
-    "process__output_schema",
-    "process__slug",
-]
-
 # See _download_data function for in-depth explanation of this.
 EXP_ASYNC_CHUNK_SIZE = 50
 
@@ -79,6 +61,24 @@ class BaseTables(abc.ABC):
     process_type = None
     META = "meta"
     QC = "qc"
+
+    SAMPLE_FIELDS = [
+        "id",
+        "slug",
+        "name",
+        "descriptor",
+        "descriptor_schema",
+    ]
+    DATA_FIELDS = [
+        "id",
+        "slug",
+        "modified",
+        "entity__name",
+        "entity__id",
+        "output",
+        "process__output_schema",
+        "process__slug",
+    ]
 
     def __init__(
         self,
@@ -142,7 +142,7 @@ class BaseTables(abc.ABC):
         """
         sample_ids = set([d.sample.id for d in self._data])
 
-        query = self.collection.samples.filter(fields=SAMPLE_FIELDS)
+        query = self.collection.samples.filter(fields=self.SAMPLE_FIELDS)
         return [s for s in query if s.id in sample_ids]
 
     @property
@@ -175,7 +175,7 @@ class BaseTables(abc.ABC):
             type=self.process_type,
             status="OK",
             ordering="-created",
-            fields=DATA_FIELDS,
+            fields=self.DATA_FIELDS,
         ):
             if datum.sample.id in sample_ids:
                 repeated_sample_ids.add(datum.sample.id)
@@ -382,7 +382,7 @@ class BaseTables(abc.ABC):
         return self.collection.data.get(
             type="data:metadata:unique",
             ordering="-modified",
-            fields=DATA_FIELDS,
+            fields=self.DATA_FIELDS,
             limit=1,
         )
 
