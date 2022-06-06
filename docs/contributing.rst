@@ -100,26 +100,4 @@ Push the tag to the main ReSDK's git repository::
 
     git push <resdk-upstream-name> master <new-version>
 
-Now you can release the code on PyPI. Clean ``build`` directory::
-
-    python setup.py clean -a
-
-Remove previous distributions in ``dist`` directory::
-
-    rm dist/*
-
-Remove previous ``egg-info`` directory::
-
-    rm -r *.egg-info
-
-Create source distribution::
-
-    python setup.py sdist
-
-Build wheel::
-
-    python setup.py bdist_wheel
-
-Upload distribution to PyPI::
-
-    twine upload dist/*
+The tagged code will we be released to PyPI automatically.
