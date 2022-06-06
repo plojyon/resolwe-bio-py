@@ -5,9 +5,9 @@ Change Log
 All notable changes to this project are documented in this file.
 
 
-==========
-Unreleased
-==========
+===================
+15.0.0 - 2022-06-06
+===================
 
 Added
 -----
@@ -24,6 +24,7 @@ Fixed
 Changed
 -------
 - ``Metadata.set_index(df)`` add column if sample name / slug is in ``df`` index
+
 
 ===================
 14.1.0 - 2022-03-25
