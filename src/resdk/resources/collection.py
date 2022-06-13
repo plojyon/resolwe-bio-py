@@ -1,11 +1,13 @@
 """Collection resources."""
 import logging
+from urllib.parse import urljoin
 
 from resdk.shortcuts.collection import CollectionRelationsMixin
 
 from ..utils.decorators import assert_object_exists
 from .base import BaseResolweResource
 from .descriptor import DescriptorSchema
+from .utils import _get_billing_account_id
 
 
 class BaseCollection(BaseResolweResource):
@@ -203,3 +205,17 @@ class Collection(CollectionRelationsMixin, BaseCollection):
         """
         duplicated = self.api().duplicate.post({"ids": [self.id]})
         return self.__class__(resolwe=self.resolwe, **duplicated[0])
+
+    @assert_object_exists
+    def assign_to_billing_account(self, billing_account_name):
+        """Assign given collection to a billing account."""
+        billing_account_id = _get_billing_account_id(self.resolwe, billing_account_name)
+
+        # Assign collection to a billing account
+        response = self.resolwe.session.post(
+            urljoin(
+                self.resolwe.url, f"api/billingaccount/{billing_account_id}/collection"
+            ),
+            data={"collection_id": self.id},
+        )
+        response.raise_for_status()

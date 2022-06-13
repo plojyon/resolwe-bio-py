@@ -1,5 +1,7 @@
 """Resource utility functions."""
+import functools
 from datetime import datetime
+from urllib.parse import urljoin
 
 import pytz
 import tzlocal
@@ -204,3 +206,18 @@ def parse_resolwe_datetime(dtime):
         local_time = utc_aware.astimezone(local_tz)
 
         return local_time
+
+
+@functools.lru_cache(128)
+def _get_billing_account_id(res, name):
+    """Get billing account ID based on it's name."""
+    response = res.session.get(urljoin(res.url, f"api/billingaccount"))
+    if not response.json():
+        raise ValueError(
+            f"You do not have sufficient permissions for assigning billing accounts."
+        )
+    for item in response.json():
+        if item["name"] == name:
+            return item["id"]
+    else:
+        raise ValueError(f'Could not find a billing account with name "{name}"')

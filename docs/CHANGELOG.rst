@@ -5,6 +5,15 @@ Change Log
 All notable changes to this project are documented in this file.
 
 
+==========
+Unreleased
+==========
+
+Added
+-----
+- Support setting billing account on ``Collection`` resource
+
+
 ===================
 15.0.0 - 2022-06-06
 ===================
