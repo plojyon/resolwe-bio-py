@@ -7,6 +7,7 @@ import unittest
 from mock import MagicMock, patch
 
 from resdk.resources.collection import Collection
+from resdk.resources.descriptor import DescriptorSchema
 from resdk.resources.relation import Relation
 
 
@@ -46,6 +47,19 @@ class TestRelation(unittest.TestCase):
         relation.resolwe.collection.get = MagicMock(return_value=collection)
         relation._collection = collection
         self.assertEqual(relation.collection, collection)
+
+    # I appears it is not possible to deepcopy MagicMocks so we just patch
+    # the deepcopy functionality:
+    @patch("resdk.resources.base.copy")
+    def test_descriptor_schema(self, copy_mock):
+        relation = Relation(id=1, resolwe=MagicMock())
+        ds = DescriptorSchema(id=3, resolwe=MagicMock())
+        ds.id = 3  # this is overriden when initialized
+
+        # get collection
+        relation.resolwe.descriptor_schema.get = MagicMock(return_value=ds)
+        relation._descriptor_schema = ds
+        self.assertEqual(relation.descriptor_schema, ds)
 
     def test_repr(self):
         relation = Relation(id=1, resolwe=MagicMock())

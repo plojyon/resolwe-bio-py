@@ -12,6 +12,8 @@ Unreleased
 Added
 -----
 - Support setting billing account on ``Collection`` resource
+- Support setting ``descriptor`` and ``DescriptorSchema`` on ``Relation``
+  resource
 
 
 ===================

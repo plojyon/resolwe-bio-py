@@ -5,6 +5,7 @@ from resdk.exceptions import ValidationError
 
 from .base import BaseResolweResource
 from .collection import Collection
+from .descriptor import DescriptorSchema
 from .utils import get_sample_id
 
 
@@ -19,10 +20,14 @@ class Relation(BaseResolweResource):
 
     endpoint = "relation"
 
+    READ_ONLY_FIELDS = BaseResolweResource.READ_ONLY_FIELDS + ("descriptor_dirty",)
+
     UPDATE_PROTECTED_FIELDS = BaseResolweResource.UPDATE_PROTECTED_FIELDS + ("type",)
     WRITABLE_FIELDS = BaseResolweResource.WRITABLE_FIELDS + (
         "collection",
         "category",
+        "descriptor",
+        "descriptor_schema",
         "partitions",
         "unit",
     )
@@ -33,9 +38,15 @@ class Relation(BaseResolweResource):
 
         #: Collection in which relation is
         self._collection = None
+        #: ``DescriptorSchema`` of ``Relation`` object
+        self._descriptor_schema = None
         #: List of samples in the relation
         self._samples = None
 
+        #: indicate whether `descriptor` doesn't match `descriptor_schema` (is dirty)
+        self.descriptor_dirty = None
+        #: annotation data, with the form defined in descriptor_schema
+        self.descriptor = None
         #: list of ``RelationPartition`` objects in the ``Relation``
         self.partitions = None
         #: type of the relation
@@ -77,9 +88,20 @@ class Relation(BaseResolweResource):
         """Set collection to which relation belongs."""
         self._resource_setter(payload, Collection, "_collection")
 
+    @property
+    def descriptor_schema(self):
+        """Get descriptor schema."""
+        return self._descriptor_schema
+
+    @descriptor_schema.setter
+    def descriptor_schema(self, payload):
+        """Set descriptor schema."""
+        self._resource_setter(payload, DescriptorSchema, "_descriptor_schema")
+
     def update(self):
         """Clear cache and update resource fields from the server."""
         self._samples = None
+        self._descriptor_schema = None
 
         super().update()
 
