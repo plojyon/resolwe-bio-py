@@ -14,6 +14,7 @@ import logging
 import operator
 
 from resdk.resources import DescriptorSchema, Process
+from resdk.resources.base import BaseResource
 
 
 class ResolweQuery:
@@ -152,11 +153,23 @@ class ResolweQuery:
         new_obj._offset = self._offset
         return new_obj
 
+    def _dehydrate_resources(self, obj):
+        """Iterate through object and replace all objects with their ids."""
+        if isinstance(obj, BaseResource):
+            return obj.id
+        if isinstance(obj, list):
+            return [self._dehydrate_resources(element) for element in obj]
+        if isinstance(obj, dict):
+            return {key: self._dehydrate_resources(value) for key, value in obj.items()}
+
+        return obj
+
     def _add_filter(self, filter_):
         """Add filtering parameters."""
         for key, value in filter_.items():
             # 'sample' is called 'entity' in the backend.
             key = key.replace("sample", "entity")
+            value = self._dehydrate_resources(value)
 
             if isinstance(value, list):
                 value = ",".join(map(str, value))

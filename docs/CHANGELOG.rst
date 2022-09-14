@@ -15,6 +15,11 @@ Added
 - Support setting ``descriptor`` and ``DescriptorSchema`` on ``Relation``
   resource
 
+Fixed
+-----
+- Fix ``ResolweQuery`` to also accept Resource objects as query parameters,
+  not just their ID's
+
 
 ===================
 15.0.0 - 2022-06-06

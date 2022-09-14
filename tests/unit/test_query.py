@@ -131,21 +131,31 @@ class TestResolweQuery(unittest.TestCase):
 
     def test_add_filter(self):
         query = MagicMock(
-            spec=ResolweQuery, _filters=defaultdict(list, {"slug": ["test"]})
+            spec=ResolweQuery,
+            _filters=defaultdict(list, {"slug": ["test"]}),
+            _dehydrate_resources=MagicMock(return_value=1),
         )
         query.resource.query_method = "GET"
         ResolweQuery._add_filter(query, {"id": 1})
         self.assertEqual(dict(query._filters), {"slug": ["test"], "id": [1]})
 
-        query = MagicMock(spec=ResolweQuery, _filters={"slug": "test"})
+        query = MagicMock(
+            spec=ResolweQuery,
+            _filters={"slug": "test"},
+            _dehydrate_resources=MagicMock(return_value=1),
+        )
         query.resource.query_method = "POST"
         ResolweQuery._add_filter(query, {"id": 1})
         self.assertEqual(query._filters, {"slug": "test", "id": 1})
 
-        query = MagicMock(spec=ResolweQuery, _filters={"slug": "test"})
+        query = MagicMock(
+            spec=ResolweQuery,
+            _filters={"slug": "test"},
+            _dehydrate_resources=MagicMock(return_value=2),
+        )
         query.resource.query_method = "POST"
-        ResolweQuery._add_filter(query, {"sample": "my_sample"})
-        self.assertEqual(query._filters, {"slug": "test", "entity": "my_sample"})
+        ResolweQuery._add_filter(query, {"sample": 2})
+        self.assertEqual(query._filters, {"slug": "test", "entity": 2})
 
     def test_compose_filters(self):
         query = MagicMock(spec=ResolweQuery)
