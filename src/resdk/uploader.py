@@ -141,27 +141,12 @@ class Uploader:
         """
         prefix = str(self.upload_config["config"]["prefix"])
         bucket_name = self.upload_config["config"]["bucket_name"]
-        presigned_url_duration = self.upload_config["config"].get(
-            "presigned_url_duration", 3600
-        )
 
         destination = Path(prefix) / str(uuid.uuid4())
         self._s3_client.upload_file(
             Filename=str(file_path), Key=str(destination), Bucket=bucket_name
         )
-        response = None
-        try:
-            response = self._s3_client.generate_presigned_url(
-                "get_object",
-                Params={"Bucket": bucket_name, "Key": str(destination)},
-                ExpiresIn=presigned_url_duration,
-            )
-        except botocore.exceptions.ClientError:
-            self.resolwe.logger.exception("Error creating presigned URL")
-            raise
-
-        # The response contains the presigned URL
-        return response
+        return f"s3://{bucket_name}/{destination}"
 
     def _upload_local(self, file_path: Union[Path, str]):
         """Upload the given file to the server.
