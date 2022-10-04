@@ -19,8 +19,10 @@ class TestCache(unittest.TestCase):
             with patch("sys.platform", platform):
                 self.assertTrue(cache_dir_resdk_base().endswith("ReSDK"))
 
-    @patch("resdk.utils.table_cache.__version__", "0.0.0.dev0+g0d51338")
-    def test_cache_dir_resdk(self):
+    @patch("resdk.utils.table_cache.version")
+    def test_cache_dir_resdk(self, version_mock):
+        version_mock.return_value = "0.0.0.dev0+g0d51338"
+
         with patch("sys.platform", "darwin"):
             self.assertTrue(
                 cache_dir_resdk().endswith("Library/Caches/ReSDK/0.0.0.dev")

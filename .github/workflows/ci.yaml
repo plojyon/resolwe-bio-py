@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        tox-env: [py37, py38, py39, py310, docs, linters, packaging]
+        tox-env: [py37, py38, py39, py310, docs, linters, package]
         include:
           - tox-env: py37
             python-version: 3.7
@@ -29,7 +29,7 @@ jobs:
             python-version: "3.10"
           - tox-env: linters
             python-version: 3.8
-          - tox-env: packaging
+          - tox-env: package
             python-version: 3.8
 
     steps:

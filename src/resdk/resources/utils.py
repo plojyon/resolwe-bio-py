@@ -211,10 +211,10 @@ def parse_resolwe_datetime(dtime):
 @functools.lru_cache(128)
 def _get_billing_account_id(res, name):
     """Get billing account ID based on it's name."""
-    response = res.session.get(urljoin(res.url, f"api/billingaccount"))
+    response = res.session.get(urljoin(res.url, "api/billingaccount"))
     if not response.json():
         raise ValueError(
-            f"You do not have sufficient permissions for assigning billing accounts."
+            "You do not have sufficient permissions for assigning billing accounts."
         )
     for item in response.json():
         if item["name"] == name:

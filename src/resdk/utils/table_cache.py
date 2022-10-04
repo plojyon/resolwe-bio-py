@@ -5,7 +5,10 @@ import sys
 from shutil import rmtree
 from typing import Any
 
-from resdk.__about__ import __version__
+try:
+    from importlib.metadata import version
+except ImportError:
+    from importlib_metadata import version
 
 
 def _default_cache_dir() -> str:
@@ -31,7 +34,7 @@ def cache_dir_resdk_base() -> str:
 
 def cache_dir_resdk() -> str:
     """Return ReSDK cache directory."""
-    v = __version__
+    v = version("resdk")
     if "dev" in v:
         # remove git commit hash
         v = v[: v.find("dev") + 3]

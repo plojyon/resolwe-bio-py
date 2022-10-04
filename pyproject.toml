@@ -1,9 +1,92 @@
 [build-system]
 requires = [
-    "setuptools >= 35.0.2",
-    "setuptools_scm >= 3.1.0, <4",
+    "setuptools >= 64.0.0",
+    "setuptools_scm >= 6.4.0",
 ]
 build-backend = "setuptools.build_meta"
 
+[project]
+name = "resdk"
+description = "Resolwe SDK for Python"
+authors = [
+    {name = "Genialis, Inc", email = "dev-team@genialis.com"},
+]
+dynamic = ["version"]
+readme = "README.rst"
+license = {file = "LICENSE"}
+requires-python = ">=3.7, <3.11"
+keywords = [
+    "bio",
+    "bioinformatics",
+    "dataflow",
+    "django",
+    "pipelines",
+    "python",
+    "resolwe",
+    "sdk",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+]
+dependencies = [
+    "aiohttp",
+    "requests>=2.6.0",
+    "slumber>=0.7.1",
+    "wrapt",
+    "pytz>=2018.4",
+    "tzlocal>=1.5.1",
+    "pandas>=1.0.0",
+    "tqdm",
+    "openpyxl",
+    "xlrd",
+    "boto3[crt]~=1.24",
+    "boto3-stubs[s3]~=1.24",
+    'importlib-metadata; python_version<"3.8"',
+]
+[project.optional-dependencies]
+docs = [
+    "sphinx~=5.2.3",
+    "sphinx_rtd_theme~=1.0.0",
+    # TODO: Consider using sphinx-pyproject in the future. At the time of this
+    # writing the missing feature was disability of sphinx-pyproject to detect
+    # dynamic project version
+]
+package = [
+    "twine~=4.0.1",
+    "check-manifest>=0.48",
+    "build",
+]
+test = [
+    "black",
+    "flake8",
+    "isort",
+    "mock",
+    "pydocstyle[toml]",
+    "pytest-cov",
+]
+[project.urls]
+repository = "https://github.com/genialis/resolwe-bio-py/"
+documentation = "https://resdk.readthedocs.io/en/latest/"
+
+[tool.setuptools_scm]
+
 [tool.black]
 target-version = ["py37", "py38", "py39", "py310"]
+
+[tool.pydocstyle]
+add-select = "D404"
+add-ignore = "D202"
+
+[tool.isort]
+profile = "black"
