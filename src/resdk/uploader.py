@@ -144,9 +144,9 @@ class Uploader:
 
         destination = Path(prefix) / str(uuid.uuid4())
         self._s3_client.upload_file(
-            Filename=str(file_path), Key=str(destination), Bucket=bucket_name
+            Filename=str(file_path), Key=destination.as_posix(), Bucket=bucket_name
         )
-        return f"s3://{bucket_name}/{destination}"
+        return f"s3://{bucket_name}/{destination.as_posix()}"
 
     def _upload_local(self, file_path: Union[Path, str]):
         """Upload the given file to the server.

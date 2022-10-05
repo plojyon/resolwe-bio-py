@@ -19,6 +19,8 @@ Fixed
 -----
 - Fix ``ResolweQuery`` to also accept Resource objects as query parameters,
   not just their ID's
+- Upload to ``S3`` bucket failing in ``Windows`` due to use of backslash in the
+  destination path
 
 
 ===================
