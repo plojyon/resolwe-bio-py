@@ -16,15 +16,11 @@ sftp-config.json
 *.so
 *.dll
 
-# Ignore built documentation
-_build
-
 # Tox files
 .tox/
 
 # ignore Coverage.py files
-.coverage
-htmlcov/
+.coverage*
 
 # Ignore files created by setup.py.
 build/
@@ -32,10 +28,6 @@ dist/
 MANIFEST
 *.egg-info
 *.egg
-distribute*.tar.gz
-
-# Ignore SDK log file
-/resdk/logfile.txt
 
 # Ignore testing cache
 .pytest_cache
