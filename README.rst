@@ -57,6 +57,10 @@ Install from PyPI::
 If you would like to contribute to the SDK codebase, follow the
 `installation steps for developers`_.
 
+.. note::
+
+  If you are using Apple silicon you should use Python version 3.10 or higher.
+
 .. _installation steps for developers: http://resdk.readthedocs.io/en/latest/contributing.html
 
 Quick Start
