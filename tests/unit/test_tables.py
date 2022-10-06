@@ -193,17 +193,17 @@ class TestTables(unittest.TestCase):
         self.assertIs(rc, self.expressions_df)
 
     @patch.object(RNATables, "_mapping")
-    def test_id_to_symbol(self, mapping_mock):
+    def test_readable_columns(self, mapping_mock):
         mapping_mock.side_effect = self.web_request(self.gene_map)
 
         ct = RNATables(self.collection)
         with self.assertRaises(ValueError):
-            mapping = ct.id_to_symbol
+            mapping = ct.readable_columns
 
         ct = RNATables(self.collection)
         ct.gene_ids = ["ENSG001", "ENSG002", "ENSG003"]
         t = time()
-        mapping = ct.id_to_symbol
+        mapping = ct.readable_columns
         self.assertTrue(time() - t > 0.1)
         mapping_mock.assert_called_with(
             ["ENSG001", "ENSG002", "ENSG003"], "ENSEMBL", "Homo sapiens"
@@ -211,12 +211,12 @@ class TestTables(unittest.TestCase):
         self.assertIs(mapping, self.gene_map)
 
         # test if use case works
-        new_exp = self.expressions_df.rename(columns=ct.id_to_symbol)
+        new_exp = self.expressions_df.rename(columns=ct.readable_columns)
         self.assertListEqual(new_exp.columns.tolist(), ["GA", "GB", "GC"])
 
         # use cache
         t = time()
-        mapping = ct.id_to_symbol
+        mapping = ct.readable_columns
         self.assertTrue(time() - t < 0.1)
         self.assertIs(mapping, self.gene_map)
 

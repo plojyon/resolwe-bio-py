@@ -354,7 +354,7 @@ class RNATables(BaseTables):
 
         .. code-block:: python
 
-            exp = exp.rename(columns=tables.id_to_symbol)
+            exp = exp.rename(columns=tables.readable_columns)
 
         :return: dict with gene ids as keys and gene symbols as values
         """
@@ -365,17 +365,6 @@ class RNATables(BaseTables):
             raise ValueError("Expression data must be used before!")
 
         return self._mapping(self.gene_ids, source, species)
-
-    @property
-    @lru_cache()
-    def id_to_symbol(self) -> Dict[str, str]:
-        """Map of source gene ids to symbols."""
-        warnings.warn(
-            "Attribute `id_to_symbol` will be removed in Q1 of 2022. "
-            "Use `readable_columns` instead.",
-            DeprecationWarning,
-        )
-        return self.readable_columns
 
     @property
     @lru_cache()

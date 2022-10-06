@@ -15,6 +15,10 @@ Added
 - Support setting ``descriptor`` and ``DescriptorSchema`` on ``Relation``
   resource
 
+Changed
+-------
+- Deprecate ``resdk.tables.RNATables.id_to_symbol`` attribute.
+
 Fixed
 -----
 - Fix ``ResolweQuery`` to also accept Resource objects as query parameters,

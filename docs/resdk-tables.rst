@@ -62,9 +62,9 @@ the :ref:`reference`, here we list the most commonly used ones::
     sum149.qc
 
     # Dictionary that maps gene ID's into gene symbols
-    sum149.id_to_symbol
+    sum149.readable_columns
     # This is handy to rename column names (gene ID's) to gene symbols
-    sum149.rc.rename(columns=sum149.id_to_symbol)
+    sum149.rc.rename(columns=sum149.readable_columns)
 
 
 .. note::
@@ -81,7 +81,7 @@ In our example we will only work with a set of `TIS signature genes`_::
 We will identify low expressed genes and only keep the ones with average raw
 expression above 20::
 
-    tis_rc = sum149.rc.rename(columns=sum149.id_to_symbol)[TIS_GENES]
+    tis_rc = sum149.rc.rename(columns=sum149.readable_columns)[TIS_GENES]
     mean = tis_rc.mean(axis=0)
     high_expressed_genes = mean.loc[mean > 20].index
 
@@ -89,7 +89,7 @@ Now, lets select TPM normalized expressions and keep only highly
 expressed tis genes. We also transform to ``log2(TPM + 1)``::
 
     import numpy as np
-    tis_tpm = sum149.exp.rename(columns=sum149.id_to_symbol)[high_expressed_genes]
+    tis_tpm = sum149.exp.rename(columns=sum149.readable_columns)[high_expressed_genes]
     tis_tpm_log = np.log(tis_tpm + 1)
 
 Finally, we perform PCA and visualize the results::
