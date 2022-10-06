@@ -295,11 +295,7 @@ class BaseTables(abc.ABC):
             elif data_type == self.QC:
                 data = self._download_qc()
             else:
-                # XXX: When dropping support for Python 3.6 the below
-                # statement can be replaced with:
-                # data = asyncio.run(self._download_data(data_type))
-                loop = asyncio.get_event_loop()
-                data = loop.run_until_complete(self._download_data(data_type))
+                data = asyncio.run(self._download_data(data_type))
 
             save_pickle(data, self._cache_file(data_type))
         return data

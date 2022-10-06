@@ -54,5 +54,4 @@ async def _batch_download(resolwe, uris, parser) -> pd.DataFrame:
 
 def batch_download(resolwe, uris, parser) -> pd.DataFrame:
     """Download multiple files defined by their uri asynchronously."""
-    loop = asyncio.get_event_loop()
-    return loop.run_until_complete(_batch_download(resolwe, uris, parser))
+    return asyncio.run(_batch_download(resolwe, uris, parser))
