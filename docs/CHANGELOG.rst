@@ -5,9 +5,9 @@ Change Log
 All notable changes to this project are documented in this file.
 
 
-==========
-Unreleased
-==========
+===================
+16.0.0 - 2022-10-19
+===================
 
 Added
 -----
@@ -17,7 +17,8 @@ Added
 
 Changed
 -------
-- Deprecate ``resdk.tables.RNATables.id_to_symbol`` attribute.
+- **BACKWARD INCOMPATIBLE:** Deprecate ``resdk.tables.RNATables.id_to_symbol``
+  attribute.
 
 Fixed
 -----
