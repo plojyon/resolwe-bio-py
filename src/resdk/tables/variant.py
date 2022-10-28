@@ -11,13 +11,12 @@ VariantTables
 import re
 import warnings
 from functools import lru_cache
-from itertools import groupby
-from typing import Callable, List, Optional
+from typing import Callable, List, Optional, Union
 
 import numpy as np
 import pandas as pd
 
-from resdk.resources import Collection, Data
+from resdk.resources import Collection, Data, Geneset
 
 from .base import BaseTables
 
@@ -54,6 +53,7 @@ class VariantTables(BaseTables):
     DEPTH_C = "depth_c"
     DEPTH_G = "depth_g"
     DEPTH_T = "depth_t"
+    FILTER = "FILTER"
 
     data_type_to_field_name = {
         VARIANTS: "tsv",
@@ -62,6 +62,7 @@ class VariantTables(BaseTables):
         DEPTH_C: "tsv",
         DEPTH_G: "tsv",
         DEPTH_T: "tsv",
+        FILTER: "tsv",
     }
 
     DATA_FIELDS = [
@@ -79,81 +80,182 @@ class VariantTables(BaseTables):
     def __init__(
         self,
         collection: Collection,
-        discard_fakes: Optional[bool] = True,
-        mutations: Optional[List[str]] = None,
+        geneset: Optional[List[str]] = None,
+        filtering: bool = True,
         cache_dir: Optional[str] = None,
         progress_callable: Optional[Callable] = None,
     ):
         """Initialize class.
 
-        :param collection: collection to use
-        :param mutations: only consider these mutations
-        :param discard_fakes: discard fake variants
-        :param cache_dir: cache directory location, if not specified system specific
-                          cache directory is used
-        :param progress_callable: custom callable that can be used to report
-                                  progress. By default, progress is written to
-                                  stderr with tqdm
+        :param collection: Collection to use.
+        :param geneset: Only consider mutations from this gene-set.
+            Can be a list of gene symbols or a valid geneset Data
+            object id / slug.
+        :param filtering: Only show variants that pass QC filters.
+        :param cache_dir: Cache directory location, if not specified
+            system specific cache directory is used.
+        :param progress_callable: Custom callable that can be used to
+            report progress. By default, progress is written to stderr
+            with tqdm.
         """
         super().__init__(collection, cache_dir, progress_callable)
+        self.filtering = filtering
 
-        self.discard_fakes = discard_fakes
-
-        self.mutations = mutations
-        if mutations is not None:
-            if not isinstance(mutations, list):
-                raise ValueError("Mutations must be a list of strings")
+        self._geneset = None
+        if geneset is None:
+            self._check_heterogeneous_mutations()
+            # Assign geneset from the Genialis Platform
+            self.geneset = self._get_obj_geneset(self._data[0])
         else:
-            # Check for heterogeneous mutations only if mutations is not specified
-            self.check_heterogeneous_mutations()
+            self.geneset = geneset
 
-    def check_heterogeneous_mutations(self):
-        """Ensure variants are selected for the same mutations in all samples."""
-        mutations = {str(d.input["mutations"]) for d in self._data}
+    @property
+    def geneset(self):
+        """Get geneset."""
+        return self._geneset
+
+    @geneset.setter
+    def geneset(self, value: Union[str, int, Geneset, List[str]]):
+        """Set geneset.
+
+        Geneset can be set only once. On attempt to re-set, ValueError is raised.
+        """
+        # Geneset can be set only once, prevent modifications
+        if self._geneset is not None:
+            raise ValueError("It is not allowed to change geneset value.")
+
+        if value is None:
+            return
+
+        # If id / slug of a geneset is given, get it from the Resolwe server
+        if isinstance(value, (int, str)):
+            gs = self.resolwe.geneset.get(value)
+            value = gs.genes
+        elif isinstance(value, Geneset):
+            value = value.genes
+
+        if isinstance(value, (list, set, tuple, pd.Series)):
+            self._geneset = set(value)
+        else:
+            raise ValueError(f'Unsupported type of "geneset" input: {value}.')
+
+    @property
+    @lru_cache()
+    def variants(self) -> pd.DataFrame:
+        """Get variants table.
+
+        There are 4 possible values:
+
+            - 0 - wild-type, no variant
+            - 1 - heterozygous mutation
+            - 2 - homozygous mutation
+            - NaN - QC filters are failing - mutation status is unreliable
+
+        """
+        df = self._load_fetch(self.VARIANTS)
+
+        # Variants that are not reported (NaN) were not detected:
+        # they are wild type.
+        df = df.fillna(0)
+
+        if self.filtering:
+            # Keep values in case .filter == PASS or .variants == 0
+            df = df.where((self.filter == "PASS") | (df == 0), other=np.nan)
+
+        return df
+
+    @property
+    @lru_cache()
+    def depth(self) -> pd.DataFrame:
+        """Get depth table."""
+        return self._load_fetch(self.DEPTH)
+
+    @property
+    @lru_cache()
+    def depth_a(self) -> pd.DataFrame:
+        """Get depth table for adenine."""
+        return self._load_fetch(self.DEPTH_A)
+
+    @property
+    @lru_cache()
+    def depth_c(self) -> pd.DataFrame:
+        """Get depth table for cytosine."""
+        return self._load_fetch(self.DEPTH_C)
+
+    @property
+    @lru_cache()
+    def depth_g(self) -> pd.DataFrame:
+        """Get depth table for guanine."""
+        return self._load_fetch(self.DEPTH_G)
+
+    @property
+    @lru_cache()
+    def depth_t(self) -> pd.DataFrame:
+        """Get depth table for thymine."""
+        return self._load_fetch(self.DEPTH_T)
+
+    # TODO: consider better name
+    @property
+    @lru_cache()
+    def filter(self) -> pd.DataFrame:
+        """Get filter table.
+
+        Values can be:
+
+            - PASS - Variant has passed filters:
+            - DP : Insufficient read depth (< 10.0)
+            - QD: insufficient quality normalized by depth (< 2.0)
+            - FS: insufficient phred-scaled p-value using Fisher's exact
+                test to detect strand bias (> 30.0)
+            - SnpCluster: Variant is part of a cluster
+
+        For example, if a variant has read depth 8, GATK will mark it as DP.
+
+        """
+        return self._load_fetch(self.FILTER)
+
+    def _check_heterogeneous_mutations(self):
+        """Check there are not heterogeneous mutations / genesets.
+
+        Genes for which mutations are computed are given either with mutations
+        (list of genes) or geneset (geneset ID) input. Ensure all the data has
+        the same value of this.
+        """
+        # Currently, frontend assigns empty list if this value is not entered.
+        mutations = {str(d.input.get("mutations", [])) for d in self._data}
+        genesets = {str(d.input.get("geneset", "")) for d in self._data}
 
         if len(mutations) > 1:
-            raise ValueError(
-                "Variants should be computed with the same mutation input. "
-                f"Variants of samples in collection {self.collection.name} "
-                f"have been computed with {', '.join(list(mutations))}.\n"
-                "Use mutations filter in the VariantTables constructor.\n"
-            )
+            name = "mutations"
+            multiple = mutations
+        elif len(genesets) > 1:
+            name = "genesets"
+            multiple = genesets
+        else:
+            return
 
-    def parse_mutations_string(self, mutations):
-        """Parse mutations string."""
-        db = {}
-        for mutation in mutations:
-            if ":" not in mutation:
-                # Only gene is given
-                gene = mutation
-                aa_changes = set()
-            else:
-                gene, aa_changes = mutation.split(":")
-                aa_changes = set(map(str.strip, aa_changes.split(",")))
+        raise ValueError(
+            f"Variants should be computed with the same {name} input. "
+            f"Variants of samples in collection {self.collection.name} "
+            f"have been computed with {', '.join(list(multiple))}.\n"
+            "Use geneset filter in the VariantTables constructor.\n"
+        )
 
-            db[gene] = aa_changes
+    def _get_obj_geneset(self, obj):
+        """Get genes for which mutations are computed in an object."""
+        obj_geneset = set(obj.input.get("mutations", []))
+        if not obj_geneset:
+            # Geneset is given via geneset input:
+            gs = self.resolwe.geneset.get(obj.input["geneset"])
+            obj_geneset = set(gs.genes)
 
-        return db
+            # Convert to gene symbols in case genes are given as feature ID's
+            if gs.output["source"] != "UCSC":
+                qs = self.resolwe.feature.filter(feature_id__in=list(obj_geneset))
+                id_2_name = {obj.feature_id: obj.name for obj in qs}
+                obj_geneset = set([id_2_name[gene] for gene in obj_geneset])
 
-    def is_mutation_subset(self, first, second):
-        """Check if mutations given in first are a a subset of second."""
-        db_first = self.parse_mutations_string(first)
-        db_second = self.parse_mutations_string(second)
-
-        for first_gene, first_aas in db_first.items():
-            if first_gene not in db_second:
-                return False
-            if not db_second[first_gene]:
-                # If the second covers the whole gene, all is good
-                continue
-            second_aas = db_second[first_gene]
-            if not first_aas and second_aas:
-                # First covers the whole gene, second does not
-                return False
-            if not first_aas.issubset(second_aas):
-                return False
-
-        return True
+        return obj_geneset
 
     @property
     @lru_cache()
@@ -161,8 +263,7 @@ class VariantTables(BaseTables):
         """Fetch data objects.
 
         Fetch Data of type ``self.process_type`` from given collection
-        and cache the results in memory. Only the needed subset of
-        fields is fetched.
+        and cache the results in memory.
 
         :return: list of Data objects
         """
@@ -174,17 +275,20 @@ class VariantTables(BaseTables):
             ordering="-created",
             fields=self.DATA_FIELDS,
         ):
-            # 1 Filter by mutations, if required
-            if self.mutations:
-                if not self.is_mutation_subset(
-                    self.mutations, datum.input["mutations"]
-                ):
-                    continue
-
-            # 2 Filter by newest datum in the sample
+            # 1 Filter by newest datum in the sample
             if datum.sample.id in sample_ids:
                 repeated_sample_ids.add(datum.sample.id)
                 continue
+
+            # 2 Filter by genes, if geneset is given
+            if self.geneset:
+                obj_geneset = self._get_obj_geneset(datum)
+                if not self.geneset.issubset(obj_geneset):
+                    warnings.warn(
+                        f"Sample {datum.sample} (Data {datum.id}) does not "
+                        "contain the genes requested in geneset input."
+                    )
+                    continue
 
             sample_ids.add(datum.sample.id)
             data.append(datum)
@@ -205,94 +309,29 @@ class VariantTables(BaseTables):
 
         return data
 
-    @property
-    @lru_cache()
-    def variants(self) -> pd.DataFrame:
-        """Return variants table as a pandas DataFrame object."""
-        return self._load_fetch(self.VARIANTS)
-
-    @property
-    @lru_cache()
-    def depth(self) -> pd.DataFrame:
-        """Return depth table as a pandas DataFrame object."""
-        return self._load_fetch(self.DEPTH)
-
-    @property
-    @lru_cache()
-    def depth_a(self) -> pd.DataFrame:
-        """Return depth table for adenine as a pandas DataFrame object."""
-        return self._load_fetch(self.DEPTH_A)
-
-    @property
-    @lru_cache()
-    def depth_c(self) -> pd.DataFrame:
-        """Return depth table for cytosine as a pandas DataFrame object."""
-        return self._load_fetch(self.DEPTH_C)
-
-    @property
-    @lru_cache()
-    def depth_g(self) -> pd.DataFrame:
-        """Return depth table for guanine as a pandas DataFrame object."""
-        return self._load_fetch(self.DEPTH_G)
-
-    @property
-    @lru_cache()
-    def depth_t(self) -> pd.DataFrame:
-        """Return depth table for thymine as a pandas DataFrame object."""
-        return self._load_fetch(self.DEPTH_T)
-
     def _download_qc(self) -> pd.DataFrame:
         """Download sample QC data and transform into table."""
         # No QC is given for variants data - return empty DataFrame
         return pd.DataFrame()
 
-    def strip_amino_acid(self, amino_acid_string, remove_alt=False):
-        """Remove "p." prefix of the amino acid string."""
-        # Example Amino acid change:  "p.Gly12Asp"
-        if pd.isna(amino_acid_string):
-            return ""
-        aa_match = re.match(
-            r"^p?\.?([A-Z][a-z]{2}\d+[A-Z][a-z]{2})$", amino_acid_string
-        )
-        if aa_match:
-            if remove_alt:
-                return aa_match.group(1)[:-3]
-            return aa_match.group(1)
-        return ""
-
-    def construct_index(self, row) -> str:
+    def _construct_index(self, row) -> str:
         """
         Construct index of the variants table.
 
         Index should have the form:
-        <chr>_<position>_<snp_change>_<aminoacid_pos_change>
-        E.g. chr2_1234567_C>T_Gly12Asp
-
-        In cases where nucleotide change or amino-acid change is
-        missing, this info is left out from the index.
+        <chr>_<position>_<snp_change>
+        E.g. chr2_1234567_C>T
 
         """
         chrom = row["CHROM"]
         pos = row["POS"]
-
-        index = f"{chrom}_{pos}"
-
-        # REF & ALT
         ref = row["REF"]
-        alt = row.get("ALT", "?")
-        if alt in ["A", "C", "G", "T"]:
-            index += f"_{ref}>{alt}"
+        alt = row["ALT"]
 
-        # Amino acid change
-        aa_change = row.get("HGVS.p", "?")
-        aa_change = self.strip_amino_acid(aa_change)
-        if aa_change:
-            index = f"{index}_{aa_change}"
-
-        return index
+        return f"{chrom}_{pos}_{ref}>{alt}"
 
     @staticmethod
-    def encode_mutation(row) -> int:
+    def _encode_mutation(row) -> int:
         """Encode mutation to numerical value.
 
         Mutations are given as <allele1>/<allele2>, e.g. T/T or C/T
@@ -302,25 +341,10 @@ class VariantTables(BaseTables):
             - 1 for heterozygous mutation
             - 2 for homozygous mutation
         """
-        allele_line = row.get("SAMPLENAME1.GT", np.nan)
-        hgvs_line = row.get("HGVS.p", np.nan)
-
-        # Handle the obvious cases first:
-        if row["REF"] == row["ALT"]:
-            return 0
-        elif row["ALT"] is None or row["ALT"] == "" or pd.isna(row["ALT"]):
-            return 0
-        elif allele_line is None or allele_line == "" or pd.isna(allele_line):
-            return 0
-        elif (
-            hgvs_line is None
-            or hgvs_line.startswith("no mutation at")
-            or pd.isna(hgvs_line)
-        ):
-            return 0
-
         try:
-            allele1, allele2 = re.match(r"([ACGT])/([ACGT])", allele_line).group(1, 2)
+            allele_line = row.get("SAMPLENAME1.GT", np.nan)
+            allele_re = r"^([ACGT]+)/([ACGT]+)$"
+            allele1, allele2 = re.match(allele_re, allele_line).group(1, 2)
         except AttributeError:
             # AttributeError is raised when there is no match, e.g.
             # there is a string value for column "SAMPLENAME1.GT" but
@@ -337,35 +361,25 @@ class VariantTables(BaseTables):
 
     def _parse_file(self, file_obj, sample_id, data_type) -> pd.Series:
         """Parse file - get encoded variants / depth of a single sample."""
-        sample_data = pd.read_csv(file_obj, sep="\t")
+        sample_data = pd.read_csv(file_obj, sep="\t", low_memory=False)
 
         # Filter mutations if specified
-        if self.mutations:
-            keep = set()
-            for gene, aa_change in self.parse_mutations_string(self.mutations).items():
-                for sample, gene2, aa_change2 in zip(
-                    sample_data.index, sample_data["Gene_Name"], sample_data["HGVS.p"]
-                ):
-                    if not aa_change:
-                        if gene == gene2:
-                            keep.add(sample)
-                    else:
-                        if gene == gene2 and aa_change == {
-                            self.strip_amino_acid(aa_change2, remove_alt=True)
-                        }:
-                            keep.add(sample)
+        if self.geneset:
+            out = sample_data.loc[sample_data["Gene_Name"].isin(self.geneset)]
+            if out.empty:
+                out = sample_data.loc[sample_data["Feature_ID"].isin(self.geneset)]
 
-            sample_data = sample_data.loc[keep]
+            sample_data = out
 
         # Construct index
         sample_data["index"] = sample_data.apply(
-            self.construct_index, axis=1, result_type="reduce"
+            self._construct_index, axis=1, result_type="reduce"
         )
         sample_data.set_index("index", inplace=True)
         sample_data.index.name = None
 
         if data_type == self.VARIANTS:
-            s = sample_data.apply(self.encode_mutation, axis=1, result_type="reduce")
+            s = sample_data.apply(self._encode_mutation, axis=1, result_type="reduce")
         elif data_type == self.DEPTH:
             # Depth, as computed by GATK is reported by "DP" column
             s = sample_data["Total_depth"]
@@ -377,54 +391,13 @@ class VariantTables(BaseTables):
             s = sample_data["Base_G"]
         elif data_type == self.DEPTH_T:
             s = sample_data["Base_T"]
+        elif data_type == self.FILTER:
+            s = sample_data["FILTER"]
 
         s.name = sample_id
+
+        # Sometimes mutations_table.tsv to contains duplicate variants
+        # For now, keep the first one and drop the rest of them.
+        s = s[~s.index.duplicated(keep="first")]
+
         return s
-
-    def postprocess_variants_table(self, df, data_type):
-        """
-        Propagate info from "fake" to the "real" variants.
-
-        "fake variants" are referred as positions for which we know that
-        do not contain variants. The absence of variants is still a valuable
-        information and should be propagated further when mergeing info
-        from multiple samples in matrix form.
-        """
-
-        def chrom_pos(column_name):
-            """Return only chromosome and position from index."""
-            chrom, pos = column_name.split("_")[:2]
-            return f"{chrom}_{pos}"
-
-        to_discard = list()
-
-        for _, group in groupby(df.columns, key=chrom_pos):
-            # Sorting moves fake variant to the first position
-            group = sorted(group)
-            if len(group) <= 1:
-                continue
-
-            fake_variant = group[0]
-            true_variants = group[1:]
-            to_discard.append(fake_variant)
-
-            # Propagate info from fake variants to the true ones
-            for dst in true_variants:
-                for sample, fake, true in zip(df.index, df[fake_variant], df[dst]):
-                    if data_type == self.VARIANTS:
-                        if fake == 0.0 and pd.isna(true):
-                            # Copy 0.0 from all fake to the true ones
-                            df.loc[sample, dst] = fake
-                    else:
-                        if not pd.isna(fake) and pd.isna(true):
-                            # Copy depth from all false to the true ones
-                            df.loc[sample, dst] = fake
-
-        if self.discard_fakes:
-            df = df.drop(columns=to_discard)
-
-        return df
-
-    async def _download_data(self, data_type: str) -> pd.DataFrame:
-        df = await super()._download_data(data_type)
-        return self.postprocess_variants_table(df, data_type=data_type)

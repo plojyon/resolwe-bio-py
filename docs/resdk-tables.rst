@@ -153,49 +153,23 @@ access of variant data present in Data of type ``data:mutationstable``::
 
 The output of the above would look something like this:
 
-=========  =====================  =====================
-sample_id  chr1_123_C>T_Gly11Asp  chr1_126_T>C_Asp12Gly
-=========  =====================  =====================
-101        2                      0
-102        0                      1
-=========  =====================  =====================
+=========  ============  ============
+sample_id  chr1_123_C>T  chr1_126_T>C
+=========  ============  ============
+101        2             NaN
+102        0             2
+=========  ============  ============
 
 
 In rows, there are sample ID's. In columns there are variants where each
 variant is given as:
-``<chromosome>_<position>_<nucleotide-change>_<amino-acid-change>``.
-Values in table can be 0 (no mutation), 1 (heterozygous mutation) or 2
-(homozygous mutation).
+``<chromosome>_<position>_<nucleotide-change>``.
+Values in table can be:
 
-The above example gives an ideal situation where the mutation status for
-each position is known. However, this is not always the case.
-
-
-Missing values and ``discard_fakes`` argument
----------------------------------------------
-
-Very often, there is no info about a certain variant / sample, so values
-can also be ``NaN`` (unknown). Other common case is just the info that
-there is no mutation on a given position. This is a valid information
-also. Given the above, a more realistic example of output is:
-
-=========  =====================  ===================== ========
-sample_id  chr1_123_C>T_Gly11Asp  chr1_126_T>C_Asp12Gly chr1_127
-=========  =====================  ===================== ========
-101        2                      NaN                   0
-102        0                      1                     NaN
-=========  =====================  ===================== ========
-
-One can se that for some combination of variants / samples there is no
-information: a value in table is ``NaN``. It is up to a user if this is
-interpreted as no variant or something else. In the first case, one can
-quickly convert ``NaN`` to 0 with ``vt.variants.fillna(0)``. One can
-also see that there is a column (chr1_127) that is not actually
-representing a variant. One may call this a "fake" variant. It is a way
-of signalling the absence of variant on a given position. Usually this
-is not useful, but is some cases it is. If you would like your output to
-contain such fake variants please specify ``discard_fakes=False`` in
-``VariantTables`` constructor.
+    - 0 (wild-type / no mutation)
+    - 1 (heterozygous mutation),
+    - 2 (homozygous mutation)
+    - NaN (QC filters are failing - mutation status is unreliable)
 
 
 Inspecting depth
@@ -217,18 +191,18 @@ worth inspecting the depth or depth per base::
 Filtering mutations
 -------------------
 
-Process ``mutations-table`` accepts an input ``mutations`` which
-specifies the gene (and optionally amino acid change) of interest. It
-restricts the scope of mutation to just a given gene or amino acid.
+Process ``mutations-table`` on Genialis Platform accepts either ``mutations`` or
+``geneset`` input which specifies the genes of interest. It restricts the scope
+of mutation search to just a few given genes.
 
-However, it can happen that not all the samples have the same
-``mutations`` input. In such cases, it makes little sense to merge the
-information about mutations from multiple samples. By default,
-``VariantTables`` checks that all Data is computed with same
-``mutations`` input. If this is not true, it will raise an error.
+However, it can happen that not all the samples have the same ``mutations`` or
+``geneset`` input. In such cases, it makes little sense to merge the information
+about mutations from multiple samples. By default, ``VariantTables`` checks that
+all Data is computed with same ``mutations`` / ``geneset`` input. If this is
+not true, it will raise an error.
 
-But if you provide additional argument ``mutations`` it will limit the
-mutations to only those in the given gene. An example::
+But if you provide additional argument ``geneset`` it will limit the
+mutations to only those in the given geneset. An example::
 
     # Sample 101 has mutations input "FHIT, BRCA2"
     # Sample 102 has mutations input "BRCA2"
@@ -238,5 +212,5 @@ mutations to only those in the given gene. An example::
     vt.variants
 
     # This would limit the variants to just the ones in BRCA2 gene.
-    vt = resdk.tables.VariantTables(<collection> mutations=["BRCA2"])
+    vt = resdk.tables.VariantTables(<collection>, geneset=["BRCA2"])
     vt.variants

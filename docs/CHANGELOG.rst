@@ -26,6 +26,14 @@ Changed
   - ``Sample.get_cuffquant``
   - ``Sample.get_expression``
 
+- **BACKWARD INCOMPATIBLE:** Rework ``VariantTables``:
+
+  - Index in VariantTables.variants is simplified and does not include
+    ammino-acid change anymore.
+  - Argument ``mutations`` in ``VariantTables`` constructor is renamed to
+    ``geneset``. Besides holding a list fo genes, this can also be a valid ID /
+    slug for Geneset object on Genialis Platform.
+
 Fixed
 -----
 - Fix ``Sample.get_reads()`` utility method
