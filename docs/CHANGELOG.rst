@@ -5,6 +5,15 @@ Change Log
 All notable changes to this project are documented in this file.
 
 
+==========
+Unreleased
+==========
+
+Added
+-----
+- Add ``build`` property to ``RNATables``.
+
+
 ===================
 16.0.0 - 2022-10-19
 ===================

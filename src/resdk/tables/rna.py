@@ -368,6 +368,20 @@ class RNATables(BaseTables):
 
     @property
     @lru_cache()
+    def build(self) -> str:
+        """Get build."""
+        builds = list(set(d.output.get("build") for d in self._data))
+        if len(builds) == 0:
+            raise ValueError("Cannot determine build, no data found.")
+        if len(builds) > 1:
+            builds = ", ".join(builds)
+            raise ValueError(
+                f"Cannot determine build, multiple builds found: {builds}."
+            )
+        return builds[0]
+
+    @property
+    @lru_cache()
     def _data(self) -> List[Data]:
         """Fetch data objects.
 
