@@ -11,7 +11,7 @@ MethylationTables
 
 """
 from functools import lru_cache
-from typing import Callable, List, Optional
+from typing import Callable, Optional
 
 import pandas as pd
 

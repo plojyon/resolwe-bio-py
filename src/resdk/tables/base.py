@@ -26,7 +26,6 @@ import pandas as pd
 import pytz
 from tqdm import tqdm
 
-from resdk.resolwe import Resolwe
 from resdk.resources import Collection, Data, Sample
 from resdk.resources.utils import iterate_schema
 from resdk.utils.table_cache import (
