@@ -13,6 +13,8 @@ import copy
 import logging
 import operator
 
+import tqdm
+
 from resdk.resources import DescriptorSchema, Process
 from resdk.resources.base import BaseResource
 
@@ -337,7 +339,7 @@ class ResolweQuery:
         new_query._add_filter({self.resource.full_search_paramater: text})
         return new_query
 
-    def iterate(self, chunk_size=100):
+    def iterate(self, chunk_size=100, show_progress=False):
         """
         Iterate through query.
 
@@ -369,10 +371,12 @@ class ResolweQuery:
         iterate_query = self._clone()
         min_id = 0
         obj_count = 0
-        while obj_count < count:
-            for obj in iterate_query.filter(
-                id__gt=min_id, limit=chunk_size, ordering="id"
-            ):
-                obj_count += 1
-                min_id = obj.id
-                yield obj
+        with tqdm.tqdm(total=count, disable=not show_progress) as pbar:
+            while obj_count < count:
+                for obj in iterate_query.filter(
+                    id__gt=min_id, limit=chunk_size, ordering="id"
+                ):
+                    obj_count += 1
+                    min_id = obj.id
+                    pbar.update(1)
+                    yield obj
