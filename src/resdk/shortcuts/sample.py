@@ -19,14 +19,12 @@ class SampleUtilsMixin:
         ``filter`` arguments and limits search to one result.
         """
         kwargs = {
-            "process_type": "data:reads:fastq",
+            "type": "data:reads:fastq",
             "ordering": "-id",
         }
         kwargs.update(filters)
 
         reads = self.data.filter(**kwargs)
-        # TODO: In future, implement method ``last()`` on ResolweQuery
-        # and return the ResolweQuery object.
 
         if not reads:
             raise LookupError("Reads not found on sample {}.".format(self))

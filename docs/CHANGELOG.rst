@@ -14,6 +14,10 @@ Added
 - Add ``build`` property to ``RNATables``.
 - Optionally show progress bar in ``resdk.Query.iterate()``
 
+Fixed
+-----
+- Fix ``Sample.get_reads()`` utility method
+
 
 ===================
 16.0.0 - 2022-10-19
