@@ -14,6 +14,17 @@ Added
 - Add ``build`` property to ``RNATables``.
 - Optionally show progress bar in ``resdk.Query.iterate()``
 
+Changed
+-------
+- Add deprecation warning to the following methods:
+
+  - ``Sample.get_reads``
+  - ``Sample.get_bam``
+  - ``Sample.get_primary_bam``
+  - ``Sample.get_macs``
+  - ``Sample.get_cuffquant``
+  - ``Sample.get_expression``
+
 Fixed
 -----
 - Fix ``Sample.get_reads()`` utility method

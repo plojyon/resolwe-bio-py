@@ -1,4 +1,5 @@
 """Sample shortcuts."""
+import warnings
 
 
 class SampleUtilsMixin:
@@ -18,6 +19,11 @@ class SampleUtilsMixin:
         the ``fastq`` objects is required, one can provide additional
         ``filter`` arguments and limits search to one result.
         """
+        warnings.warn(
+            "Method `Sample.get_reads` will be deprecated in next major "
+            "release. Use Sample filtering to get the same results.",
+            DeprecationWarning,
+        )
         kwargs = {
             "type": "data:reads:fastq",
             "ordering": "-id",
@@ -33,6 +39,11 @@ class SampleUtilsMixin:
 
     def get_bam(self):
         """Return ``bam`` object on the sample."""
+        warnings.warn(
+            "Method `Sample.get_bam` will be deprecated in next major "
+            "release. Use Sample filtering to get the same results.",
+            DeprecationWarning,
+        )
         return self.data.get(type="data:alignment:bam")
 
     def get_primary_bam(self, fallback_to_bam=False):
@@ -43,6 +54,11 @@ class SampleUtilsMixin:
         be returned.
 
         """
+        warnings.warn(
+            "Method `Sample.get_primary_bam` will be deprecated in next major "
+            "release. Use Sample filtering to get the same results.",
+            DeprecationWarning,
+        )
         try:
             return self.data.get(type="data:alignment:bam:primary")
         except LookupError:
@@ -53,12 +69,29 @@ class SampleUtilsMixin:
 
     def get_macs(self):
         """Return list of ``bed`` objects on the sample."""
+        warnings.warn(
+            "Method `Sample.get_macs` will be deprecated in next major "
+            "release. Use Sample filtering to get the same results.",
+            DeprecationWarning,
+        )
         return self.data.filter(type="data:chipseq:callpeak:macs14")
 
     def get_cuffquant(self):
+        """Get cuffquant."""
+        warnings.warn(
+            "Method `Sample.get_cuffquant` will be deprecated in next major "
+            "release. Use Sample filtering to get the same results.",
+            DeprecationWarning,
+        )
         """Return ``cuffquant`` object on the sample."""
         return self.data.get(type="data:cufflinks:cuffquant")
 
     def get_expression(self):
+        """Get expression."""
+        warnings.warn(
+            "Method `Sample.get_expression` will be deprecated in next major "
+            "release. Use Sample filtering to get the same results.",
+            DeprecationWarning,
+        )
         """Return ``expression`` object on the sample."""
         return self.data.get(type="data:expression:")
