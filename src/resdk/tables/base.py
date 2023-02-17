@@ -322,7 +322,7 @@ class BaseTables(abc.ABC):
         # Keep only numeric / string types:
         column_types = {}
         prefix = "XXX"
-        for (schema, _, path) in iterate_schema(
+        for schema, _, path in iterate_schema(
             sample.descriptor, sample.descriptor_schema.schema, path=prefix
         ):
             field_type = schema["type"]

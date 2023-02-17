@@ -17,7 +17,6 @@ sys.path.insert(0, DOCS_SCRIPTS_DIR)
 
 
 class BaseResdkDocsFunctionalTest(BaseResdkFunctionalTest):
-
     sample_slug = "resdk-example"
     reads_slug = "resdk-example-reads"
     genome_slug = "resdk-example-genome"

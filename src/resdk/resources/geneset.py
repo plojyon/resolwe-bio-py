@@ -50,7 +50,6 @@ class Geneset(Data):
         """Set genes."""
         self._assert_allow_change("genes")
         if genes is not None:
-
             # Make sure submitted list only includes unique elements:
             if len(set(genes)) != len(genes):
                 counter = Counter(list(genes))

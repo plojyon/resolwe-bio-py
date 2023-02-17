@@ -233,7 +233,6 @@ class TestBaseMethods(unittest.TestCase):
 
 class TestAttributesDefined(unittest.TestCase):
     def test_attributes_are_defined(self):
-
         classes = [
             BaseResource,
             BaseResolweResource,

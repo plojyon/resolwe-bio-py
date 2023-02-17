@@ -35,7 +35,6 @@ class TestRun(BaseResdkFunctionalTest):
 
 
 class TestDataUsage(BaseResdkFunctionalTest):
-
     expected_fields = {
         "user_id",
         "username",

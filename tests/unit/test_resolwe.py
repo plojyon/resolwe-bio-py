@@ -292,7 +292,6 @@ class TestRun(unittest.TestCase):
     @patch("resdk.resolwe.Data")
     @patch("resdk.resolwe.Resolwe", spec=True)
     def test_file_processing(self, resolwe_mock, data_mock):
-
         resolwe_mock.api = MagicMock(
             **{
                 "process.get.return_value": self.process_mock,
