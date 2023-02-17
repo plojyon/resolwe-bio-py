@@ -475,6 +475,7 @@ class RNATables(BaseTables):
         df.attrs["exp_type"] = (
             "rc" if data_type == self.RC else self._data[0].output["exp_type"]
         )
+        df.attrs["build"] = self.build
         return df
 
     def _mapping(self, ids: List[str], source: str, species: str) -> Dict[str, str]:

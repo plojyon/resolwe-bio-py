@@ -13,6 +13,7 @@ Added
 -----
 - Add ``build`` property to ``RNATables``.
 - Optionally show progress bar in ``resdk.Query.iterate()``
+- Add ``build`` info to ``RNATables.rc.attrs`` and ``RNATables.exp.attrs``
 
 Changed
 -------
