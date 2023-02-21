@@ -475,7 +475,13 @@ class RNATables(BaseTables):
         df.attrs["exp_type"] = (
             "rc" if data_type == self.RC else self._data[0].output["exp_type"]
         )
-        df.attrs["build"] = self.build
+        try:
+            df.attrs["build"] = self.build
+        except ValueError:
+            # In rare cases, it can happen that Collection has Data with
+            # different builds but same source. In such case, just skip
+            # assigning the build.
+            pass
         return df
 
     def _mapping(self, ids: List[str], source: str, species: str) -> Dict[str, str]:
