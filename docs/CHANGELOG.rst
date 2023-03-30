@@ -40,6 +40,7 @@ Fixed
 - Fix ``duplicate`` endpoint now returns background task object
 - The data endpoint serializes ``collection`` information only on the top level, the
   ``collection`` entry  inside ``entity`` is now a collection primary key
+- Fix ReSDK tables in case of local server storage
 
 
 ===================

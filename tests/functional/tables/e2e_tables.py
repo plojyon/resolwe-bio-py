@@ -6,7 +6,7 @@ import time
 import numpy as np
 
 import resdk
-from resdk.tables import RNATables
+from resdk.tables import RNATables, VariantTables
 
 from ..base import BaseResdkFunctionalTest
 
@@ -79,3 +79,39 @@ class TestTables(BaseResdkFunctionalTest):
         t3 = time.time() - t0
         self.assertTrue((rc2 == rc3).all(axis=None))
         self.assertTrue(t3 < t2)
+
+
+class TestVariantTables(BaseResdkFunctionalTest):
+    def setUp(self):
+        self.cache_dir = tempfile.mkdtemp()
+        self.test_server_url = "https://app.genialis.com"
+        self.test_collection_slug = "varianttables_demo"
+        self.res = resdk.Resolwe(
+            url=self.test_server_url, username="resdk-e2e-test", password="safe4ever"
+        )
+        self.collection = self.res.collection.get(self.test_collection_slug)
+        self.vt = VariantTables(self.collection, cache_dir=self.cache_dir)
+
+    def tearDown(self):
+        shutil.rmtree(self.cache_dir)
+
+    def test_geneset(self):
+        self.assertIn("CYTH3", self.vt.geneset)
+
+    def test_variants(self):
+        self.assertEqual(self.vt.variants.shape, (2, 32))
+        self.assertEqual(self.vt.variants.index.tolist(), [112166, 112167])
+        self.assertIn("14_52004545_C>CT", self.vt.variants.columns)
+        self.assertEqual(self.vt.variants.loc[112166, "14_52004545_C>CT"], 1.0)
+
+    def test_depth(self):
+        self.assertEqual(self.vt.depth.shape, (2, 32))
+        self.assertEqual(self.vt.depth.index.tolist(), [112166, 112167])
+        self.assertIn("14_52004545_C>CT", self.vt.depth.columns)
+        self.assertEqual(self.vt.depth.loc[112166, "14_52004545_C>CT"], 185.0)
+
+    def test_filter(self):
+        self.assertEqual(self.vt.filter.shape, (2, 32))
+        self.assertEqual(self.vt.filter.index.tolist(), [112166, 112167])
+        self.assertIn("14_52004545_C>CT", self.vt.filter.columns)
+        self.assertEqual(self.vt.filter.loc[112166, "14_52004545_C>CT"], "PASS")

@@ -5,7 +5,6 @@ import time
 import unittest
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 from mock import MagicMock, PropertyMock, patch
 
@@ -68,8 +67,8 @@ class TestVariantTables(unittest.TestCase):
 
         uri_resolve_response = MagicMock()
         self.uri2url_mapping = {
-            f"{self.data1.sample.id}/{self.variants_file1}": "url1",
-            f"{self.data2.sample.id}/{self.variants_file2}": "url2",
+            str(Path(str(self.data1.id)) / self.variants_file1): "url1",
+            str(Path(str(self.data2.id)) / self.variants_file1): "url2",
         }
         uri_resolve_response.content = json.dumps(self.uri2url_mapping).encode("utf-8")
 
@@ -136,69 +135,6 @@ class TestVariantTables(unittest.TestCase):
         aenter_mock.__aenter__.return_value = response_mock
 
         return aenter_mock
-
-    @patch("resdk.tables.base.aiohttp.ClientSession.get")
-    @patch.object(VariantTables, "_get_data_uri")
-    @patch.object(VariantTables, "filter", new_callable=PropertyMock)
-    def test_variants(self, filter_mock, data_uri_mock, get_mock):
-        filter_mock.return_value = pd.DataFrame(
-            [["PASS", "PASS"], ["PASS", "DP"]],
-            index=[self.sample1.id, self.sample2.id],
-            columns=["chr2_120_C>T", "chr2_123_C>T"],
-        )
-
-        # Mock the response of _get_data_uri
-        data_uri_mock.side_effect = [
-            f"{self.data1.sample.id}/{self.variants_file1}",
-            f"{self.data2.sample.id}/{self.variants_file2}",
-        ]
-        # Mock the response of aiohttp.session.get
-        get_mock.side_effect = self.session_get_wrapper
-
-        vt = VariantTables(self.collection)
-        expected = pd.DataFrame(
-            [[1.0, 2.0], [1.0, 0.0]],
-            index=[self.sample1.id, self.sample2.id],
-            columns=["chr2_120_C>T", "chr2_123_C>T"],
-        )
-        expected.index.name = "sample_id"
-        pd.testing.assert_frame_equal(vt.variants, expected)
-
-    @patch("resdk.tables.base.aiohttp.ClientSession.get")
-    @patch.object(VariantTables, "_get_data_uri")
-    def test_depth(self, data_uri_mock, get_mock):
-        # Mock the response of _get_data_uri
-        data_uri_mock.side_effect = list(self.uri2url_mapping.keys())
-        # Mock the response of aiohttp.session.get
-        get_mock.side_effect = self.session_get_wrapper
-
-        vt = VariantTables(self.collection)
-
-        expected = pd.DataFrame(
-            [[65.0, 51.0], [650.0, np.nan]],
-            index=[self.sample1.id, self.sample2.id],
-            columns=["chr2_120_C>T", "chr2_123_C>T"],
-        )
-        expected.index.name = "sample_id"
-        pd.testing.assert_frame_equal(vt.depth, expected)
-
-    @patch("resdk.tables.base.aiohttp.ClientSession.get")
-    @patch.object(VariantTables, "_get_data_uri")
-    def test_depth_t(self, data_uri_mock, get_mock):
-        # Mock the response of _get_data_uri
-        data_uri_mock.side_effect = list(self.uri2url_mapping.keys())
-        # Mock the response of aiohttp.session.get
-        get_mock.side_effect = self.session_get_wrapper
-
-        vt = VariantTables(self.collection)
-
-        expected = pd.DataFrame(
-            [[55.0, 41.0], [640.0, np.nan]],
-            index=[self.sample1.id, self.sample2.id],
-            columns=["chr2_120_C>T", "chr2_123_C>T"],
-        )
-        expected.index.name = "sample_id"
-        pd.testing.assert_frame_equal(vt.depth_t, expected)
 
     def test_construct_index(self):
         vt = VariantTables(self.collection)

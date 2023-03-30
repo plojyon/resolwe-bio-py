@@ -19,7 +19,7 @@ from collections import Counter
 from functools import lru_cache
 from io import BytesIO
 from typing import Callable, Dict, List, Optional
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 
 import aiohttp
 import pandas as pd
@@ -483,7 +483,22 @@ class BaseTables(abc.ABC):
             auth=self.resolwe.auth,
         )
         response.raise_for_status()
-        return json.loads(response.content.decode("utf-8"))
+        uri_to_url = json.loads(response.content.decode("utf-8"))
+
+        def resolve_url(url):
+            """
+            Resolve url.
+
+            In case files are stored locally on a server, a local path
+            is provided. Url has to be prepended with self.resolwe.url.
+            """
+            if urlparse(url).scheme:
+                return urljoin(self.resolwe.url, url)
+            return url
+
+        uri_to_url = {uri: resolve_url(url) for uri, url in uri_to_url.items()}
+
+        return uri_to_url
 
     @abc.abstractmethod
     def _parse_file(self, file_obj, sample_id, data_type):
@@ -536,7 +551,9 @@ class BaseTables(abc.ABC):
             source_urls = self._get_data_urls(uri_to_id.keys())
             urls_ids = [(url, uri_to_id[uri]) for uri, url in source_urls.items()]
 
-            async with aiohttp.ClientSession() as session:
+            async with aiohttp.ClientSession(
+                cookies=self.resolwe.auth.cookies
+            ) as session:
                 futures = [
                     self._download_file(url, session, id_, data_type)
                     for url, id_ in urls_ids
