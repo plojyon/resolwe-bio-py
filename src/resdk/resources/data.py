@@ -156,10 +156,11 @@ class Data(BaseResolweResource):
     def sample(self):
         """Get sample."""
         if self._sample is None and self._original_values.get("entity", None):
-            self._sample = Sample(
-                resolwe=self.resolwe, **self._original_values["entity"]
-            )
-
+            # The collection data is only serialized on the top level. Replace the
+            # data inside 'entity' with the actual collection data.
+            entity_values = self._original_values["entity"].copy()
+            entity_values["collection"] = self._original_values.get("collection", None)
+            self._sample = Sample(resolwe=self.resolwe, **entity_values)
         return self._sample
 
     @sample.setter
