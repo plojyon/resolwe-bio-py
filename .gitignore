@@ -34,3 +34,6 @@ MANIFEST
 
 # Ignore virtualenv folder
 venv/
+
+# Ignore mypy cache folder
+.mypy_cache
