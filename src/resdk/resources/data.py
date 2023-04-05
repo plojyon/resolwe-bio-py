@@ -6,6 +6,7 @@ from urllib.parse import urljoin
 from resdk.constants import CHUNK_SIZE
 
 from ..utils.decorators import assert_object_exists
+from .background_task import BackgroundTask
 from .base import BaseResolweResource
 from .collection import Collection
 from .descriptor import DescriptorSchema
@@ -360,7 +361,8 @@ class Data(BaseResolweResource):
 
         :return: Duplicated data object
         """
-        duplicated = self.api().duplicate.post(
+        task_data = self.api().duplicate.post(
             {"ids": [self.id], "inherit_collection": inherit_collection}
         )
-        return self.__class__(resolwe=self.resolwe, **duplicated[0])
+        background_task = BackgroundTask(resolwe=self.resolwe, **task_data)
+        return self.resolwe.data.get(id__in=background_task.result())

@@ -5,6 +5,7 @@ from urllib.parse import urljoin
 from resdk.shortcuts.collection import CollectionRelationsMixin
 
 from ..utils.decorators import assert_object_exists
+from .background_task import BackgroundTask
 from .base import BaseResolweResource
 from .descriptor import DescriptorSchema
 from .utils import _get_billing_account_id
@@ -203,8 +204,9 @@ class Collection(CollectionRelationsMixin, BaseCollection):
 
         :return: Duplicated collection
         """
-        duplicated = self.api().duplicate.post({"ids": [self.id]})
-        return self.__class__(resolwe=self.resolwe, **duplicated[0])
+        task_data = self.api().duplicate.post({"ids": [self.id]})
+        background_task = BackgroundTask(resolwe=self.resolwe, **task_data)
+        return self.resolwe.collection.get(id__in=background_task.result())
 
     @assert_object_exists
     def assign_to_billing_account(self, billing_account_name):

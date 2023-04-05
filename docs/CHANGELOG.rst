@@ -37,6 +37,7 @@ Changed
 Fixed
 -----
 - Fix ``Sample.get_reads()`` utility method
+- Fix ``duplicate`` endpoint now returns background task object
 
 
 ===================
