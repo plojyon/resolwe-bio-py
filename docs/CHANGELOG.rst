@@ -5,9 +5,9 @@ Change Log
 All notable changes to this project are documented in this file.
 
 
-==========
-Unreleased
-==========
+===================
+17.0.0 - 2023-04-24
+===================
 
 Added
 -----
@@ -26,7 +26,7 @@ Changed
   - ``Sample.get_cuffquant``
   - ``Sample.get_expression``
 
-- **BACKWARD INCOMPATIBLE:** Rework ``VariantTables``:
+- Rework ``VariantTables``:
 
   - Index in VariantTables.variants is simplified and does not include
     ammino-acid change anymore.
