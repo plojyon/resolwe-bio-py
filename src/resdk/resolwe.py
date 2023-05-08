@@ -53,6 +53,21 @@ class ResolweResource(slumber.Resource):
             return handle_http_exception(attr)
         return attr
 
+    def delete(self, *args, **kwargs):
+        """Delete resource object.
+
+        This is mostly Slumber default implementation except that it returns the
+        processed response when status is not 204 (No Content).
+        """
+        resp = self._request("DELETE", params=kwargs)
+        if 200 <= resp.status_code <= 299:
+            if resp.status_code == 204:
+                return True
+            else:
+                return self._process_response(resp)
+        else:
+            return False
+
 
 class ResolweAPI(slumber.API):
     """Use custom ResolweResource resource class in slumber's API."""

@@ -5,6 +5,15 @@ Change Log
 All notable changes to this project are documented in this file.
 
 
+==========
+Unreleased
+==========
+
+Fixed
+-----
+- Fix ``delete`` endpoint can return background task object
+
+
 ===================
 17.0.0 - 2023-04-24
 ===================

@@ -169,7 +169,14 @@ class BaseResource:
             if user_input.strip().lower() != "y":
                 return
 
-        self.api(self.id).delete()
+        response = self.api(self.id).delete()
+        # This could either be True or a background task data.
+        if response is not True:
+            # Resolve circular import
+            from .background_task import BackgroundTask
+
+            BackgroundTask(resolwe=self.resolwe, **response).wait()
+            return True
 
     def __setattr__(self, name, value):
         """Detect changes of read only fields.
