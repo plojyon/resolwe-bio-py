@@ -47,7 +47,7 @@ class TestTables(unittest.TestCase):
         self.collection.slug = "slug"
         self.collection.name = "Name"
         self.collection.samples.filter = self.web_request([self.sample])
-        self.collection.data.filter = self.web_request([self.data])
+        self.collection.data.filter().iterate = self.web_request([self.data])
         self.collection.resolwe = self.resolwe
 
         self.relation = MagicMock()
@@ -102,7 +102,7 @@ class TestTables(unittest.TestCase):
         data2.id = 12345
         data2.process.slug = "process-slug2"
         data2.output.__getitem__.side_effect = {"source": "ENSEMBL"}.__getitem__
-        self.collection.data.filter = self.web_request([self.data, data2])
+        self.collection.data.filter().iterate = self.web_request([self.data, data2])
 
         with self.assertRaisesRegex(ValueError, r"Expressions of all samples.*"):
             RNATables(self.collection)
@@ -112,7 +112,7 @@ class TestTables(unittest.TestCase):
         data2.id = 12345
         data2.process.slug = "process-slug"
         data2.output.__getitem__.side_effect = {"source": "GENCODE"}.__getitem__
-        self.collection.data.filter = self.web_request([self.data, data2])
+        self.collection.data.filter().iterate = self.web_request([self.data, data2])
 
         with self.assertRaisesRegex(ValueError, r"Alignment of all samples.*"):
             RNATables(self.collection)
@@ -245,7 +245,7 @@ class TestTables(unittest.TestCase):
             version = ct1._metadata_version
 
     def test_qc_version(self):
-        self.collection.data.filter = self.web_request([self.data])
+        self.collection.data.filter().iterate = self.web_request([self.data])
 
         ct = RNATables(self.collection)
         version = ct._qc_version
@@ -256,7 +256,7 @@ class TestTables(unittest.TestCase):
         version = ct._qc_version
         self.assertTrue(time() - t < 0.1)
 
-        self.collection.data.filter = self.web_request([])
+        self.collection.data.filter().iterate = self.web_request([])
         ct1 = RNATables(self.collection)
         with self.assertRaises(ValueError):
             version = ct1._qc_version
@@ -271,7 +271,7 @@ class TestTables(unittest.TestCase):
         version = ct._data_version
         self.assertTrue(time() - t < 0.1)
 
-        self.collection.data.filter = MagicMock(return_value=[])
+        self.collection.data.filter().iterate = MagicMock(return_value=[])
         ct = RNATables(self.collection)
         with self.assertRaises(ValueError):
             version = ct._data_version

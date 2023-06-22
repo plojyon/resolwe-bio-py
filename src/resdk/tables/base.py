@@ -168,19 +168,18 @@ class BaseTables(abc.ABC):
 
         :return: list of Data objects
         """
-        data = []
-        sample_ids, repeated_sample_ids = set(), set()
+        sample2data = {}
+        repeated_sample_ids = set()
         for datum in self.collection.data.filter(
             type=self.process_type,
             status="OK",
-            ordering="-created",
             fields=self.DATA_FIELDS,
-        ):
-            if datum.sample.id in sample_ids:
+        ).iterate():
+            # We are using iterate to prevent 504 Bad Gateways
+            # This means that data is given from oldest to newest
+            if datum.sample.id in sample2data:
                 repeated_sample_ids.add(datum.sample.id)
-                continue
-            sample_ids.add(datum.sample.id)
-            data.append(datum)
+            sample2data[datum.sample.id] = datum
 
         if repeated_sample_ids:
             repeated = ", ".join(map(str, repeated_sample_ids))
@@ -190,7 +189,7 @@ class BaseTables(abc.ABC):
                 UserWarning,
             )
 
-        return data
+        return list(sample2data.values())
 
     @property
     @lru_cache()
@@ -256,9 +255,8 @@ class BaseTables(abc.ABC):
                 type="data:multiqc",
                 status="OK",
                 entity__isnull=False,
-                ordering="id",
                 fields=["id", "entity__id"],
-            )
+            ).iterate()
         ]
         if not mqc_ids:
             raise ValueError(
@@ -533,7 +531,7 @@ class BaseTables(abc.ABC):
         :param data_type: data type
         :return: table with data, features in columns, samples in rows
         """
-        samples_data = []
+        df = None
         for i in self.tqdm(
             range(0, len(self._data), EXP_ASYNC_CHUNK_SIZE),
             desc="Downloading data",
@@ -559,8 +557,9 @@ class BaseTables(abc.ABC):
                     for url, id_ in urls_ids
                 ]
                 data = await asyncio.gather(*futures)
-                samples_data.extend(data)
+                data = pd.concat(data, axis=1)
+            df = pd.concat([df, data], axis=1)
 
-        df = pd.concat(samples_data, axis=1).T.sort_index().sort_index(axis=1)
+        df = df.T.sort_index().sort_index(axis=1)
         df.index.name = "sample_id"
         return df

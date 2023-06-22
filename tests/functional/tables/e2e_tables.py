@@ -41,14 +41,14 @@ class TestTables(BaseResdkFunctionalTest):
         self.assertIn(39000, self.ct.rc.index)
         self.assertIn("ENSG00000000003", self.ct.rc.columns)
         self.assertEqual(self.ct.rc.iloc[0, 0], 792)
-        self.assertIsInstance(self.ct.rc.iloc[0, 0], np.int64)
+        self.assertIsInstance(self.ct.rc.iloc[0, 0], np.int32)
 
     def test_exp(self):
         self.assertEqual(self.ct.exp.shape, (8, 58487))
         self.assertIn(39000, self.ct.exp.index)
         self.assertIn("ENSG00000000003", self.ct.exp.columns)
         self.assertAlmostEqual(self.ct.exp.iloc[0, 0], 19.447467, places=3)
-        self.assertIsInstance(self.ct.exp.iloc[0, 0], np.float64)
+        self.assertIsInstance(self.ct.exp.iloc[0, 0], np.float32)
 
     def test_consistent_index(self):
         self.assertTrue(all(self.ct.exp.index == self.ct.meta.index))

@@ -5,6 +5,15 @@ Change Log
 All notable changes to this project are documented in this file.
 
 
+==========
+Unreleased
+==========
+
+Fixed
+-----
+- Fix ``RNATables`` in case of very large collection
+
+
 ===================
 18.0.0 - 2023-05-18
 ===================

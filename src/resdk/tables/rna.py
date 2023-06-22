@@ -466,6 +466,8 @@ class RNATables(BaseTables):
         sample_data = pd.read_csv(file_obj, sep="\t", compression="gzip")
         sample_data = sample_data.set_index("Gene")["Expression"]
         sample_data.name = sample_id
+        # Optimize memory usage, float32 and int32 will suffice.
+        sample_data = sample_data.astype("int32" if data_type == self.RC else "float32")
         return sample_data
 
     async def _download_data(self, data_type: str) -> pd.DataFrame:
