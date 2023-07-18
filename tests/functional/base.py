@@ -1,13 +1,16 @@
 """Functional tests for ReSDK."""
 import os
 import unittest
+from unittest.mock import patch
 
 from resdk import Resolwe
 
 URL = os.environ.get("SERVER_URL", "http://localhost:8000")
 USER_USERNAME = "user"
+USER_EMAIL = "user@genialis.com"
 USER_PASSWORD = "user"
 ADMIN_USERNAME = "admin"
+ADMIN_EMAIL = "admin@genialis.com"
 ADMIN_PASSWORD = "admin"
 
 FILES_PATH = os.path.normpath(
@@ -25,8 +28,10 @@ class BaseResdkFunctionalTest(unittest.TestCase):
     """
 
     def setUp(self):
-        self.res = Resolwe(ADMIN_USERNAME, ADMIN_PASSWORD, URL)
-        self.user_res = Resolwe(USER_USERNAME, USER_PASSWORD, URL)
+        """Prepare objects and patch them to use username/password authentication."""
+        with patch("resdk.resolwe.AUTOMATIC_LOGIN_POSTFIX", "rest-auth/login/"):
+            self.res = Resolwe(ADMIN_EMAIL, ADMIN_PASSWORD, URL)
+            self.user_res = Resolwe(USER_EMAIL, USER_PASSWORD, URL)
 
     def set_slug(self, resource, slug):
         """Set slug of resource."""

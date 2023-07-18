@@ -2,10 +2,11 @@ import os
 import shutil
 import sys
 import tempfile
+from unittest.mock import patch
 
 from resdk import Resolwe
 
-from ..base import URL, USER_PASSWORD, USER_USERNAME, BaseResdkFunctionalTest
+from ..base import URL, USER_EMAIL, USER_PASSWORD, BaseResdkFunctionalTest
 
 TEST_FILES_DIR = os.path.abspath(
     os.path.normpath(os.path.join(__file__, "../../../files"))
@@ -66,7 +67,8 @@ class BaseResdkDocsFunctionalTest(BaseResdkFunctionalTest):
             for line_index, line_content in replace_lines:
                 content[line_index] = line_content
 
-        exec("".join(content))
+        with patch("resdk.resolwe.AUTOMATIC_LOGIN_POSTFIX", "rest-auth/login/"):
+            exec("".join(content))
 
     def upload_reads(self, res):
         reads = res.run(
@@ -162,7 +164,7 @@ class TestStart(BaseResdkDocsFunctionalTest):
             "start.py",
             replace_lines=[
                 (4, "res = resdk.Resolwe(url='{}')\n".format(URL)),
-                (5, "res.login('{}', '{}')\n".format(USER_USERNAME, USER_PASSWORD)),
+                (5, "res.login('{}', '{}')\n".format(USER_EMAIL, USER_PASSWORD)),
             ],
         )
 
@@ -179,7 +181,7 @@ class TestTutorialGet(BaseResdkDocsFunctionalTest):
             "tutorial-get.py",
             replace_lines=[
                 (4, "res = resdk.Resolwe(url='{}')\n".format(URL)),
-                (5, "res.login('{}', '{}')\n".format(USER_USERNAME, USER_PASSWORD)),
+                (5, "res.login('{}', '{}')\n".format(USER_EMAIL, USER_PASSWORD)),
             ],
         )
 
@@ -220,7 +222,7 @@ class TestTutorialCreate(BaseResdkDocsFunctionalTest):
             "tutorial-create.py",
             replace_lines=[
                 (3, "res = resdk.Resolwe(url='{}')\n".format(URL)),
-                (4, "res.login('{}', '{}')\n".format(USER_USERNAME, USER_PASSWORD)),
+                (4, "res.login('{}', '{}')\n".format(USER_EMAIL, USER_PASSWORD)),
                 (
                     21,
                     "        'src': '{}'\n".format(

@@ -494,62 +494,81 @@ class TestDownload(unittest.TestCase):
 class TestResAuth(unittest.TestCase):
     @patch("resdk.resolwe.ResAuth", spec=True)
     def setUp(self, auth_mock):
+        auth_mock.interactive_login_url = "https://url.com/remote-auth/"
         auth_mock.configure_mock(sessionid=None, csrftoken=None)
         self.auth_mock = auth_mock
 
-    @patch("resdk.resolwe.requests.post")
-    def test_bad_url(self, requests_post_mock):
-        requests_post_mock.side_effect = requests.exceptions.ConnectionError()
+    def test_init(self):
+        ResAuth.__init__(self.auth_mock, "uname", "pw", "https://url.com")
+        self.auth_mock.automatic_login.assert_called_once_with("uname", "pw")
+        self.auth_mock.interactive_login.assert_not_called()
 
-        with self.assertRaisesRegex(
-            ValueError, "Server not accessible on www.abc.com. Wrong url?"
-        ):
-            ResAuth.__init__(
-                self.auth_mock, username="usr", password="pwd", url="www.abc.com"
-            )
-
-    @patch("resdk.resolwe.requests")
-    def test_bad_credentials(self, requests_mock):
-        requests_mock.post = MagicMock(return_value=MagicMock(status_code=400))
-
-        message = r"Response HTTP status code .* Invalid credentials?"
-        with self.assertRaisesRegex(ValueError, message):
-            ResAuth.__init__(
-                self.auth_mock, username="usr", password="pwd", url="www.abc.com"
-            )
-
-    @patch("resdk.resolwe.requests")
-    def test_no_csrf_token(self, requests_mock):
-        post_mock = MagicMock(status_code=200, cookies={"sessionid": 42})
-        requests_mock.post = MagicMock(return_value=post_mock)
-
-        message = "Missing sessionid or csrftoken. Invalid credentials?"
-        with self.assertRaisesRegex(Exception, message):
-            ResAuth.__init__(
-                self.auth_mock, username="usr", password="pwd", url="www.abc.com"
-            )
-
-    @patch("resdk.resolwe.requests")
-    def test_all_ok(self, requests_mock):
-        post_mock = MagicMock(
-            status_code=200, cookies={"sessionid": 42, "csrftoken": 43}
-        )
-        requests_mock.post = MagicMock(return_value=post_mock)
-
+    def test_interactive_fallback_no_username(self):
+        """Only fall back to automatic login if username is not provided."""
         ResAuth.__init__(
-            self.auth_mock, username="usr", password="pwd", url="www.abc.com"
+            self.auth_mock,
+            username="test",
+            password="pass",
+            url="https://url.com",
+            interactive=True,
         )
-        self.assertEqual(self.auth_mock.sessionid, 42)
-        self.assertEqual(self.auth_mock.csrftoken, 43)
+        self.auth_mock.interactive_login.assert_not_called()
+        self.auth_mock.reset_mock()
+
+        # Attempt interactive login only when no username is given.
+        ResAuth.__init__(
+            self.auth_mock, password="pw", url="https://url.com", interactive=True
+        )
+        self.auth_mock.interactive_login.assert_called_once_with()
 
     @patch("resdk.resolwe.requests")
-    def test_public_user(self, requests_mock):
-        post_mock = MagicMock(status_code=200)
-        requests_mock.post = MagicMock(return_value=post_mock)
+    @patch("resdk.resolwe.webbrowser")
+    @patch("resdk.resolwe.print")
+    @patch("resdk.resolwe.time")
+    def test_interactive_login(
+        self, time_mock, print_mock, webbrowser_mock, requests_mock
+    ):
+        requests_mock.get.return_value = MagicMock(
+            status_code=200, **{"json.return_value": {"auth_id": "123"}}
+        )
+        requests_mock.Session.return_value.get.side_effect = [
+            MagicMock(status_code=204),
+            MagicMock(
+                status_code=200,
+                json=MagicMock(
+                    return_value={"csrftoken": "my-token", "sessionid": "my-id"}
+                ),
+            ),
+        ]
+        self.assertDictEqual(
+            ResAuth.interactive_login(self.auth_mock),
+            {"csrftoken": "my-token", "sessionid": "my-id"},
+        )
+        webbrowser_mock.open.assert_called_once_with("https://url.com/remote-auth/")
+        requests_mock.get.assert_called_once_with(
+            "https://url.com/remote-auth/auth-id/"
+        )
+        print_mock.assert_called_once()
+        time_mock.sleep.assert_called_once_with(1)
+        self.assertEqual(requests_mock.Session.return_value.get.call_count, 2)
+        requests_mock.Session.return_value.get.assert_called_with(
+            "https://url.com/remote-auth/poll/"
+        )
 
-        ResAuth.__init__(self.auth_mock, url="www.abc.com")
-        self.assertEqual(self.auth_mock.sessionid, None)
-        self.assertEqual(self.auth_mock.csrftoken, None)
+    @patch("resdk.resolwe.requests")
+    def test_automatic_login(self, requests_mock):
+        requests_mock.post.return_value = MagicMock(status_code=204)
+        requests_mock.post.return_value.cookies.get_dict.return_value = {
+            "csrftoken": "my-token",
+            "sessionid": "my-id",
+        }
+        self.auth_mock.logger = MagicMock()
+        self.auth_mock.automatic_login_url = "http://www.abc.com/saml-auth/api-login/"
+        cookies = ResAuth.automatic_login(
+            self.auth_mock, username="me", password="pass"
+        )
+        self.auth_mock.logger.info.assert_called_once()
+        self.assertDictEqual(cookies, {"csrftoken": "my-token", "sessionid": "my-id"})
 
     def test_call(self):
         res_auth = MagicMock(
@@ -559,7 +578,9 @@ class TestResAuth(unittest.TestCase):
         self.assertDictEqual(resp.headers, {"referer": "www.abc.com"})
 
         res_auth = MagicMock(
-            spec=ResAuth, sessionid="my-id", csrftoken="my-token", url="abc.com"
+            spec=ResAuth,
+            cookies={"csrftoken": "my-token", "sessionid": "my-id"},
+            url="abc.com",
         )
         resp = ResAuth.__call__(res_auth, MagicMock(headers={}))
         self.assertDictEqual(

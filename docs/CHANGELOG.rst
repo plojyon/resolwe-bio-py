@@ -9,6 +9,10 @@ All notable changes to this project are documented in this file.
 Unreleased
 ==========
 
+Changed
+-------
+- Change login to use the new SAML authentication method
+
 Fixed
 -----
 - Fix ``RNATables`` in case of very large collection

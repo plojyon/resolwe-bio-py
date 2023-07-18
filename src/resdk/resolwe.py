@@ -13,7 +13,11 @@ import logging
 import ntpath
 import os
 import re
-from urllib.parse import urljoin
+import time
+import webbrowser
+from contextlib import suppress
+from typing import Optional, TypedDict
+from urllib.parse import urlencode, urljoin, urlparse
 
 import requests
 import slumber
@@ -38,9 +42,10 @@ from .resources import (
 from .resources.base import BaseResource
 from .resources.kb import Feature, Mapping
 from .resources.utils import get_collection_id, get_data_id, is_data, iterate_fields
-from .utils import is_email
 
 DEFAULT_URL = "http://localhost:8000"
+AUTOMATIC_LOGIN_POSTFIX = "saml-auth/api-login/"
+INTERACTIVE_LOGIN_POSTFIX = "saml-auth/remote-login/"
 
 
 class ResolweResource(slumber.Resource):
@@ -167,8 +172,13 @@ class Resolwe:
                 query = query.filter(**self.query_filter_mapping[query_name])
             setattr(self, query_name, query)
 
-    def _login(self, username=None, password=None):
-        self.auth = ResAuth(username, password, self.url)
+    def _login(
+        self,
+        username: Optional[str] = None,
+        password: Optional[str] = None,
+        interactive: bool = False,
+    ):
+        self.auth = ResAuth(username, password, self.url, interactive=interactive)
         self.session.cookies = requests.utils.cookiejar_from_dict(self.auth.cookies)
         self.api = ResolweAPI(
             urljoin(self.url, "/api/"),
@@ -179,17 +189,21 @@ class Resolwe:
         self._initialize_queries()
         self.uploader.invalidate_cache()
 
+        # Retrieve the logged in user and save it to auth. Necessary for interactive
+        # login.
+        with suppress(Exception):
+            logged_in_user = self.user.get(current_only=True)
+            self.auth.username = logged_in_user.email
+
     def login(self, username=None, password=None):
         """Interactive login.
 
-        Ask the user to enter credentials in command prompt. If
-        username / email and password are given, login without prompt.
+        If only username is given prompt the user for password via shell.
+        If username is not given, prompt for interactive login.
         """
-        if username is None:
-            username = input("Username (or email): ")
-        if password is None:
+        if username is not None and password is None:
             password = getpass.getpass("Password: ")
-        self._login(username=username, password=password)
+        self._login(username=username, password=password, interactive=True)
 
     def get_query_by_resource(self, resource):
         """Get ResolweQuery for a given resource."""
@@ -461,58 +475,126 @@ class Resolwe:
         return self.api.base.data_usage.get(**query_params)
 
 
+class AuthCookie(TypedDict):
+    """Authentication cookie dict."""
+
+    csrftoken: str
+    sessionid: str
+
+
 class ResAuth(requests.auth.AuthBase):
     """HTTP Resolwe Authentication for Request object.
 
     :param str username: user's username
     :param str password: user's password
     :param str url: Resolwe server address
+    :param str cookies: user's sessionid and csrftoken cookies
 
     """
 
-    #: Session ID used in HTTP requests
-    sessionid = None
-    #: CSRF token used in HTTP requests
-    csrftoken = None
+    #: Dictionary of authentication cookes.
+    cookies: AuthCookie = {"csrftoken": "", "sessionid": ""}
 
-    def __init__(self, username=None, password=None, url=DEFAULT_URL):
+    def __init__(
+        self,
+        username: Optional[str] = None,
+        password: Optional[str] = None,
+        url: str = DEFAULT_URL,
+        interactive: bool = False,
+    ):
         """Authenticate user on Resolwe server."""
         self.logger = logging.getLogger(__name__)
-        self.cookies = {}
-
         self.username = username
         self.url = url
+        self.automatic_login_url = urljoin(self.url, AUTOMATIC_LOGIN_POSTFIX)
+        self.interactive_login_url = urljoin(self.url, INTERACTIVE_LOGIN_POSTFIX)
 
-        if not username and not password:
+        if not interactive and (username is None or password is None):
+            # Anonymous authentication
             return
 
-        key = "email" if is_email(username) else "username"
-        payload = {key: username, "password": password}
+        if username and password:
+            self.cookies = self.automatic_login(username, password)
+        else:
+            self.cookies = self.interactive_login()
 
-        try:
-            response = requests.post(urljoin(url, "/rest-auth/login/"), data=payload)
-        except requests.exceptions.ConnectionError:
-            raise ValueError("Server not accessible on {}. Wrong url?".format(url))
+    def automatic_login(self, username: str, password: str) -> AuthCookie:
+        """Attempt to perform automatic SAML login.
 
-        status_code = response.status_code
-        if status_code in [400, 403]:
-            msg = "Response HTTP status code {}. Invalid credentials?".format(
-                status_code
-            )
-            raise ValueError(msg)
+        :returns: authentication cookie dict on success, None on failure.
+        """
+        self.logger.info("Attempting automatic login.")
+        response = requests.post(
+            self.automatic_login_url,
+            data={"email": username, "password": password},
+        )
+        cookies = response.cookies.get_dict()
+        # Status should be either 204 (No Content) or 200 (OK).
+        if (
+            response.status_code not in [200, 204]
+            or "sessionid" not in cookies
+            or "csrftoken" not in cookies
+        ):
+            raise RuntimeError("Automatic login failed.")
 
-        if not ("sessionid" in response.cookies and "csrftoken" in response.cookies):
-            raise Exception("Missing sessionid or csrftoken. Invalid credentials?")
+        return {
+            "sessionid": cookies["sessionid"],
+            "csrftoken": cookies["csrftoken"],
+        }
 
-        self.sessionid = response.cookies["sessionid"]
-        self.csrftoken = response.cookies["csrftoken"]
-        self.url = url
-        self.cookies = {"csrftoken": self.csrftoken, "sessionid": self.sessionid}
+    def interactive_login(self, polling_interval: int = 1) -> AuthCookie:
+        """Prompt user to log in with a web browser.
+
+        :returns: authentication cookie dict on success, None on failure.
+        """
+        auth_id_url = urljoin(self.interactive_login_url, "auth-id/")
+        auth_id = requests.get(auth_id_url).json()["auth_id"]
+
+        # Use login url without the auth_id, as the system call could be intercepted.
+        browser_opened = webbrowser.open(self.interactive_login_url)
+        login_url_with_auth_id = (
+            urlparse(self.interactive_login_url)
+            ._replace(query=urlencode({"auth_id": auth_id}))
+            .geturl()
+        )
+        message = f"""Browser will{" not" if not browser_opened else ""} be automatically opened.
+Please visit the following URL:
+
+{self.interactive_login_url}
+
+Then enter the code:
+
+{self.interactive_login_url}
+
+Alternatively, you may visit the following URL which will autofill the code upon loading:
+{login_url_with_auth_id}\n"""
+        # Do not use logger here, because we want the url to be visible even if logging
+        # is disabled.
+        print(message)
+
+        poll_url = urljoin(self.interactive_login_url, "poll/")
+        session = requests.Session()
+        session.cookies.set("auth_id", auth_id)
+        response = session.get(poll_url)
+        while response.status_code == 204:
+            time.sleep(polling_interval)
+            response = session.get(poll_url)
+
+        cookie_dict = response.json()
+
+        if (
+            response.status_code != 200
+            or "sessionid" not in cookie_dict
+            or "csrftoken" not in cookie_dict
+        ):
+            raise RuntimeError("Interactive login failed.")
+
+        return cookie_dict
 
     def __call__(self, request):
         """Set request headers."""
-        if self.sessionid and self.csrftoken:
-            request.headers["X-CSRFToken"] = self.csrftoken
+        if "csrftoken" in self.cookies:
+            request.headers["X-CSRFToken"] = self.cookies["csrftoken"]
 
         request.headers["referer"] = self.url
 
