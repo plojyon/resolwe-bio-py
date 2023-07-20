@@ -124,6 +124,18 @@ MQC_GENERAL_COLUMNS = [
         "agg_func": "sum",
     },
     {
+        "name": "STAR quantification_mqc-generalstats-star_quantification-of_assigned_reads",
+        "slug": "star_assigned_reads_percent",
+        "type": "float64",
+        "agg_func": "mean",
+    },
+    {
+        "name": "STAR quantification_mqc-generalstats-star_quantification-Assigned_reads",
+        "slug": "star_assigned_reads",
+        "type": "int64",
+        "agg_func": "sum",
+    },
+    {
         "name": "Salmon_mqc-generalstats-salmon-percent_mapped",
         "slug": "salmon_assigned_reads_percent",
         "type": "float64",

@@ -5,6 +5,16 @@ Change Log
 All notable changes to this project are documented in this file.
 
 
+==========
+Unreleased
+==========
+
+Changed
+-------
+- Extend the list of supported QC fields in ``RNATables``
+  to accommodate assigned reads by STAR quantification
+
+
 ===================
 19.0.1 - 2023-08-22
 ===================
