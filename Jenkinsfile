@@ -71,17 +71,15 @@ throttle(["resolwe_bio_py"]) {
                     // https://issues.jenkins-ci.org/browse/JENKINS-36240
                     def change_author = env.CHANGE_AUTHOR
                     def trusted_authors = [
-                        "AGregorc",
                         "JureZmrzlikar",
                         "acopar",
                         "dblenkus",
                         "gregorjerse",
                         "jkokosar",
-                        "jvrakor",
                         "mstajdohar",
                         "mzganec",
-                        "robertcv",
                         "romunov",
+                        "plojyon",
                     ]
                     if (change_author != null && ! trusted_authors.contains(change_author)) {
                         // NOTE: The change_author variable equals null if a branch from the main
