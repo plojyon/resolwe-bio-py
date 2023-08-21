@@ -16,6 +16,7 @@ Added
 Changed
 -------
 - Change login to use the new SAML authentication method
+- Fix `aiohttp` version to 3.8
 
 Fixed
 -----

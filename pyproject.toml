@@ -41,7 +41,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
 ]
 dependencies = [
-    "aiohttp",
+    "aiohttp~=3.8.5",
     "requests>=2.6.0",
     "slumber>=0.7.1",
     "wrapt",
