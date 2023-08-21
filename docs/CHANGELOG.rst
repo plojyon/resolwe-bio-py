@@ -9,6 +9,10 @@ All notable changes to this project are documented in this file.
 Unreleased
 ==========
 
+Added
+-----
+- Add support for ``Python 3.11``
+
 Changed
 -------
 - Change login to use the new SAML authentication method
