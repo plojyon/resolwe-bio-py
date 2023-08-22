@@ -10,14 +10,20 @@ from resdk.tables import RNATables, VariantTables
 
 from ..base import BaseResdkFunctionalTest
 
+TABLES_LIVE_URL = "https://app.genialis.com"
+TABLES_USER_EMAIL = "jure+e2e@genialis.com"
+TABLES_USER_PASSWORD = "safe4ever&ever"
+
 
 class TestTables(BaseResdkFunctionalTest):
     def setUp(self):
         self.cache_dir = tempfile.mkdtemp()
-        self.test_server_url = "https://app.genialis.com"
+        self.test_server_url = TABLES_LIVE_URL
         self.test_collection_slug = "resdk-test-collection-tables"
         self.res = resdk.Resolwe(
-            url=self.test_server_url, username="resdk-e2e-test", password="safe4ever"
+            url=self.test_server_url,
+            username=TABLES_USER_EMAIL,
+            password=TABLES_USER_PASSWORD,
         )
         self.collection = self.res.collection.get(self.test_collection_slug)
         self.ct = RNATables(self.collection, cache_dir=self.cache_dir)
@@ -84,10 +90,12 @@ class TestTables(BaseResdkFunctionalTest):
 class TestVariantTables(BaseResdkFunctionalTest):
     def setUp(self):
         self.cache_dir = tempfile.mkdtemp()
-        self.test_server_url = "https://app.genialis.com"
+        self.test_server_url = TABLES_LIVE_URL
         self.test_collection_slug = "varianttables_demo"
         self.res = resdk.Resolwe(
-            url=self.test_server_url, username="resdk-e2e-test", password="safe4ever"
+            url=self.test_server_url,
+            username=TABLES_USER_EMAIL,
+            password=TABLES_USER_PASSWORD,
         )
         self.collection = self.res.collection.get(self.test_collection_slug)
         self.vt = VariantTables(self.collection, cache_dir=self.cache_dir)
