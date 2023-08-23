@@ -557,17 +557,19 @@ class ResAuth(requests.auth.AuthBase):
             ._replace(query=urlencode({"auth_id": auth_id}))
             .geturl()
         )
-        message = f"""Browser will{" not" if not browser_opened else ""} be automatically opened.
-Please visit the following URL:
+        message_automatic = f"""Enter the following code in the opened browser window:
 
-{self.interactive_login_url}
-
-Then enter the code:
-
-{self.interactive_login_url}
+{auth_id}
 
 Alternatively, you may visit the following URL which will autofill the code upon loading:
 {login_url_with_auth_id}\n"""
+        message_not_automatic = f"""Open the following URL which will autofill the code upon loading:
+
+{login_url_with_auth_id}\n"""
+
+        message = f"Browser {'could not' if not browser_opened else 'will'} be automatically opened.\n"
+        message += message_automatic if browser_opened else message_not_automatic
+
         # Do not use logger here, because we want the url to be visible even if logging
         # is disabled.
         print(message)
