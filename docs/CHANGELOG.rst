@@ -5,6 +5,15 @@ Change Log
 All notable changes to this project are documented in this file.
 
 
+==========
+Unreleased
+==========
+
+Changed
+-------
+- Update documentation for interactive user login
+
+
 ===================
 19.0.0 - 2023-08-22
 ===================

@@ -51,6 +51,9 @@ recognize the interpreter by '>>>'. Now we can connect to the Genialis Server:
   If you omit the ``login()`` line you will be logged as anonymous user.
   Note that anonymous users do not have access to the ful set of features.
 
+  The ``login()`` call will perform interactive login in a web browser. If you
+  wish to log in as a different user, open the link in an incognito window.
+
 .. note::
 
 	When connecting to the server through an interactive session, we suggest you
