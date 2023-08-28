@@ -83,7 +83,7 @@ class ResolweAPI(slumber.API):
 class Resolwe:
     """Connect to a Resolwe server.
 
-    :param username: user's username
+    :param username: user's email
     :type username: str
     :param password: user's password
     :type password: str
@@ -485,7 +485,7 @@ class AuthCookie(TypedDict):
 class ResAuth(requests.auth.AuthBase):
     """HTTP Resolwe Authentication for Request object.
 
-    :param str username: user's username
+    :param str username: user's email
     :param str password: user's password
     :param str url: Resolwe server address
     :param str cookies: user's sessionid and csrftoken cookies

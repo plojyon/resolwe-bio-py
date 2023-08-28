@@ -21,7 +21,6 @@ class User(BaseResource):
     WRITABLE_FIELDS = (
         "company",
         "department",
-        "email",
         "first_name",
         "job_title",
         "lab",
@@ -29,7 +28,10 @@ class User(BaseResource):
         "location",
         "phone_number",
     )
-    UPDATE_PROTECTED_FIELDS = ("username",)
+    UPDATE_PROTECTED_FIELDS = (
+        "username",
+        "email",
+    )
 
     def __init__(self, resolwe=None, **model_data):
         """Initialize attributes."""
@@ -65,11 +67,10 @@ class User(BaseResource):
 
     def __repr__(self):
         """Format resource name."""
-        return "{} <id: {}, name: '{}', username: '{}', email: '{}'>".format(
+        return "{} <id: {}, name: '{}', email: '{}'>".format(
             self.__class__.__name__,
             self.id,
             self.get_name(),
-            self.username,
             self.email,
         )
 
