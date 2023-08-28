@@ -161,6 +161,18 @@ MQC_GENERAL_COLUMNS = [
         "agg_func": "mean",
     },
     {
+        "name": "RNA-SeQC_mqc-generalstats-rna_seqc-Expression_Profiling_Efficiency",
+        "slug": "profiling_efficiency",
+        "type": "float64",
+        "agg_func": "mean",
+    },
+    {
+        "name": "RNA-SeQC_mqc-generalstats-rna_seqc-Genes_Detected",
+        "slug": "genes_detected",
+        "type": "Int64",
+        "agg_func": "mean",
+    },
+    {
         "slug": "strandedness_code",
         "type": "string",
     },
@@ -170,16 +182,31 @@ MQC_GENERAL_COLUMNS = [
     },
 ]
 
+MQC_COVERAGE_COLUMNS = [
+    {
+        "name": "Genes used in 3' bias",
+        "slug": "num_genes_three_prime_bias",
+        "type": "Int64",
+        "agg_func": "mean",
+    },
+    {
+        "name": "Mean 3' bias",
+        "slug": "mean_three_prime_bias",
+        "type": "Float64",
+        "agg_func": "mean",
+    },
+]
 
-def multiqc_general_stats_parser(file_object, name):
-    """Parse "multiqc_general_stats.txt" file."""
+
+def general_multiqc_parser(file_object, name, column_names):
+    """General parser for MultiQC files."""
     df = pd.read_csv(file_object, sep="\t", index_col=0)
 
     # Keep only specified columns:
     df = df[
         [
             column.get("name", "")
-            for column in MQC_GENERAL_COLUMNS
+            for column in column_names
             if column.get("name", "") in df.columns
         ]
     ]
@@ -187,7 +214,7 @@ def multiqc_general_stats_parser(file_object, name):
     df = df.rename(
         columns={
             column.get("name", ""): column["slug"]
-            for column in MQC_GENERAL_COLUMNS
+            for column in column_names
             if column.get("name", "") in df.columns
         }
     )
@@ -196,12 +223,22 @@ def multiqc_general_stats_parser(file_object, name):
     series = df.agg(
         {
             column["slug"]: column["agg_func"]
-            for column in MQC_GENERAL_COLUMNS
+            for column in column_names
             if column["slug"] in df.columns
         }
     )
     series.name = name
     return series
+
+
+def multiqc_general_stats_parser(file_object, name):
+    """Parse "multiqc_general_stats.txt" file."""
+    return general_multiqc_parser(file_object, name, MQC_GENERAL_COLUMNS)
+
+
+def multiqc_coverage_parser(file_object, name):
+    """Parse "multiqc_rna-seqc_coverage_stats.txt" file."""
+    return general_multiqc_parser(file_object, name, MQC_COVERAGE_COLUMNS)
 
 
 def multiqc_strand_parser(file_object, name):
@@ -451,6 +488,7 @@ class RNATables(BaseTables):
                 "uri_general": f"{mqc.id}/multiqc_data/multiqc_general_stats.txt",
                 "uri_strand": f"{mqc.id}/multiqc_data/multiqc_library_strandedness.txt",
                 "uri_build": f"{mqc.id}/multiqc_data/multiqc_sample_info.txt",
+                "uri_coverage": f"{mqc.id}/multiqc_data/multiqc_rna-seqc_coverage_stats.txt",
             }
 
         df = pd.DataFrame(index=[sample.id for sample in self._samples])
@@ -459,6 +497,7 @@ class RNATables(BaseTables):
             "uri_general": multiqc_general_stats_parser,
             "uri_strand": multiqc_strand_parser,
             "uri_build": multiqc_build_parser,
+            "uri_coverage": multiqc_coverage_parser,
         }
         for type_, parser in parsers.items():
             uris = [item[type_] for item in mqc_db.values()]
@@ -468,7 +507,9 @@ class RNATables(BaseTables):
 
         # Cast to correct dtype
         column_types = {
-            c["slug"]: c["type"] for c in MQC_GENERAL_COLUMNS if c["slug"] in df.columns
+            c["slug"]: c["type"]
+            for c in MQC_GENERAL_COLUMNS + MQC_COVERAGE_COLUMNS
+            if c["slug"] in df.columns
         }
         df = df[column_types.keys()].astype(column_types)
 

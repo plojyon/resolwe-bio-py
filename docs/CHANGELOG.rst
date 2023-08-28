@@ -13,6 +13,8 @@ Changed
 -------
 - Extend the list of supported QC fields in ``RNATables``
   to accommodate assigned reads by STAR quantification
+- Extend the list of supported QC fields in ``RNATables``
+  to accommodate metrics reported by RNA-SeQC
 
 
 ===================
