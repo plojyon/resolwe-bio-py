@@ -135,6 +135,7 @@ class Resolwe:
 
     def __init__(self, username=None, password=None, url=None):
         """Initialize attributes."""
+        self.logger = logging.getLogger(__name__)
         self.session = requests.Session()
         self.uploader = Uploader(self)
         if url is None:
@@ -151,8 +152,6 @@ class Resolwe:
 
         self.url = url
         self._login(username=username, password=password)
-
-        self.logger = logging.getLogger(__name__)
 
     def _validate_url(self, url):
         if not re.match(r"https?://", url):
@@ -517,6 +516,8 @@ class ResAuth(requests.auth.AuthBase):
             self.cookies = self.automatic_login(username, password)
         else:
             self.cookies = self.interactive_login()
+
+        self.logger.info(f"Successfully logged in as {username}.")
 
     def automatic_login(self, username: str, password: str) -> AuthCookie:
         """Attempt to perform automatic SAML login.
