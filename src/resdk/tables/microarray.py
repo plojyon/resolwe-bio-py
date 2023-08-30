@@ -6,6 +6,7 @@ MATables
 
 .. autoclass:: MATables
     :members:
+    :inherited-members:
 
     .. automethod:: __init__
 

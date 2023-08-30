@@ -12,39 +12,51 @@ Resource classes
 
 .. autoclass:: resdk.resources.base.BaseResolweResource
    :members:
+   :inherited-members:
 
 .. autoclass:: resdk.resources.Data
    :members:
+   :inherited-members:
 
 .. autoclass:: resdk.resources.collection.BaseCollection
    :members:
+   :inherited-members:
 
 .. autoclass:: resdk.resources.Collection
    :members:
+   :inherited-members:
 
 .. autoclass:: resdk.resources.Sample
    :members:
+   :inherited-members:
 
 .. autoclass:: resdk.resources.Relation
    :members:
+   :inherited-members:
 
 .. autoclass:: resdk.resources.Process
    :members:
+   :inherited-members:
 
 .. autoclass:: resdk.resources.DescriptorSchema
    :members:
+   :inherited-members:
 
 .. autoclass:: resdk.resources.User
    :members:
+   :inherited-members:
 
 .. autoclass:: resdk.resources.Group
    :members:
+   :inherited-members:
 
 .. autoclass:: resdk.resources.Geneset
    :members:
+   :inherited-members:
 
 .. autoclass:: resdk.resources.Metadata
    :members:
+   :inherited-members:
 
 .. automodule:: resdk.resources.kb
 

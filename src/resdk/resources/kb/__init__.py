@@ -2,9 +2,11 @@
 
 .. autoclass:: resdk.resources.kb.Feature
    :members:
+   :inherited-members:
 
 .. autoclass:: resdk.resources.kb.Mapping
    :members:
+   :inherited-members:
 
 """
 

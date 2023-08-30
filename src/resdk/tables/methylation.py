@@ -6,6 +6,7 @@ MethylationTables
 
 .. autoclass:: MethylationTables
     :members:
+    :inherited-members:
 
     .. automethod:: __init__
 

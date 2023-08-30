@@ -6,6 +6,7 @@ RNATables
 
 .. autoclass:: RNATables
     :members:
+    :inherited-members:
 
     .. automethod:: __init__
 

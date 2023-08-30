@@ -6,6 +6,7 @@ VariantTables
 
 .. autoclass:: VariantTables
     :members:
+    :inherited-members:
 
 """
 import re
