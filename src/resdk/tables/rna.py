@@ -16,6 +16,7 @@ import warnings
 from functools import lru_cache
 from typing import Callable, Dict, List, Optional
 
+import numpy as np
 import pandas as pd
 
 from resdk.resources import Collection, Data
@@ -414,7 +415,19 @@ class RNATables(BaseTables):
         if not self.gene_ids:
             raise ValueError("Expression data must be used before!")
 
-        return self._mapping(self.gene_ids, source, species)
+        mapping = self._mapping(self.gene_ids, source, species)
+        if len(mapping) < len(self.gene_ids):
+            missing = list(set(self.gene_ids) - set(mapping))
+            missing_str = (
+                "(" + ", ".join(missing[:5]) + (", ...)" if len(missing) > 5 else ")")
+            )
+            warnings.warn(
+                f"Symbols for {len(missing)} gene IDs were not found. ({missing_str})"
+                "Missing symbols will be set to empty string.",
+                UserWarning,
+            )
+            mapping = {id_: mapping.get(id_, np.nan) for id_ in self.gene_ids}
+        return mapping
 
     @property
     @lru_cache()

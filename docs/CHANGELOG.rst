@@ -15,6 +15,8 @@ Changed
   to accommodate assigned reads by STAR quantification
 - Extend the list of supported QC fields in ``RNATables``
   to accommodate metrics reported by RNA-SeQC
+- Warn user in case ``resdk.tables.RNATables.readable_columns`` cannot find
+  mappings for all genes.
 
 
 ===================
