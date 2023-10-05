@@ -254,7 +254,21 @@ class VariantTables(BaseTables):
             if gs.output["source"] != "UCSC":
                 qs = self.resolwe.feature.filter(feature_id__in=list(obj_geneset))
                 id_2_name = {obj.feature_id: obj.name for obj in qs}
-                obj_geneset = set([id_2_name[gene] for gene in obj_geneset])
+                # Sometimes, genes defined in obj.input[geneset/mutations] are
+                # missing in KnowledgeBase. This can happen due to KB updates.
+                mapping_yes, mapping_no = set(), set()
+                for gene_id in obj_geneset:
+                    if gene_id in id_2_name:
+                        mapping_yes.add(id_2_name[gene_id])
+                    else:
+                        mapping_no.add(gene_id)
+                if mapping_no:
+                    warnings.warn(
+                        f"{len(mapping_no)} genes in sample {obj.sample.id} are "
+                        "missing from KnowledgeBase. These genes are ignored in "
+                        "further analysis."
+                    )
+                obj_geneset = mapping_yes
 
         return obj_geneset
 
