@@ -519,9 +519,14 @@ class RNATables(BaseTables):
             df = df.merge(qc, how="left", left_index=True, right_index=True)
 
         # Cast to correct dtype
+        BUILD_COLUMN = [{"slug": "genome_build", "type": "category"}]
+        STRANDEDNESS_COLUMN = [{"slug": "strandedness_code", "type": "category"}]
         column_types = {
             c["slug"]: c["type"]
-            for c in MQC_GENERAL_COLUMNS + MQC_COVERAGE_COLUMNS
+            for c in MQC_GENERAL_COLUMNS
+            + MQC_COVERAGE_COLUMNS
+            + BUILD_COLUMN
+            + STRANDEDNESS_COLUMN
             if c["slug"] in df.columns
         }
         df = df[column_types.keys()].astype(column_types)
