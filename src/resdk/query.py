@@ -149,7 +149,7 @@ class ResolweQuery:
 
     def _clone(self):
         """Return copy of current object with empty cache."""
-        new_obj = ResolweQuery(self.resolwe, self.resource)
+        new_obj = self.__class__(self.resolwe, self.resource)
         new_obj._filters = copy.deepcopy(self._filters)
         new_obj._limit = self._limit
         new_obj._offset = self._offset
@@ -380,3 +380,24 @@ class ResolweQuery:
                     min_id = obj.id
                     pbar.update(1)
                     yield obj
+
+
+class AnnotationValueQuery(ResolweQuery):
+    """Populate Annotation fields with a single query."""
+
+    def _fetch(self):
+        """Make request to the server and populate cache.
+
+        Fetch all values and their fields with 2 queries.
+        """
+        # Execute the query in a single request.
+        super()._fetch()
+
+        # Get corresponding annotation field details in a single query.
+        field_ids = [value.field_id for value in self._cache]
+        fields = self.resolwe.annotation_field.filter(id__in=field_ids)
+        fields_map = {field.id: field for field in fields}
+
+        # Set the fields on the AnnotationValue instances.
+        for value in self._cache:
+            value._field = fields_map[value.field_id]

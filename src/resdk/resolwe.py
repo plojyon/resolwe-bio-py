@@ -26,8 +26,10 @@ from resdk.uploader import Uploader
 
 from .constants import CHUNK_SIZE
 from .exceptions import ValidationError, handle_http_exception
-from .query import ResolweQuery
+from .query import AnnotationValueQuery, ResolweQuery
 from .resources import (
+    AnnotationField,
+    AnnotationValue,
     Collection,
     Data,
     DescriptorSchema,
@@ -94,6 +96,7 @@ class Resolwe:
 
     # Map resource class to ResolweQuery name
     resource_query_mapping = {
+        AnnotationField: "annotation_field",
         Data: "data",
         Collection: "collection",
         Sample: "sample",
@@ -170,6 +173,8 @@ class Resolwe:
             if query_name in self.query_filter_mapping:
                 query = query.filter(**self.query_filter_mapping[query_name])
             setattr(self, query_name, query)
+        # Use custon query to reduce the number of queries.
+        setattr(self, "annotation_value", AnnotationValueQuery(self, AnnotationValue))
 
     def _login(
         self,
