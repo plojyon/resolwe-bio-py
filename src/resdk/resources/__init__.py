@@ -41,6 +41,18 @@ Resource classes
 .. autoclass:: resdk.resources.DescriptorSchema
    :members:
    :inherited-members:
+   
+.. autoclass:: resdk.resources.AnnotationValue
+   :members:
+   :inherited-members:
+
+.. autoclass:: resdk.resources.AnnotationGroup
+   :members:
+   :inherited-members:
+
+.. autoclass:: resdk.resources.AnnotationField
+   :members:
+   :inherited-members:
 
 .. autoclass:: resdk.resources.User
    :members:
@@ -79,6 +91,7 @@ Utility functions
    :members:
 
 """
+from .annotations import AnnotationField, AnnotationGroup, AnnotationValue
 from .collection import Collection
 from .data import Data
 from .descriptor import DescriptorSchema
@@ -90,6 +103,9 @@ from .sample import Sample
 from .user import Group, User
 
 __all__ = (
+    "AnnotationField",
+    "AnnotationGroup",
+    "AnnotationValue",
     "Collection",
     "Data",
     "DescriptorSchema",

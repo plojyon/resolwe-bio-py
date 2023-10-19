@@ -17,6 +17,7 @@ Changed
   to accommodate metrics reported by RNA-SeQC
 - Warn user in case ``resdk.tables.RNATables.readable_columns`` cannot find
   mappings for all genes.
+- Add annotation models
 
 
 ===================

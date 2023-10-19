@@ -206,6 +206,19 @@ class BaseResource:
         else:
             return False
 
+    def _resource_setter(self, payload, resource, field):
+        """Set ``resource`` with ``payload`` on ``field``."""
+        if isinstance(payload, resource):
+            setattr(self, field, payload)
+        elif isinstance(payload, dict):
+            setattr(self, field, resource(resolwe=self.resolwe, **payload))
+        elif isinstance(payload, int):
+            setattr(self, field, resource.fetch_object(self.resolwe, id=payload))
+        elif isinstance(payload, str):
+            setattr(self, field, resource.fetch_object(self.resolwe, slug=payload))
+        else:
+            setattr(self, field, payload)
+
 
 class BaseResolweResource(BaseResource):
     """Base class for Resolwe resources.
@@ -309,16 +322,3 @@ class BaseResolweResource(BaseResource):
         return "{} <id: {}, slug: '{}', name: '{}'>".format(
             self.__class__.__name__, self.id, self.slug, self.name
         )
-
-    def _resource_setter(self, payload, resource, field):
-        """Set ``resource`` with ``payload`` on ``field``."""
-        if isinstance(payload, resource):
-            setattr(self, field, payload)
-        elif isinstance(payload, dict):
-            setattr(self, field, resource(resolwe=self.resolwe, **payload))
-        elif isinstance(payload, int):
-            setattr(self, field, resource.fetch_object(self.resolwe, id=payload))
-        elif isinstance(payload, str):
-            setattr(self, field, resource.fetch_object(self.resolwe, slug=payload))
-        else:
-            setattr(self, field, payload)
