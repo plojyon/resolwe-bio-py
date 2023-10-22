@@ -1,11 +1,15 @@
 """Sample resource."""
 import logging
+from typing import TYPE_CHECKING
 
 from resdk.shortcuts.sample import SampleUtilsMixin
 
 from ..utils.decorators import assert_object_exists
 from .background_task import BackgroundTask
 from .collection import BaseCollection, Collection
+
+if TYPE_CHECKING:
+    from .annotations import AnnotationValue
 
 
 class Sample(SampleUtilsMixin, BaseCollection):
@@ -251,3 +255,32 @@ class Sample(SampleUtilsMixin, BaseCollection):
         )
         background_task = BackgroundTask(resolwe=self.resolwe, **task_data)
         return self.resolwe.sample.get(id__in=background_task.result())
+
+    @property
+    def annotations(self):
+        """Get the annotations for the given sample."""
+        return self.resolwe.annotation_value.filter(entity=self.id)
+
+    def get_annotation(self, full_path: str) -> "AnnotationValue":
+        """Get the AnnotationValue from full path.
+
+        :raises LookupError: when field at the specified path does not exist.
+        """
+        group_name, field_name = full_path.split(".", maxsplit=1)
+        return self.annotations.get(
+            field__name=field_name, field__group__name=group_name
+        )
+
+    def set_annotation(self, full_path: str, value) -> "AnnotationValue":
+        """Create/update annotation value."""
+        try:
+            annotation_value = self.get_annotation(full_path)
+            annotation_value.value = value
+            annotation_value.save()
+        except LookupError:
+            field = self.resolwe.annotation_field.from_path(full_path)
+            annotation_value = self.resolwe.annotation_value.create(
+                sample=self, field=field, value=value
+            )
+        finally:
+            return annotation_value

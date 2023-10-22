@@ -15,7 +15,13 @@ import operator
 
 import tqdm
 
-from resdk.resources import DescriptorSchema, Process
+from resdk.resources import (
+    AnnotationField,
+    AnnotationValue,
+    DescriptorSchema,
+    Process,
+    Sample,
+)
 from resdk.resources.base import BaseResource
 
 
@@ -92,6 +98,10 @@ class ResolweQuery:
 
         self.logger = logging.getLogger(__name__)
 
+    def _non_string_iterable(self, item) -> bool:
+        """Return True when item is iterable but not string."""
+        return isinstance(item, collections.abc.Iterable) and not isinstance(item, str)
+
     def __getitem__(self, index):
         """Retrieve an item or slice from the set of results."""
         if not isinstance(index, (slice, int)):
@@ -159,10 +169,10 @@ class ResolweQuery:
         """Iterate through object and replace all objects with their ids."""
         if isinstance(obj, BaseResource):
             return obj.id
-        if isinstance(obj, list):
-            return [self._dehydrate_resources(element) for element in obj]
         if isinstance(obj, dict):
             return {key: self._dehydrate_resources(value) for key, value in obj.items()}
+        if self._non_string_iterable(obj):
+            return [self._dehydrate_resources(element) for element in obj]
 
         return obj
 
@@ -172,10 +182,8 @@ class ResolweQuery:
             # 'sample' is called 'entity' in the backend.
             key = key.replace("sample", "entity")
             value = self._dehydrate_resources(value)
-
-            if isinstance(value, list):
+            if self._non_string_iterable(value):
                 value = ",".join(map(str, value))
-
             if self.resource.query_method == "GET":
                 self._filters[key].append(value)
             elif self.resource.query_method == "POST":
@@ -382,6 +390,18 @@ class ResolweQuery:
                     yield obj
 
 
+class AnnotationFieldQuery(ResolweQuery):
+    """Add additional method to the annotation field query."""
+
+    def from_path(self, full_path: str) -> "AnnotationField":
+        """Get the AnnotationField from full path.
+
+        :raises LookupError: when field at the specified path does not exist.
+        """
+        group_name, field_name = full_path.split(".", maxsplit=1)
+        return self.get(name=field_name, group__name=group_name)
+
+
 class AnnotationValueQuery(ResolweQuery):
     """Populate Annotation fields with a single query."""
 
@@ -393,11 +413,15 @@ class AnnotationValueQuery(ResolweQuery):
         # Execute the query in a single request.
         super()._fetch()
 
-        # Get corresponding annotation field details in a single query.
-        field_ids = [value.field_id for value in self._cache]
-        fields = self.resolwe.annotation_field.filter(id__in=field_ids)
-        fields_map = {field.id: field for field in fields}
-
-        # Set the fields on the AnnotationValue instances.
+        missing = collections.defaultdict(list)
         for value in self._cache:
-            value._field = fields_map[value.field_id]
+            if value._field is None:
+                missing[value.field_id].append(value)
+
+        if missing:
+            # Get corresponding annotation field details in a single query and attach it to
+            # the values.
+            for field in self.resolwe.annotation_field.filter(id__in=missing.keys()):
+                for value in missing[field.id]:
+                    value._field = field
+                    value._original_values["field"] = field._original_values

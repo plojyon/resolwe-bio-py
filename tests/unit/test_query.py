@@ -134,6 +134,7 @@ class TestResolweQuery(unittest.TestCase):
             spec=ResolweQuery,
             _filters=defaultdict(list, {"slug": ["test"]}),
             _dehydrate_resources=MagicMock(return_value=1),
+            _non_string_iterable=MagicMock(return_value=False),
         )
         query.resource.query_method = "GET"
         ResolweQuery._add_filter(query, {"id": 1})
@@ -143,6 +144,7 @@ class TestResolweQuery(unittest.TestCase):
             spec=ResolweQuery,
             _filters={"slug": "test"},
             _dehydrate_resources=MagicMock(return_value=1),
+            _non_string_iterable=MagicMock(return_value=False),
         )
         query.resource.query_method = "POST"
         ResolweQuery._add_filter(query, {"id": 1})
@@ -152,6 +154,7 @@ class TestResolweQuery(unittest.TestCase):
             spec=ResolweQuery,
             _filters={"slug": "test"},
             _dehydrate_resources=MagicMock(return_value=2),
+            _non_string_iterable=MagicMock(return_value=False),
         )
         query.resource.query_method = "POST"
         ResolweQuery._add_filter(query, {"sample": 2})

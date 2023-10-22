@@ -26,7 +26,7 @@ from resdk.uploader import Uploader
 
 from .constants import CHUNK_SIZE
 from .exceptions import ValidationError, handle_http_exception
-from .query import AnnotationValueQuery, ResolweQuery
+from .query import AnnotationFieldQuery, AnnotationValueQuery, ResolweQuery
 from .resources import (
     AnnotationField,
     AnnotationValue,
@@ -94,9 +94,17 @@ class Resolwe:
 
     """
 
+    # Map between resource and Query map. Default in ResorweQuery, only overrides must
+    # be listed here.
+    resource_query_class = {
+        AnnotationValue: AnnotationValueQuery,
+        AnnotationField: AnnotationFieldQuery,
+    }
+
     # Map resource class to ResolweQuery name
     resource_query_mapping = {
         AnnotationField: "annotation_field",
+        AnnotationValue: "annotation_value",
         Data: "data",
         Collection: "collection",
         Sample: "sample",
@@ -169,12 +177,11 @@ class Resolwe:
         """Initialize ResolweQuery's."""
         for resource, query_name in self.resource_query_mapping.items():
             slug_field = self.slug_field_mapping.get(query_name, "slug")
-            query = ResolweQuery(self, resource, slug_field=slug_field)
+            QueryClass = self.resource_query_class.get(resource, ResolweQuery)
+            query = QueryClass(self, resource, slug_field=slug_field)
             if query_name in self.query_filter_mapping:
                 query = query.filter(**self.query_filter_mapping[query_name])
             setattr(self, query_name, query)
-        # Use custon query to reduce the number of queries.
-        setattr(self, "annotation_value", AnnotationValueQuery(self, AnnotationValue))
 
     def _login(
         self,

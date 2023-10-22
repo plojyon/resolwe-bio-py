@@ -102,8 +102,8 @@ class BaseResource:
 
         def field_changed(field_name):
             """Check if local field value is different from the server."""
-            original_value = self._original_values.get(field_name, None)
             current_value = getattr(self, field_name, None)
+            original_value = self._original_values.get(field_name, None)
 
             if isinstance(current_value, BaseResource) and original_value:
                 # TODO: Check that current and original are instances of the same resource class
@@ -151,6 +151,13 @@ class BaseResource:
 
             if "sample" in payload:
                 payload["entity"] = payload.pop("sample")
+
+            from .annotations import AnnotationValue
+
+            # Annotation models have primarykey serializer.
+            if isinstance(self, AnnotationValue):
+                payload["field"] = payload["field"]["id"]
+                payload["entity"] = payload["entity"]["id"]
 
             response = self.api.post(payload)
             self._update_fields(response)
