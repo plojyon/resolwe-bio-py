@@ -77,11 +77,6 @@ class Sample(SampleUtilsMixin, BaseCollection):
 
         return self._relations
 
-    def update_descriptor(self, descriptor):
-        """Update descriptor and descriptor_schema."""
-        self.api(self.id).patch({"descriptor": descriptor})
-        self.descriptor = descriptor
-
     @property
     def background(self):
         """Get background sample of the current one."""

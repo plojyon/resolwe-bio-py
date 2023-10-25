@@ -11,6 +11,8 @@ Unreleased
 
 Changed
 -------
+- **BACKWARD INCOMPATIBLE:** Remove ``update_descriptor`` method from the
+  ``Sample`` resource
 - Extend the list of supported QC fields in ``RNATables``
   to accommodate assigned reads by STAR quantification
 - Extend the list of supported QC fields in ``RNATables``
