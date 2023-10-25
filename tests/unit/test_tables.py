@@ -7,6 +7,7 @@ import pytz
 from mock import MagicMock, patch
 from pandas.testing import assert_frame_equal
 
+from resdk.resources import AnnotationField, AnnotationValue
 from resdk.tables import RNATables
 
 
@@ -21,10 +22,22 @@ class TestTables(unittest.TestCase):
         self.sample.modified = datetime(
             2020, 11, 1, 12, 15, 0, 0, tzinfo=pytz.UTC
         ).astimezone(pytz.timezone("Europe/Ljubljana"))
-        self.sample.descriptor_schema.schema = [
-            {"name": "PFS", "type": "basic:decimal:", "label": "P"}
+        self.av1 = AnnotationValue(
+            resolwe=self.resolwe,
+            value=1,
+            entity=123,
+        )
+        self.af1 = AnnotationField(
+            id=1,
+            resolwe=self.resolwe,
+            name="PFS",
+            group=dict(name="general"),
+            type="DECIMAL",
+        )
+        self.av1._field = self.af1
+        self.resolwe.annotation_value.filter.return_value = [
+            self.av1,
         ]
-        self.sample.descriptor = {"PFS": 1}
 
         self.data = MagicMock()
         self.data.id = 12345
@@ -46,7 +59,7 @@ class TestTables(unittest.TestCase):
         self.collection = MagicMock()
         self.collection.slug = "slug"
         self.collection.name = "Name"
-        self.collection.samples.filter = self.web_request([self.sample])
+        self.collection.samples.filter().iterate = self.web_request([self.sample])
         self.collection.data.filter().iterate = self.web_request([self.data])
         self.collection.resolwe = self.resolwe
 
@@ -324,12 +337,12 @@ class TestTables(unittest.TestCase):
 
     def test_get_descriptors(self):
         ct = RNATables(self.collection)
-        descriptors = ct._get_descriptors()
+        anns = ct._get_annotations()
 
-        expected = pd.DataFrame([1], columns=["PFS"], index=[123], dtype=float)
+        expected = pd.DataFrame([1], columns=["general.PFS"], index=[123], dtype=float)
         expected.index.name = "sample_id"
 
-        assert_frame_equal(descriptors, expected)
+        assert_frame_equal(anns, expected, check_names=False)
 
     def test_get_relations(self):
         ct = RNATables(self.collection)
@@ -361,11 +374,11 @@ class TestTables(unittest.TestCase):
 
         assert_frame_equal(orange_data, expected)
 
-    @patch.object(RNATables, "_get_descriptors")
+    @patch.object(RNATables, "_get_annotations")
     @patch.object(RNATables, "_get_relations")
     @patch.object(RNATables, "_get_orange_data")
-    def test_download_metadata(self, orange_mock, relations_mock, descriptors_mock):
-        descriptors_mock.return_value = self.metadata_df
+    def test_download_metadata(self, orange_mock, relations_mock, annotations_mock):
+        annotations_mock.return_value = self.metadata_df
         relations_mock.return_value = pd.DataFrame(
             [["A"]], index=[123], columns=["Replicate"]
         )

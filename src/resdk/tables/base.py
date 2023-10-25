@@ -15,7 +15,7 @@ import asyncio
 import json
 import os
 import warnings
-from collections import Counter
+from collections import Counter, defaultdict
 from functools import lru_cache
 from io import BytesIO
 from typing import Callable, Dict, List, Optional
@@ -27,7 +27,6 @@ import pytz
 from tqdm import tqdm
 
 from resdk.resources import Collection, Data, Sample
-from resdk.resources.utils import iterate_schema
 from resdk.utils.table_cache import (
     cache_dir_resdk,
     clear_cache_dir_resdk,
@@ -65,8 +64,6 @@ class BaseTables(abc.ABC):
         "id",
         "slug",
         "name",
-        "descriptor",
-        "descriptor_schema",
     ]
     DATA_FIELDS = [
         "id",
@@ -141,7 +138,7 @@ class BaseTables(abc.ABC):
         """
         sample_ids = set([d.sample.id for d in self._data])
 
-        query = self.collection.samples.filter(fields=self.SAMPLE_FIELDS)
+        query = self.collection.samples.filter(fields=self.SAMPLE_FIELDS).iterate()
         return [s for s in query if s.id in sample_ids]
 
     @property
@@ -309,39 +306,36 @@ class BaseTables(abc.ABC):
         cache_file = f"{self.collection.slug}_{data_type}_{version}.pickle"
         return os.path.join(self.cache_dir, cache_file)
 
-    def _get_descriptors(self) -> pd.DataFrame:
-        descriptors = []
+    def _get_annotations(self) -> pd.DataFrame:
+        TYPE_TO_DTYPE = {
+            "STRING": str,
+            # Pandas cannot cast NaN's to int, but it can cast them
+            # to pd.Int64Dtype
+            "INTEGER": pd.Int64Dtype(),
+            "DECIMAL": float,
+            "DATE": "datetime64[ns]",
+        }
+
+        annotations = []
+        # Make one query for all values instead of one per sample
+        avs = self.resolwe.annotation_value.filter(
+            entity__collection=self.collection.id
+        )
+
+        sample_data = defaultdict(dict)
+        sample_dtypes = defaultdict(dict)
+        for ann_value in avs:
+            sample_data[ann_value.sample.id][str(ann_value.field)] = ann_value.value
+            sample_dtypes[ann_value.sample.id][str(ann_value.field)] = TYPE_TO_DTYPE[
+                ann_value.field.type.upper()
+            ]
+
         for sample in self._samples:
-            sample.descriptor["sample_id"] = sample.id
-            descriptors.append(sample.descriptor)
+            data = sample_data.get(sample.id, {})
+            dtypes = sample_dtypes.get(sample.id, {})
+            annotations.append(pd.DataFrame(data, index=[sample.id]).astype(dtypes))
 
-        df = pd.json_normalize(descriptors).set_index("sample_id")
-
-        # Keep only numeric / string types:
-        column_types = {}
-        prefix = "XXX"
-        for schema, _, path in iterate_schema(
-            sample.descriptor, sample.descriptor_schema.schema, path=prefix
-        ):
-            field_type = schema["type"]
-            field_name = path[len(prefix) + 1 :]
-
-            # This can happen if this filed has None value in all descriptors
-            if field_name not in df:
-                continue
-
-            if field_type == "basic:string:":
-                column_types[field_name] = str
-            elif field_type == "basic:integer:":
-                # Pandas cannot cast NaN's to int, but it can cast them
-                # to pd.Int64Dtype
-                column_types[field_name] = pd.Int64Dtype()
-            elif field_type == "basic:decimal:":
-                column_types[field_name] = float
-
-        df = df[column_types.keys()].astype(column_types)
-
-        return df
+        return pd.concat(annotations, axis=0)
 
     def _get_relations(self) -> pd.DataFrame:
         relations = pd.DataFrame(index=[s.id for s in self._samples])
@@ -440,9 +434,9 @@ class BaseTables(abc.ABC):
         """Download samples metadata and transform into table."""
         meta = pd.DataFrame(None, index=[s.id for s in self._samples])
 
-        # Add descriptors metadata
-        descriptors = self._get_descriptors()
-        meta = meta.merge(descriptors, how="left", left_index=True, right_index=True)
+        # Add annotations metadata
+        annotations = self._get_annotations()
+        meta = meta.merge(annotations, how="left", left_index=True, right_index=True)
 
         # Add relations metadata
         relations = self._get_relations()
