@@ -15,13 +15,7 @@ import operator
 
 import tqdm
 
-from resdk.resources import (
-    AnnotationField,
-    AnnotationValue,
-    DescriptorSchema,
-    Process,
-    Sample,
-)
+from resdk.resources import AnnotationField, DescriptorSchema, Process
 from resdk.resources.base import BaseResource
 
 
