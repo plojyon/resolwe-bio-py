@@ -30,37 +30,37 @@ reads.sample
 reads.name = 'My first data'
 reads.save()
 
-# define the chosen descriptor schema
-reads.descriptor_schema = 'reads'
+reads.sample.set_annotation("general.species", "Homo sapiens")
 
-# define the descriptor
-reads.descriptor = {
-    'description': 'Some free text...',
+# Get the field by it's group and name:
+field = res.annotation_field.get(group__name="general", name="species")
+# Same thing, but in shorter syntax
+field = res.annotation_field.from_path("general.species")
+# Examine some of the field attributes
+field.name
+field.group
+field.description
+
+res.annotation_field.all()
+# You can also filter the results
+res.annotation_field.filter(group__name="general")
+
+# Get an AnnotationValue
+ann_value = reads.sample.get_annotation("general.species")
+# The actual value
+ann_value.value
+# The corresponding field
+ann_value.field
+# The corresponding sample
+ann_value.sample
+
+reads.sample.annotations
+reads.sample.get_annotations()
+annotations = {
+    "general.species": "Homo sapiens", "general.description": "Description"
 }
-
-# Very important: save changes!
-reads.save()
-
-reads.sample.descriptor_schema = 'sample'
-
-reads.sample.descriptor = {
-    'general': {
-        'description': 'This is a sample...',
-        'species': 'Homo sapiens',
-        'strain': 'F1 hybrid FVB/N x 129S6/SvEv',
-        'cell_type': 'glioblastoma',
-    },
-    'experiment': {
-        'assay_type': 'rna-seq',
-        'molecule': 'total_rna',
-    },
-}
-
-reads.sample.save()
-
-
-
-
+reads.sample.set_annotations(annotations)
+reads.sample.set_annotation("general.description", None, force=True)
 
 
 
@@ -115,3 +115,4 @@ alignment.process_warning
 
 # Access process' execution errors
 alignment.process_error
+

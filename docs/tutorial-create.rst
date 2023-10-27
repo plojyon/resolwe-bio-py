@@ -74,50 +74,88 @@ applied on the server.
   modify ``created`` or ``contributor`` fields. You will get an error if you
   try.
 
-Annotate Samples and Data
-=========================
+Annotate Samples
+================
 
-The obvious next thing to do after uploading some data is to annotate it.
-Annotations are encoded as bundles of descriptors, where each descriptor
-references a value in a descriptor schema (*i.e.* a template). Annotations for
-data objects, samples, and collections each follow a different descriptor
-format. For example, a reads data object can be annotated with the 'reads'
-descriptor schema, while a sample can be annotated by the 'sample' annotation
-schema. Each data object that is associated with the sample is also connected
-to the sample's annotation, so that the annotation for a sample (or collection)
-represents all Data objects attached to it. `Descriptor schemas`_ are described
-in detail (with `accompanying examples`_) in the
-`Resolwe Bioinformatics documentation`_.
+The next thing to do after uploading some data is to annotate samples this data
+belongs to. This can be done by assigning a value to a predefined field on a
+given sample. See the example below.
 
-.. _Resolwe Bioinformatics documentation: http://resolwe-bio.readthedocs.io
-.. _Descriptor schemas: https://resolwe-bio.readthedocs.io/en/latest/descriptor.html
-.. _accompanying examples: https://github.com/genialis/resolwe-bio/tree/master/resolwe_bio/descriptors
-
-Here, we show how to annotate the ``reads`` data object by defining the
-descriptor information that populates the annotation fields as defined in the
-'reads' descriptor schema:
+Each sample should be assigned a species. This is done by attaching the
+``general.species`` field on a sample and assigning it a value, e.g.
+``Homo sapiens``.
 
 .. literalinclude:: files/tutorial-create.py
-   :lines: 33-42
+   :lines: 33
 
-We can annotate the sample object using a similar process with a 'sample'
-descriptor schema:
+
+Annotation Fields
+-----------------
+
+You might be wondering why the example above requires ``general.species`` string
+instead of e.g. just ``species``. The answer to this are ``AnnotationField``\ s.
+These are predefined *objects* that are available to annotate samples. These
+objects primarily have a name, but also other properties. Let's examine some of
+those:
 
 .. literalinclude:: files/tutorial-create.py
-   :lines: 44-59
+   :lines: 35-42
 
-.. warning::
 
-    Many descriptor schemas have required fields with a limited set of choices
-    that may be applied as annotations. For example, the 'species' annotation
-    in a sample descriptor must be selected from the list of options in the
-    `sample descriptor schema`_, represented by its Latin name.
+.. note::
 
-.. _sample descriptor schema: https://github.com/genialis/resolwe-bio/blob/master/resolwe_bio/descriptors/sample.yml
+   Each field is uniquely defined by the combination of ``name`` and ``group``.
 
-We can also define descriptors and descriptor schema directly when calling
-``res.run`` function. This is described in the section about the ``run()``
-method below.
+If you wish to examine what fields are available, use a query
+
+.. literalinclude:: files/tutorial-create.py
+   :lines: 44-46
+
+
+You may be wondering whether you can create your own fields / groups. The answer
+is no. Time has proven that keeping things organized requires the usage
+of a selected set of predefined fields. If you absolutely feel that you need an
+additional annotation field, let us know or use resources such as :ref:`metadata`.
+
+
+Annotation Values
+-----------------
+
+As mentioned before, fields are only one part of the annotation. The other part
+are annotation values, stored as a standalone resource ``AnnotationValues``.
+They connect the field with the actual value.
+
+.. literalinclude:: files/tutorial-create.py
+   :lines: 48-55
+
+
+As a shortcut, you can get all the ``AnnotationValue``\ s for a given sample by:
+
+.. literalinclude:: files/tutorial-create.py
+   :lines: 57
+
+
+Helper methods
+--------------
+
+Sometimes it is convenient to represent the annotations with the dictionary,
+where keys are field names and values are annotation values. You can get all
+the annotation for a given sample in this format by calling:
+
+.. literalinclude:: files/tutorial-create.py
+   :lines: 58
+
+Multiple annotations stored in the dictionary can be assigned to sample by:
+
+.. literalinclude:: files/tutorial-create.py
+   :lines: 59-62
+
+Annotation is deleted from the sample by setting its value to ``None`` when
+calling ``set_annotation`` or ``set_annotations`` helper methods. To avoid
+confirmation prompt, you can set ``force=True``.
+
+.. literalinclude:: files/tutorial-create.py
+   :lines: 63
 
 Run analyses
 ============

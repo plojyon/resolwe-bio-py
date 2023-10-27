@@ -4,9 +4,9 @@
 Metadata
 ========
 
-Samples are normally annotated with the use of ``descriptor`` and
-``descriptor_schema``. However in some cases the fields defined in
-``DescriptorSchema`` do not suffice and it comes handy to upload sample
+Samples are normally annotated with the use of ``AnnotationField``\ s and
+``AnnotationValue``\ s. However in some cases the available
+``AnnotationField``\ s do not suffice and it comes handy to upload sample
 annotations in a table where each row holds information about some
 sample in collection. In general, there can be multiple rows referring
 to the same sample in the collection (for example one sample received
