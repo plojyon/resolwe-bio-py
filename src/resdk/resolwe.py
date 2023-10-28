@@ -16,11 +16,13 @@ import re
 import time
 import webbrowser
 from contextlib import suppress
+from importlib.metadata import version as package_version
 from typing import Optional, TypedDict
 from urllib.parse import urlencode, urljoin, urlparse
 
 import requests
 import slumber
+from packaging import version
 
 from resdk.uploader import Uploader
 
@@ -48,6 +50,7 @@ from .resources.utils import get_collection_id, get_data_id, is_data, iterate_fi
 DEFAULT_URL = "http://localhost:8000"
 AUTOMATIC_LOGIN_POSTFIX = "saml-auth/api-login/"
 INTERACTIVE_LOGIN_POSTFIX = "saml-auth/remote-login/"
+MINIMAL_SUPPORTED_VERSION_POSTFIX = "api/resdk_minimal_supported_version"
 
 
 class ResolweResource(slumber.Resource):
@@ -162,7 +165,34 @@ class Resolwe:
             password = os.environ.get("RESOLWE_API_PASSWORD", None)
 
         self.url = url
+
+        # Check minimal supported version.
+        self.version_check()
+
         self._login(username=username, password=password)
+
+    def version_check(self):
+        """Check that the server is compatible with the client."""
+        url = urljoin(self.url, MINIMAL_SUPPORTED_VERSION_POSTFIX)
+        try:
+            response = requests.get(url)
+            minimal_version = version.parse(
+                response.json()["minimal_supported_version"]
+            )
+            my_version = version.parse(package_version("resdk"))
+            if my_version < minimal_version:
+                message = (
+                    f"Warning: your version of ReSDK ('{my_version}') is not compatible with "
+                    f"the server: minimal supported version is '{minimal_version}'. "
+                    "To update the package run\n\n"
+                    "python -m pip install --upgrade resdk\n\n"
+                    "from the command line."
+                )
+                self.logger.warning(message)
+        except Exception:
+            self.logger.warning(
+                "Warning: unable to read the minimal supported version from the server."
+            )
 
     def _validate_url(self, url):
         if not re.match(r"https?://", url):

@@ -13,6 +13,8 @@ Changed
 -------
 - **BACKWARD INCOMPATIBLE:** Remove ``inherit_collection`` parameter in
   ``Data.duplicate()`` and ``Sample.duplicate()``
+- Minimal supported version is checked when connection to the server is
+  established and warning is printed on mismatch
 
 
 ===================
