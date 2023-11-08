@@ -526,10 +526,10 @@ class ResAuth(requests.auth.AuthBase):
 
         if username and password:
             self.cookies = self.automatic_login(username, password)
+            self.logger.info(f"Successfully logged in as {username}.")
         else:
             self.cookies = self.interactive_login()
-
-        self.logger.info(f"Successfully logged in as {username}.")
+            self.logger.info("Successfully logged in.")
 
     def automatic_login(self, username: str, password: str) -> AuthCookie:
         """Attempt to perform automatic SAML login.
