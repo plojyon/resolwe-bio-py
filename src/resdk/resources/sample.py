@@ -237,17 +237,12 @@ class Sample(SampleUtilsMixin, BaseCollection):
         return self._is_background
 
     @assert_object_exists
-    def duplicate(self, inherit_collection=False):
+    def duplicate(self):
         """Duplicate (make copy of) ``sample`` object.
 
-        :param inherit_collection: If ``True`` then duplicated samples
-            (and their data) will be added to collection of the original
-            sample.
         :return: Duplicated sample
         """
-        task_data = self.api().duplicate.post(
-            {"ids": [self.id], "inherit_collection": inherit_collection}
-        )
+        task_data = self.api().duplicate.post({"ids": [self.id]})
         background_task = BackgroundTask(resolwe=self.resolwe, **task_data)
         return self.resolwe.sample.get(id__in=background_task.result())
 

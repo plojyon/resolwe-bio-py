@@ -354,16 +354,11 @@ class Data(BaseResolweResource):
         return output.decode("utf-8")
 
     @assert_object_exists
-    def duplicate(self, inherit_collection=False):
+    def duplicate(self):
         """Duplicate (make copy of) ``data`` object.
-
-        :param inherit_collection: If ``True`` then duplicated data
-            will be added to collection of the original data.
 
         :return: Duplicated data object
         """
-        task_data = self.api().duplicate.post(
-            {"ids": [self.id], "inherit_collection": inherit_collection}
-        )
+        task_data = self.api().duplicate.post({"ids": [self.id]})
         background_task = BackgroundTask(resolwe=self.resolwe, **task_data)
         return self.resolwe.data.get(id__in=background_task.result())
