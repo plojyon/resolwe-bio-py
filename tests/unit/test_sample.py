@@ -66,6 +66,23 @@ class TestSample(unittest.TestCase):
         with self.assertRaises(ValueError):
             _ = sample.data
 
+    def test_set_annotations(self):
+        sample = Sample(id=1, resolwe=MagicMock())
+        annotations = {"general.species": "Mus musculus", "qc.message": None}
+        post_mock = MagicMock()
+        sample.api = MagicMock(return_value=post_mock)
+
+        sample.set_annotations(annotations)
+
+        # name, args, kwargs = sample.api.post
+        # print(name, args, kwargs)
+        post_mock.set_annotations.post.assert_called_with(
+            [
+                {"field_path": "general.species", "value": "Mus musculus"},
+                {"field_path": "qc.message", "value": None},
+            ]
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

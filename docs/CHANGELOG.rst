@@ -16,6 +16,11 @@ Changed
 - Minimal supported version is checked when connection to the server is
   established and warning is printed on mismatch
 
+Added
+-----
+- Add ``set_annotations`` on ``Sample`` resource to allow bulk annotation
+  update
+
 
 ===================
 20.0.0 - 2023-10-27

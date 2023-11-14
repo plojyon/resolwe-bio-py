@@ -1,6 +1,6 @@
 """Sample resource."""
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Dict
 
 from resdk.shortcuts.sample import SampleUtilsMixin
 
@@ -273,3 +273,10 @@ class Sample(SampleUtilsMixin, BaseCollection):
                 sample=self, field=field, value=value
             )
         return annotation_value
+
+    def set_annotations(self, annotations: Dict[str, Any]):
+        """Bulk set annotations on the sample."""
+        payload = [
+            {"field_path": key, "value": value} for key, value in annotations.items()
+        ]
+        self.api(self.id).set_annotations.post(payload)
