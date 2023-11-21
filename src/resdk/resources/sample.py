@@ -272,5 +272,4 @@ class Sample(SampleUtilsMixin, BaseCollection):
             annotation_value = self.resolwe.annotation_value.create(
                 sample=self, field=field, value=value
             )
-        finally:
-            return annotation_value
+        return annotation_value
