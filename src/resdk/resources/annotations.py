@@ -94,9 +94,9 @@ class AnnotationValue(BaseResource):
 
     READ_ONLY_FIELDS = BaseResource.READ_ONLY_FIELDS + ("label",)
 
-    UPDATE_PROTECTED_FIELDS = BaseResource.UPDATE_PROTECTED_FIELDS + ("field",)
+    UPDATE_PROTECTED_FIELDS = BaseResource.UPDATE_PROTECTED_FIELDS + ("field", "sample")
 
-    WRITABLE_FIELDS = BaseResource.WRITABLE_FIELDS + ("value", "sample")
+    WRITABLE_FIELDS = BaseResource.WRITABLE_FIELDS + ("value",)
 
     def __init__(self, resolwe: "Resolwe", **model_data):
         """Initialize the instance.
@@ -113,7 +113,6 @@ class AnnotationValue(BaseResource):
         #: sample
         self.sample_id: Optional[int] = None
         self._sample: Optional[Sample] = None
-
         super().__init__(resolwe, **model_data)
 
     @property
@@ -123,6 +122,8 @@ class AnnotationValue(BaseResource):
             if self.sample_id is None:
                 self.sample_id = self._original_values["entity"]
             self._sample = Sample(resolwe=self.resolwe, id=self.sample_id)
+            # Without this save will fail due to change in read-only field.
+            self._original_values["sample"] = {"id": self.sample_id}
         return self._sample
 
     @sample.setter
