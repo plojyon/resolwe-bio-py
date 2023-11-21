@@ -222,6 +222,9 @@ class ResolweQuery:
         if isinstance(items, dict) and "results" in items:
             self._count = items["count"]
             items = items["results"]
+        # Store count when list of objects is received without limit.
+        if isinstance(items, list) and self._limit is None:
+            self._count = len(items)
 
         self._cache = [self._populate_resource(data) for data in items]
 
