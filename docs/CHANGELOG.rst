@@ -20,6 +20,8 @@ Added
 -----
 - Add ``set_annotations`` on ``Sample`` resource to allow bulk annotation
   update
+- Add ``get_annotations`` on ``Sample`` which returns all annotations on a
+  sample as a dictionary
 
 
 ===================

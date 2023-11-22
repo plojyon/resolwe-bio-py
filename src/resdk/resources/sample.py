@@ -285,6 +285,13 @@ class Sample(SampleUtilsMixin, BaseCollection):
             )
         return annotation_value
 
+    def get_annotations(self) -> Dict[str, Any]:
+        """Get all annotations for the given sample in a dictionary."""
+        return {
+            str(annotation.field): annotation.value
+            for annotation in self.annotations.all()
+        }
+
     def set_annotations(self, annotations: Dict[str, Any]):
         """Bulk set annotations on the sample."""
         payload = [
