@@ -1,6 +1,6 @@
 """Sample resource."""
 import logging
-from typing import TYPE_CHECKING, Any, Dict
+from typing import TYPE_CHECKING, Any, Dict, Optional
 
 from resdk.shortcuts.sample import SampleUtilsMixin
 
@@ -261,13 +261,24 @@ class Sample(SampleUtilsMixin, BaseCollection):
             field__name=field_name, field__group__name=group_name
         )
 
-    def set_annotation(self, full_path: str, value) -> "AnnotationValue":
-        """Create/update annotation value."""
+    def set_annotation(
+        self, full_path: str, value, force=False
+    ) -> Optional["AnnotationValue"]:
+        """Create/update annotation value.
+
+        If value is None the annotation is deleted and None is returned. If force is
+        set to True no explicit confirmation is required to delete the annotation.
+        """
         try:
             annotation_value = self.get_annotation(full_path)
+            if value is None:
+                annotation_value.delete(force=force)
+                return None
             annotation_value.value = value
             annotation_value.save()
         except LookupError:
+            if value is None:
+                return None
             field = self.resolwe.annotation_field.from_path(full_path)
             annotation_value = self.resolwe.annotation_value.create(
                 sample=self, field=field, value=value
