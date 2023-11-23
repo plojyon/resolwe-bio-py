@@ -281,7 +281,7 @@ class Sample(SampleUtilsMixin, BaseCollection):
                 return None
             field = self.resolwe.annotation_field.from_path(full_path)
             annotation_value = self.resolwe.annotation_value.create(
-                sample=self, field=field, value=value
+                sample=self.id, field=field.id, value=value
             )
         return annotation_value
 
