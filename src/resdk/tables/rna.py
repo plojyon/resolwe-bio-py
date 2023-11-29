@@ -193,7 +193,7 @@ MQC_COVERAGE_COLUMNS = [
     {
         "name": "Mean 3' bias",
         "slug": "mean_three_prime_bias",
-        "type": "Float64",
+        "type": "float64",
         "agg_func": "mean",
     },
 ]
