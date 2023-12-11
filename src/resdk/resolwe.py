@@ -17,6 +17,7 @@ import os
 import re
 import time
 import webbrowser
+from collections import defaultdict
 from contextlib import suppress
 from importlib.metadata import version as package_version
 from pathlib import Path
@@ -50,6 +51,7 @@ from .resources import (
 from .resources.base import BaseResource
 from .resources.kb import Feature, Mapping
 from .resources.utils import get_collection_id, get_data_id, is_data, iterate_fields
+from .utils import md5
 
 DEFAULT_URL = "http://localhost:8000"
 AUTOMATIC_LOGIN_POSTFIX = "saml-auth/api-login/"
@@ -489,7 +491,8 @@ class Resolwe:
             self.logger.info("Downloading files to %s:", download_dir)
             # Store the sizes of files in the given directory.
             # Use the dictionary to cache the responses.
-            sizes: dict[str, dict[str, int]] = dict()
+            sizes: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
+            checksums: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
 
             for file_uri in files:
                 file_name = os.path.basename(file_uri)
@@ -506,13 +509,13 @@ class Resolwe:
 
                 file_directory = os.path.dirname(file_url)
                 if file_directory not in sizes:
-                    sizes[file_directory] = {
-                        entry["name"]: entry["size"]
-                        for entry in json.loads(
-                            self.session.get(file_directory, auth=self.auth).content
-                        )
-                        if entry["type"] == "file"
-                    }
+                    content = self.session.get(file_directory, auth=self.auth).content
+                    for entry in json.loads(content):
+                        if entry["type"] != "file":
+                            continue
+                        sizes[file_directory][entry["name"]] = entry["size"]
+                        checksums[file_directory][entry["name"]] = entry["md5"]
+
                 file_size = sizes[file_directory][file_name]
 
                 with tqdm.tqdm(
@@ -530,6 +533,18 @@ class Resolwe:
                         for chunk in response.iter_content(chunk_size=CHUNK_SIZE):
                             file_handle.write(chunk)
                             progress_bar.update(len(chunk))
+
+                # Verify md5 checksum:
+                if file_name.endswith(".html"):
+                    # Due to backend processing, html file fields have
+                    # checksums that are difficult to reproduce here.
+                    return
+                expected_md5 = checksums[file_directory][file_name]
+                computed_md5 = md5(os.path.join(download_dir, file_path, file_name))
+                if expected_md5 != computed_md5:
+                    raise ValueError(
+                        f"Checksum of downloaded file {file_name} does not match the expected value."
+                    )
 
     def data_usage(self, **query_params):
         """Get per-user data usage information.

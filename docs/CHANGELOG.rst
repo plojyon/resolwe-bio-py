@@ -14,6 +14,7 @@ Added
 - Optionally show progress bar when downloading files
 - Optionally show progress bar when uploading files
 - Add ``modified`` as read-only field to the ``AnnotationValue`` resource
+- Add md5 checksum after file is downloaded
 
 Fixed
 -----

@@ -4,6 +4,8 @@ Unit tests for resdk/resolwe.py file.
 
 import json
 import os
+import shutil
+import tempfile
 import unittest
 
 import requests
@@ -437,62 +439,66 @@ class TestDownload(unittest.TestCase):
             "auth": MagicMock(),
             "logger": MagicMock(),
         }
+        self.tmp_dir = tempfile.mkdtemp()
 
-    @patch("resdk.resolwe.os")
+    def tearDown(self):
+        if os.path.isdir(self.tmp_dir):
+            shutil.rmtree(self.tmp_dir)
+
     @patch("resdk.resolwe.Resolwe", spec=True)
-    def test_fail_if_bad_dir(self, resolwe_mock, os_mock):
+    def test_fail_if_bad_dir(self, resolwe_mock):
         resolwe_mock.configure_mock(**self.config)
-        os_mock.path.isdir.return_value = False
 
         message = "Download directory does not exist: .*"
         with self.assertRaisesRegex(ValueError, message):
-            Resolwe._download_files(resolwe_mock, self.file_list)
+            Resolwe._download_files(resolwe_mock, self.file_list, "/does/not/exist/")
 
-    @patch("resdk.resolwe.os")
     @patch("resdk.resolwe.Resolwe", spec=True)
-    def test_empty_file_list(self, resolwe_mock, os_mock):
+    def test_empty_file_list(self, resolwe_mock):
         resolwe_mock.configure_mock(**self.config)
 
-        Resolwe._download_files(resolwe_mock, [])
+        Resolwe._download_files(resolwe_mock, [], download_dir=self.tmp_dir)
 
         resolwe_mock.logger.info.assert_called_once_with("No files to download.")
 
-    @patch("resdk.resolwe.os")
     @patch("resdk.resolwe.Resolwe", spec=True)
-    def test_bad_response(self, resolwe_mock, os_mock):
+    def test_bad_response(self, resolwe_mock):
         resolwe_mock.configure_mock(**self.config)
-        os_mock.path.join.return_value = "somefile.txt"
-        os_mock.path.basename.return_value = "file.txt"
-        os_mock.path.isfile.return_value = True
-        os_mock.path.dirname.return_value = "the/first"
-        os_mock.getcwd.return_value = os.getcwd()
         response = {"raise_for_status.side_effect": Exception("abc")}
-        sizes = [{"name": "file.txt", "size": 1, "type": "file"}]
+        sizes = [{"name": "file.txt", "size": 1, "type": "file", "md5": 123}]
         resolwe_mock.session.get.side_effect = [
             MagicMock(content=json.dumps(sizes)),
             MagicMock(ok=False, **response),
         ]
+
         with self.assertRaisesRegex(Exception, "abc"):
-            Resolwe._download_files(resolwe_mock, self.file_list[:1])
+            Resolwe._download_files(
+                resolwe_mock,
+                self.file_list[:1],
+                download_dir=self.tmp_dir,
+            )
         self.assertEqual(resolwe_mock.logger.info.call_count, 2)
 
-    @patch("resdk.resolwe.open")
-    @patch("resdk.resolwe.os")
     @patch("resdk.resolwe.Resolwe", spec=True)
-    def test_good_response(self, resolwe_mock, os_mock, open_mock):
+    def test_good_response(self, resolwe_mock):
         resolwe_mock.configure_mock(**self.config)
-        os_mock.path.isfile.return_value = True
 
-        os_mock.path.basename.return_value = "file.txt"
-        os_mock.path.isfile.return_value = True
-        os_mock.path.dirname.side_effect = [
-            "the/first",
-            "the/first",
-            "the/second",
-            "the/second",
+        size_file1 = [
+            {
+                "name": "file.txt",
+                "size": 1,
+                "type": "file",
+                "md5": "e3cdf70a99c1d6890c54ad56bd4a5de1",
+            }
         ]
-        size_file1 = [{"name": "file.txt", "size": 1, "type": "file"}]
-        size_file2 = [{"name": "file.txt", "size": 2, "type": "file"}]
+        size_file2 = [
+            {
+                "name": "file.py",
+                "size": 2,
+                "type": "file",
+                "md5": "f1a8bf29b1df09dd9082f8f8fece0839",
+            }
+        ]
         resolwe_mock.session.get.side_effect = [
             MagicMock(content=json.dumps(size_file1)),
             MagicMock(ok=True, **{"iter_content.return_value": [b"11", b"12", b"13"]}),
@@ -500,15 +506,13 @@ class TestDownload(unittest.TestCase):
             MagicMock(ok=True, **{"iter_content.return_value": [b"21", b"22", b"23"]}),
         ]
 
-        Resolwe._download_files(resolwe_mock, self.file_list)
-        self.assertEqual(resolwe_mock.logger.info.call_count, 3)
-
-        # This asserts may seem wierd. To check what is happening behind the scenes:
-        # print(open_mock.mock_calls)
-        self.assertEqual(
-            open_mock.return_value.__enter__.return_value.write.call_count, 6
+        Resolwe._download_files(
+            resolwe_mock,
+            self.file_list,
+            download_dir=self.tmp_dir,
+            show_progress=False,
         )
-        # Why 6? 2 files in self.file_list, each downloads 3 chunks (defined in response mock)
+        self.assertEqual(resolwe_mock.logger.info.call_count, 3)
 
 
 class TestResAuth(unittest.TestCase):

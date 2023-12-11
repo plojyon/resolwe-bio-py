@@ -300,7 +300,7 @@ class Data(BaseResolweResource):
     def download(self, file_name=None, field_name=None, download_dir=None):
         """Download Data object's files and directories.
 
-        Download files and directoriesfrom the Resolwe server to the
+        Download files and directories from the Resolwe server to the
         download directory (defaults to the current working directory).
 
         :param file_name: name of file or directory
