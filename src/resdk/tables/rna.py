@@ -13,6 +13,7 @@ RNATables
 """
 import os
 import warnings
+from collections import Counter
 from functools import lru_cache
 from typing import Callable, Dict, List, Optional
 
@@ -433,15 +434,18 @@ class RNATables(BaseTables):
     @lru_cache()
     def build(self) -> str:
         """Get build."""
-        builds = list(set(d.output.get("build") for d in self._data))
+        builds = Counter([d.output.get("build") for d in self._data])
+
         if len(builds) == 0:
             raise ValueError("Cannot determine build, no data found.")
-        if len(builds) > 1:
-            builds = ", ".join(builds)
-            raise ValueError(
-                f"Cannot determine build, multiple builds found: {builds}."
+        elif len(builds) > 1:
+            builds_str = ", ".join(k for k in builds.keys())
+            warnings.warn(
+                f"Cannot determine build, multiple builds found: {builds_str}."
             )
-        return builds[0]
+
+        # Return the only / most common build
+        return builds.most_common(1)[0][0]
 
     @property
     @lru_cache()

@@ -15,6 +15,8 @@ Changed
   ``Data.duplicate()`` and ``Sample.duplicate()``
 - Minimal supported version is checked when connection to the server is
   established and warning is printed on mismatch
+- ``RNATables.build`` now emits warning instead of error in case there are
+  multiple different builds in the same collection
 
 Added
 -----
