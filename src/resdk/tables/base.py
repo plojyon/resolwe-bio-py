@@ -484,7 +484,7 @@ class BaseTables(abc.ABC):
             In case files are stored locally on a server, a local path
             is provided. Url has to be prepended with self.resolwe.url.
             """
-            if urlparse(url).scheme:
+            if not urlparse(url).scheme:
                 return urljoin(self.resolwe.url, url)
             return url
 

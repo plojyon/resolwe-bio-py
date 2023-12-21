@@ -25,6 +25,10 @@ Added
 - Add ``get_annotations`` on ``Sample`` which returns all annotations on a
   sample as a dictionary
 
+Fixed
+-----
+- Fix downloading tables data
+
 
 ===================
 20.0.0 - 2023-10-27
