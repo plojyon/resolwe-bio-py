@@ -2,6 +2,7 @@
 import logging
 from typing import TYPE_CHECKING, Any, Dict, Optional
 
+from resdk.exceptions import ResolweServerError
 from resdk.shortcuts.sample import SampleUtilsMixin
 
 from ..utils.decorators import assert_object_exists
@@ -279,7 +280,10 @@ class Sample(SampleUtilsMixin, BaseCollection):
         except LookupError:
             if value is None:
                 return None
-            field = self.resolwe.annotation_field.from_path(full_path)
+            try:
+                field = self.resolwe.annotation_field.from_path(full_path)
+            except LookupError:
+                raise ResolweServerError(f"Field '{full_path}' does not exist.")
             annotation_value = self.resolwe.annotation_value.create(
                 sample=self.id, field=field.id, value=value
             )

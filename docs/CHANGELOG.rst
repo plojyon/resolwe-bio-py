@@ -17,6 +17,8 @@ Changed
   established and warning is printed on mismatch
 - ``RNATables.build`` now emits warning instead of error in case there are
   multiple different builds in the same collection
+- Return more descriptive error message when setting a single annotation value
+  on a sample and the annotation field does not exist
 
 Added
 -----
