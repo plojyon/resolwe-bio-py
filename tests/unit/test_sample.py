@@ -74,8 +74,6 @@ class TestSample(unittest.TestCase):
 
         sample.set_annotations(annotations)
 
-        # name, args, kwargs = sample.api.post
-        # print(name, args, kwargs)
         post_mock.set_annotations.post.assert_called_with(
             [
                 {"field_path": "general.species", "value": "Mus musculus"},
