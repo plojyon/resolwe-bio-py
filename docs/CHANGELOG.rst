@@ -28,7 +28,9 @@ Added
 Fixed
 -----
 - Fix downloading tables data
-
+- Fix download stopped with incomplete data received: urllib3 version 2.0 has 
+  ``enforce_content_length`` set to ``True`` by default which raises error
+  if not enough data was received
 
 ===================
 20.0.0 - 2023-10-27
