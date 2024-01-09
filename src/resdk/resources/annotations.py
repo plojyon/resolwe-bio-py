@@ -92,7 +92,7 @@ class AnnotationValue(BaseResource):
 
     endpoint = "annotation_value"
 
-    READ_ONLY_FIELDS = BaseResource.READ_ONLY_FIELDS + ("label",)
+    READ_ONLY_FIELDS = BaseResource.READ_ONLY_FIELDS + ("label", "modified")
 
     UPDATE_PROTECTED_FIELDS = BaseResource.UPDATE_PROTECTED_FIELDS + ("field", "sample")
 

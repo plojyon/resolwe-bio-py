@@ -5,6 +5,17 @@ Change Log
 All notable changes to this project are documented in this file.
 
 
+==========
+Unreleased
+==========
+
+Added
+-----
+- Optionally show progress bar when downloading files
+- Optionally show progress bar when uploading files
+- Add ``modified`` as read-only field to the ``AnnotationValue`` resource
+
+
 ===================
 21.0.0 - 2023-01-15
 ===================
@@ -26,8 +37,6 @@ Added
   update
 - Add ``get_annotations`` on ``Sample`` which returns all annotations on a
   sample as a dictionary
-- Optionally show progress bar when downloading files
-- Optionally show progress bar when uploading files
 
 Fixed
 -----
