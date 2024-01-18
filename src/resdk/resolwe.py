@@ -9,6 +9,7 @@ Resolwe
 
 """
 import getpass
+import json
 import logging
 import ntpath
 import os
@@ -17,11 +18,13 @@ import time
 import webbrowser
 from contextlib import suppress
 from importlib.metadata import version as package_version
-from typing import Optional, TypedDict
+from pathlib import Path
+from typing import List, Optional, TypedDict, Union
 from urllib.parse import urlencode, urljoin, urlparse
 
 import requests
 import slumber
+import tqdm
 from packaging import version
 
 from resdk.uploader import Uploader
@@ -455,7 +458,9 @@ class Resolwe:
         model_data = self.api.data.get_or_create.post(data)
         return Data(resolwe=self, **model_data)
 
-    def _download_files(self, files, download_dir=None):
+    def _download_files(
+        self, files: List[Union[str, Path]], download_dir=None, show_progress=True
+    ):
         """Download files.
 
         Download files from the Resolwe server to the download
@@ -481,6 +486,9 @@ class Resolwe:
 
         else:
             self.logger.info("Downloading files to %s:", download_dir)
+            # Store the sizes of files in the given directory.
+            # Use the dictionary to cache the responses.
+            sizes: dict[str, dict[str, int]] = dict()
 
             for file_uri in files:
                 file_name = os.path.basename(file_uri)
@@ -495,7 +503,22 @@ class Resolwe:
 
                 self.logger.info("* %s", os.path.join(file_path, file_name))
 
-                with open(
+                file_directory = os.path.dirname(file_url)
+                if file_directory not in sizes:
+                    sizes[file_directory] = {
+                        entry["name"]: entry["size"]
+                        for entry in json.loads(
+                            self.session.get(file_directory, auth=self.auth).content
+                        )
+                        if entry["type"] == "file"
+                    }
+                file_size = sizes[file_directory][file_name]
+
+                with tqdm.tqdm(
+                    total=file_size,
+                    disable=not show_progress,
+                    desc=f"Downloading file {file_name}",
+                ) as progress_bar, open(
                     os.path.join(download_dir, file_path, file_name), "wb"
                 ) as file_handle:
                     response = self.session.get(file_url, stream=True, auth=self.auth)
@@ -505,6 +528,7 @@ class Resolwe:
                     else:
                         for chunk in response.iter_content(chunk_size=CHUNK_SIZE):
                             file_handle.write(chunk)
+                            progress_bar.update(len(chunk))
 
     def data_usage(self, **query_params):
         """Get per-user data usage information.

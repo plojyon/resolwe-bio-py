@@ -2,7 +2,7 @@
 Unit tests for resdk/resolwe.py file.
 """
 
-
+import json
 import os
 import unittest
 
@@ -461,10 +461,17 @@ class TestDownload(unittest.TestCase):
     @patch("resdk.resolwe.Resolwe", spec=True)
     def test_bad_response(self, resolwe_mock, os_mock):
         resolwe_mock.configure_mock(**self.config)
+        os_mock.path.join.return_value = "somefile.txt"
+        os_mock.path.basename.return_value = "file.txt"
         os_mock.path.isfile.return_value = True
+        os_mock.path.dirname.return_value = "the/first"
+        os_mock.getcwd.return_value = os.getcwd()
         response = {"raise_for_status.side_effect": Exception("abc")}
-        resolwe_mock.session.get.return_value = MagicMock(ok=False, **response)
-
+        sizes = [{"name": "file.txt", "size": 1, "type": "file"}]
+        resolwe_mock.session.get.side_effect = [
+            MagicMock(content=json.dumps(sizes)),
+            MagicMock(ok=False, **response),
+        ]
         with self.assertRaisesRegex(Exception, "abc"):
             Resolwe._download_files(resolwe_mock, self.file_list[:1])
         self.assertEqual(resolwe_mock.logger.info.call_count, 2)
@@ -476,9 +483,22 @@ class TestDownload(unittest.TestCase):
         resolwe_mock.configure_mock(**self.config)
         os_mock.path.isfile.return_value = True
 
-        resolwe_mock.session.get.return_value = MagicMock(
-            ok=True, **{"iter_content.return_value": range(3)}
-        )
+        os_mock.path.basename.return_value = "file.txt"
+        os_mock.path.isfile.return_value = True
+        os_mock.path.dirname.side_effect = [
+            "the/first",
+            "the/first",
+            "the/second",
+            "the/second",
+        ]
+        size_file1 = [{"name": "file.txt", "size": 1, "type": "file"}]
+        size_file2 = [{"name": "file.txt", "size": 2, "type": "file"}]
+        resolwe_mock.session.get.side_effect = [
+            MagicMock(content=json.dumps(size_file1)),
+            MagicMock(ok=True, **{"iter_content.return_value": [b"11", b"12", b"13"]}),
+            MagicMock(content=json.dumps(size_file2)),
+            MagicMock(ok=True, **{"iter_content.return_value": [b"21", b"22", b"23"]}),
+        ]
 
         Resolwe._download_files(resolwe_mock, self.file_list)
         self.assertEqual(resolwe_mock.logger.info.call_count, 3)

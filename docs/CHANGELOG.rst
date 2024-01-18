@@ -26,6 +26,7 @@ Added
   update
 - Add ``get_annotations`` on ``Sample`` which returns all annotations on a
   sample as a dictionary
+- Optionally show progress bar when downloading files
 
 Fixed
 -----
