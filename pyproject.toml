@@ -76,6 +76,8 @@ test = [
     "mock",
     "pydocstyle[toml]",
     "pytest-cov",
+    "types-tqdm",
+    "types-slumber",
 ]
 [project.urls]
 repository = "https://github.com/genialis/resolwe-bio-py/"
