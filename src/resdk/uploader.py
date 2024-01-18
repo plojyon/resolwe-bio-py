@@ -11,6 +11,7 @@ from urllib.parse import urljoin
 
 import boto3
 import botocore
+import tqdm
 from mypy_boto3_s3 import S3Client
 
 from resdk.aws.session import get_refreshable_boto3_session
@@ -31,6 +32,22 @@ class UploadType(Enum):
     def default() -> "UploadType":
         """Return the default upload type."""
         return UploadType.LOCAL
+
+
+class ProgressCallback:
+    """Show progress during upload/download."""
+
+    def __init__(self, progress_bar: tqdm.tqdm):
+        """Store the reference to the progress bar.
+
+        The user is responsible to create the progress bar and setting the total amount
+        of bytes to transfer on it.
+        """
+        self._progress_bar = progress_bar
+
+    def __call__(self, transfered_bytes: int):
+        """Update the progress bar with transfered bytes."""
+        self._progress_bar.update(transfered_bytes)
 
 
 class Uploader:
@@ -132,7 +149,7 @@ class Uploader:
             "expiry_time": credentials["Expiration"],
         }
 
-    def _upload_s3(self, file_path: Union[Path, str]) -> str:
+    def _upload_s3(self, file_path: Union[Path, str], show_progress=True) -> str:
         """Upload the given file in the S3 bucket.
 
         :attr file_path: file path.
@@ -143,12 +160,21 @@ class Uploader:
         bucket_name = self.upload_config["config"]["bucket_name"]
 
         destination = Path(prefix) / str(uuid.uuid4())
-        self._s3_client.upload_file(
-            Filename=str(file_path), Key=destination.as_posix(), Bucket=bucket_name
-        )
+        # Use progress bar to show progress.
+        with tqdm.tqdm(
+            total=Path(file_path).stat().st_size,
+            disable=not show_progress,
+            desc=f"Uploading file {file_path}",
+        ) as progress_bar:
+            self._s3_client.upload_file(
+                Filename=str(file_path),
+                Key=destination.as_posix(),
+                Bucket=bucket_name,
+                Callback=ProgressCallback(progress_bar),
+            )
         return f"s3://{bucket_name}/{destination.as_posix()}"
 
-    def _upload_local(self, file_path: Union[Path, str]):
+    def _upload_local(self, file_path: Union[Path, str], show_progress=True):
         """Upload the given file to the server.
 
         File is uploaded in chunks of size CHUNK_SIZE bytes.
@@ -169,7 +195,11 @@ class Uploader:
         if self.resolwe.session is None:
             raise RuntimeError("Session has not been initialized.")
 
-        with file_path.open("rb") as file_:
+        with file_path.open("rb") as file_, tqdm.tqdm(
+            total=file_size,
+            disable=not show_progress,
+            desc=f"Uploading file {file_path}",
+        ) as progress_bar:
             while True:
                 chunk = file_.read(CHUNK_SIZE)
                 if not chunk:
@@ -205,9 +235,7 @@ class Uploader:
                     # Upload of a chunk failed (5 retries)
                     return None
 
-                progress = 100.0 * (chunk_number * CHUNK_SIZE + len(chunk)) / file_size
-                message = "{:.0f} % Uploaded {}".format(progress, file_path)
-                self.resolwe.logger.info(message)
+                progress_bar.update(len(chunk))
                 chunk_number += 1
 
         return response.json()["files"][0]["temp"]
