@@ -66,6 +66,7 @@ convention for logging in resdk: "Exceptions are explicitly logged
 only when they are caught and not re-raised."
 
 """
+
 import logging
 import sys
 

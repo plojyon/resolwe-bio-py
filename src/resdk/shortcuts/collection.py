@@ -1,4 +1,5 @@
 """ReSDK Resolwe shortcuts."""
+
 from itertools import zip_longest
 
 from resdk.resources.utils import get_sample_id

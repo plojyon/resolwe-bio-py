@@ -2,7 +2,6 @@
 Unit tests for resdk/query.py file.
 """
 
-
 import unittest
 from collections import defaultdict
 

@@ -11,6 +11,7 @@ RNATables
     .. automethod:: __init__
 
 """
+
 import os
 import warnings
 from collections import Counter

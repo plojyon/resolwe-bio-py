@@ -1,4 +1,5 @@
 """Process resource."""
+
 import logging
 from time import sleep, time
 

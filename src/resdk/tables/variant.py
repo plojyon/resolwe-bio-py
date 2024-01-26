@@ -9,6 +9,7 @@ VariantTables
     :inherited-members:
 
 """
+
 import re
 import warnings
 from functools import lru_cache

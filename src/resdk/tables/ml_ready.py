@@ -10,6 +10,7 @@ Machine learning ready tables
     .. automethod:: __init__
 
 """
+
 import warnings
 from io import BytesIO
 from urllib.parse import urljoin

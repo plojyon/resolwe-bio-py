@@ -1,4 +1,5 @@
 """Permissions manager class."""
+
 import copy
 
 from ..constants import ALL_PERMISSIONS

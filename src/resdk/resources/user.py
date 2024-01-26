@@ -1,4 +1,5 @@
 """Process resource."""
+
 from ..utils.decorators import assert_object_exists
 from .base import BaseResource
 from .utils import get_user_id

@@ -8,6 +8,7 @@ Resolwe
    :members:
 
 """
+
 import getpass
 import json
 import logging

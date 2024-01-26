@@ -11,6 +11,7 @@ MethylationTables
     .. automethod:: __init__
 
 """
+
 from functools import lru_cache
 from typing import Callable, Optional
 

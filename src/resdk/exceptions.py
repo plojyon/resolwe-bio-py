@@ -9,6 +9,7 @@ Custom ReSDK exceptions.
 .. autoclass:: ValidationError
 
 """
+
 from slumber.exceptions import SlumberHttpBaseException
 
 

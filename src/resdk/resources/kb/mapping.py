@@ -1,4 +1,5 @@
 """KB mapping resource."""
+
 from ..base import BaseResource
 
 

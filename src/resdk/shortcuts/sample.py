@@ -1,4 +1,5 @@
 """Sample shortcuts."""
+
 import warnings
 
 

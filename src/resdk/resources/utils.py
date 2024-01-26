@@ -1,4 +1,5 @@
 """Resource utility functions."""
+
 import functools
 from datetime import datetime
 from urllib.parse import urljoin

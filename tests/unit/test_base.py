@@ -2,7 +2,6 @@
 Unit tests for resdk/resolwe.py file.
 """
 
-
 import unittest
 
 import slumber

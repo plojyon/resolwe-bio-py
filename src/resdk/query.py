@@ -8,6 +8,7 @@ Resolwe Query
    :members:
 
 """
+
 import collections
 import copy
 import logging

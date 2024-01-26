@@ -1,4 +1,5 @@
 """Collection Metadata resource."""
+
 import logging
 import os
 import tempfile

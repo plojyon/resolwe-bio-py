@@ -2,7 +2,6 @@
 Unit tests for resdk/utils/decorators.py file.
 """
 
-
 import unittest
 
 from resdk.utils.decorators import assert_object_exists, return_first_element

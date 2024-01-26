@@ -1,4 +1,5 @@
 """Relation resource."""
+
 import logging
 
 from resdk.exceptions import ValidationError

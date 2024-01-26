@@ -2,7 +2,6 @@
 Unit tests for resdk/resources/process.py file.
 """
 
-
 import unittest
 
 from mock import patch

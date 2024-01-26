@@ -40,6 +40,7 @@ Table classes
    .. automethod:: __init__
 
 """
+
 from .methylation import MethylationTables  # noqa
 from .microarray import MATables  # noqa
 from .ml_ready import MLTables  # noqa

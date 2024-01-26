@@ -1,4 +1,5 @@
 """Process resource."""
+
 import logging
 
 from .base import BaseResolweResource

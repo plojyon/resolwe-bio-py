@@ -2,7 +2,6 @@
 Unit tests for resdk/resources/collection.py file.
 """
 
-
 import unittest
 
 from mock import MagicMock, patch

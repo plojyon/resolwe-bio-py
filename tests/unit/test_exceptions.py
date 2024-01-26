@@ -2,7 +2,6 @@
 Unit tests for resdk/exceptions.py file.
 """
 
-
 import unittest
 
 from mock import MagicMock

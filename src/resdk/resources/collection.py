@@ -1,4 +1,5 @@
 """Collection resources."""
+
 import logging
 from urllib.parse import urljoin
 

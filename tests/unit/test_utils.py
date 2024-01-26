@@ -2,7 +2,6 @@
 Unit tests for resdk/resources/utils.py file.
 """
 
-
 import unittest
 
 import pytz

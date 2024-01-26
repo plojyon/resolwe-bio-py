@@ -7,7 +7,6 @@ Session
 Get refreshable boto3 session from temporary credentials.
 """
 
-
 import logging
 from typing import Callable, Dict
 

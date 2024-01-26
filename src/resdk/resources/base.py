@@ -1,4 +1,5 @@
 """Constants and abstract classes."""
+
 import copy
 import logging
 import operator

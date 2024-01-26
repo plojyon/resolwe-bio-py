@@ -2,7 +2,6 @@
 Unit tests for resdk/resources/user.py file.
 """
 
-
 import unittest
 
 from mock import MagicMock

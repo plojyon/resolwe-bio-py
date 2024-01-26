@@ -1,4 +1,5 @@
 """KB feature resource."""
+
 from ..base import BaseResource
 
 

@@ -10,6 +10,7 @@ Base Tables
     .. automethod:: __init__
 
 """
+
 import abc
 import asyncio
 import json
