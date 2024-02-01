@@ -15,6 +15,10 @@ Added
 - Optionally show progress bar when uploading files
 - Add ``modified`` as read-only field to the ``AnnotationValue`` resource
 
+Fixed
+-----
+- Invalidate cache in resdk tables on AnnotationValue updates
+
 
 ===================
 21.0.0 - 2023-01-15
@@ -41,7 +45,7 @@ Added
 Fixed
 -----
 - Fix downloading tables data
-- Fix download stopped with incomplete data received: urllib3 version 2.0 has 
+- Fix download stopped with incomplete data received: urllib3 version 2.0 has
   ``enforce_content_length`` set to ``True`` by default which raises error
   if not enough data was received
 - Require ``urllib`` version ``2.0`` or higher only for ``Python 3.10+`` due to

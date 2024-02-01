@@ -3,8 +3,10 @@
 import logging
 from typing import TYPE_CHECKING, Optional, Union
 
+from ..utils.decorators import assert_object_exists
 from .base import BaseResource
 from .sample import Sample
+from .utils import parse_resolwe_datetime
 
 if TYPE_CHECKING:
     from resdk.resolwe import Resolwe
@@ -92,7 +94,7 @@ class AnnotationValue(BaseResource):
 
     endpoint = "annotation_value"
 
-    READ_ONLY_FIELDS = BaseResource.READ_ONLY_FIELDS + ("label", "modified")
+    READ_ONLY_FIELDS = BaseResource.READ_ONLY_FIELDS + ("label",)
 
     UPDATE_PROTECTED_FIELDS = BaseResource.UPDATE_PROTECTED_FIELDS + ("field", "sample")
 
@@ -114,6 +116,12 @@ class AnnotationValue(BaseResource):
         self.sample_id: Optional[int] = None
         self._sample: Optional[Sample] = None
         super().__init__(resolwe, **model_data)
+
+    @property
+    @assert_object_exists
+    def modified(self):
+        """Modification time."""
+        return parse_resolwe_datetime(self._original_values["modified"])
 
     @property
     def sample(self):

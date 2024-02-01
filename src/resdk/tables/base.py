@@ -197,9 +197,10 @@ class BaseTables(abc.ABC):
         The versioning of metadata on the server is determined by the
         newest of these values:
 
-            - newset modified sample
-            - newset modified relation
-            - newset modified orange Data
+            - newest modified sample
+            - newest modified relation
+            - newest modified orange Data
+            - newest modified AnnotationValue
 
         :return: metadata version
         """
@@ -210,6 +211,7 @@ class BaseTables(abc.ABC):
             "limit": 1,
         }
 
+        # Get newest sample timestamp
         try:
             newest_sample = self.collection.samples.get(**kwargs)
             timestamps.append(newest_sample.modified)
@@ -218,15 +220,28 @@ class BaseTables(abc.ABC):
                 f"Collection {self.collection.name} has no samples!"
             ) from None
 
+        # Get newest relation timestamp
         try:
             newest_relation = self.collection.relations.get(**kwargs)
             timestamps.append(newest_relation.modified)
         except LookupError:
             pass
 
+        # Get newest orange object timestamp
         try:
             orange = self._get_orange_object()
             timestamps.append(orange.modified)
+        except LookupError:
+            pass
+
+        # Get newest AnnotationValue timestamp
+        try:
+            newest_ann_value = self.resolwe.annotation_value.get(
+                entity__collection=self.collection.id,
+                ordering="-modified",
+                limit=1,
+            )
+            timestamps.append(newest_ann_value.modified)
         except LookupError:
             pass
 

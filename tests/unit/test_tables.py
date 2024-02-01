@@ -56,6 +56,12 @@ class TestTables(unittest.TestCase):
             2020, 9, 1, 12, 15, 0, 0, tzinfo=pytz.UTC
         ).astimezone(pytz.timezone("Europe/Ljubljana"))
 
+        self.ann_value = MagicMock()
+        self.ann_value.id = 1024
+        self.ann_value.modified = datetime(
+            2020, 9, 2, 12, 15, 0, 0, tzinfo=pytz.UTC
+        ).astimezone(pytz.timezone("Europe/Ljubljana"))
+
         self.collection = MagicMock()
         self.collection.slug = "slug"
         self.collection.name = "Name"
@@ -242,6 +248,7 @@ class TestTables(unittest.TestCase):
         self.collection.samples.get = self.web_request(self.sample)
         self.collection.relations.get = self.web_request(self.relation)
         self.collection.data.get = self.web_request(self.orange_data)
+        self.collection.resolwe.annotation_value.get = self.web_request(self.ann_value)
 
         ct = RNATables(self.collection)
         version = ct._metadata_version
@@ -302,6 +309,7 @@ class TestTables(unittest.TestCase):
         self.collection.samples.get = self.web_request(self.sample)
         self.collection.relations.get = self.web_request(self.relation)
         self.collection.data.get = self.web_request(self.orange_data)
+        self.collection.resolwe.annotation_value.get = self.web_request(self.ann_value)
         ct = RNATables(self.collection)
         data = ct._load_fetch(RNATables.META)
         self.assertIs(data, self.metadata_df)
