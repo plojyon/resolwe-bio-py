@@ -15,6 +15,7 @@ Added
 - Optionally show progress bar when uploading files
 - Add ``modified`` as read-only field to the ``AnnotationValue`` resource
 - Add md5 checksum after file is downloaded
+- Add support for Python3.12
 
 Fixed
 -----

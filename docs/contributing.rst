@@ -30,7 +30,7 @@ change directory::
 
 Prepare Resolwe SDK for Python for development::
 
-    pip install -e .[docs,package,test]
+    pip install -e '.[docs,package,test]'
 
 .. note::
 

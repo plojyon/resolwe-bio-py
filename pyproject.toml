@@ -14,7 +14,7 @@ authors = [
 dynamic = ["version"]
 readme = "README.rst"
 license = {file = "LICENSE"}
-requires-python = ">=3.8, <3.12"
+requires-python = ">=3.8, <3.13"
 keywords = [
     "bio",
     "bioinformatics",
@@ -38,9 +38,10 @@ classifiers = [
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
 ]
 dependencies = [
-    "aiohttp~=3.8.5",
+    "aiohttp~=3.9.3",
     "requests>=2.6.0",
     "urllib3>=2;python_version >= '3.10'",
     "slumber>=0.7.1",
@@ -86,7 +87,7 @@ documentation = "https://resdk.readthedocs.io/en/latest/"
 [tool.setuptools_scm]
 
 [tool.black]
-target-version = ["py38", "py39", "py310", "py311"]
+target-version = ["py38", "py39", "py310", "py311", "py312"]
 
 [tool.pydocstyle]
 add-select = "D404"
