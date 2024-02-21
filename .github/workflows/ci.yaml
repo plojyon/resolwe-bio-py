@@ -127,13 +127,13 @@ jobs:
       - name: Build a binary wheel and a source tarball
         run: ${{ env.PYTHON }} -m build --sdist --wheel --outdir dist/ .
 
-      - name: Publish distribution to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1.8
-        with:
-          password: ${{ secrets.pypi_password }}
-
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
         with:
           file: .coverage
+
+      - name: Publish distribution to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1.8
+        with:
+          password: ${{ secrets.pypi_password }}
 
