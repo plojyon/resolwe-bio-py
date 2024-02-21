@@ -26,7 +26,7 @@ jobs:
           AWS_DEFAULT_REGION: us-east-1
         run: echo "ecr_password=$(aws ecr get-login-password)" >> $GITHUB_OUTPUT
 
-  test:
+  unittest:
     needs: ecr_login
     runs-on: arc-runner
     env:
@@ -34,11 +34,6 @@ jobs:
 
     container:
       image: 342286153875.dkr.ecr.us-east-1.amazonaws.com/genialis/ci/arc-runner:latest
-      volumes:
-        - /run/docker:/var/run/docker
-        # Process executors must mount certain volumes, so the directories must be shared on the host.
-        - /tmp:/tmp
-        - /home/runner/_work:/home/runner/_work
       credentials:
         username: AWS
         password: ${{ needs.ecr_login.outputs.ecr_password }}
@@ -58,7 +53,7 @@ jobs:
 
   e2e:
     runs-on: arc-runner
-    needs: [test, ecr_login]
+    needs: [unittest, ecr_login]
     env:
       TOX_COMMAND: "python3.12 -m tox --skip-missing-interpreters false"
       TOXENV: py310-e2e-resdk
@@ -113,7 +108,7 @@ jobs:
 
   build:
     runs-on: arc-runner
-    needs: [test, e2e, ecr_login]
+    needs: [unittest, e2e, ecr_login]
     if: startsWith(github.ref, 'refs/tags')
     env:
       PYTHON: "python3.12"
