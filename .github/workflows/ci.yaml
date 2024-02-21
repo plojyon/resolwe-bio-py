@@ -71,6 +71,7 @@ jobs:
     env:
       TOX_COMMAND: "python3.12 -m tox --skip-missing-interpreters false"
       TOXENV: py310-e2e-resdk
+      WORKDIR: "/home/runner/_work/resolwe-bio-py/resolwe-bio-py"
 
     container:
       image: 342286153875.dkr.ecr.us-east-1.amazonaws.com/genialis/ci/arc-runner:latest
@@ -89,7 +90,7 @@ jobs:
         GENESIS_ES_PORT: 59210
         GENESIS_REDIS_HOST: redis
         GENESIS_REDIS_PORT: 6379
-        GENESIS_RESDK_PATH: "/home/runner/_work/resolwe-bio-py/resolwe-bio-py"
+        GENESIS_RESDK_PATH: ${{ env.WORKDIR }}
         GENESIS_REST_THROTTLING: '{"login": "100000/hour", "credentials": "100000/hour", "email": "100000/hour"}'
       credentials:
         username: AWS
@@ -103,7 +104,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: genialis/genialis-base
-          path: /home/runner/_work/genialis-base
+          path: ${{ env.WORKDIR }}/genialis-base
 
       - name: Set up environment
         run: |
