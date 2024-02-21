@@ -4,72 +4,126 @@ on:
   push:
     branches:
       - master
+      - arc-runners-devel # TODO: remove
     tags:
       - "[0-9]+.[0-9]+.[0-9]+*"
-
   pull_request:
-
   workflow_dispatch:
 
 jobs:
+  ecr_login:
+    runs-on: ubuntu-latest
+    outputs:
+      ecr_password: ${{ steps.retrieve_password.outputs.ecr_password }}
+    steps:
+      - name: Set up AWS CLI
+        uses: chrislennon/action-aws-cli@1.1
+      - name: Retrieve ECR password
+        id: retrieve_password
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: us-east-1
+        run: echo "ecr_password=$(aws ecr get-login-password)" >> $GITHUB_OUTPUT
+
   test:
-    runs-on: ubuntu-22.04
+    needs: ecr_login
+    runs-on: arc-runner
+    env:
+      TOX_COMMAND: "python3.12 -m tox --skip-missing-interpreters false"
+
+    container:
+      image: 342286153875.dkr.ecr.us-east-1.amazonaws.com/genialis/ci/arc-runner:latest
+      options: --hostname gbase
+      # volumes:
+      #   - /run/docker:/var/run/docker
+      #   # Process executors must mount certain volumes, so the directories must be shared on the host.
+      #   - /tmp:/tmp
+      #   - /home/runner/_work:/home/runner/_work
+      credentials:
+        username: AWS
+        password: ${{ needs.ecr_login.outputs.ecr_password }}
     strategy:
       fail-fast: false
       matrix:
-        tox-env: [py38, py39, py310, py311, py312, docs, linters, package]
-        include:
-          - tox-env: py38
-            python-version: 3.8
-          - tox-env: py39
-            python-version: 3.9
-          - tox-env: py310
-            python-version: "3.10"
-          - tox-env: py311
-            python-version: "3.11"
-          - tox-env: py312
-            python-version: "3.12"
-          - tox-env: linters
-            python-version: "3.11"
-          - tox-env: package
-            python-version: "3.11"
+        # TODO: py38
+        toxenv: [py39, py310, py311, py312, docs, linters, package]
 
     steps:
-      - uses: actions/checkout@v4
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: Install Dependencies
-        run: |
-          python -m pip install --upgrade pip tox
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Run Tests
         run: >
-          tox -e ${{ matrix.tox-env }}
+          ${{ env.TOX_COMMAND }} -e ${{ matrix.toxenv }}
+
+  e2e:
+    runs-on: arc-runner
+    needs: [test, ecr_login]
+    env:
+      TOX_COMMAND: "python3.12 -m tox --skip-missing-interpreters false"
+      DOCKER_HOST: unix:///run/docker/docker.sock
+      GENESIS_POSTGRESQL_NAME: resolwe-genialis
+      GENESIS_POSTGRESQL_USER: genialis-base
+      GENESIS_POSTGRESQL_HOST: postgres
+      GENESIS_POSTGRESQL_PORT: 5432
+      GENESIS_ES_PORT: 59210
+      GENESIS_REDIS_HOST: redis
+      GENESIS_REDIS_PORT: 6379
+      GENESIS_RESDK_PATH: "/home/runner/_work/resolwe-bio-py/resolwe-bio-py"
+      GENESIS_REST_THROTTLING: '{"login": "100000/hour", "credentials": "100000/hour", "email": "100000/hour"}'
+
+    strategy:
+      matrix:
+        toxenv: ["py310-e2e-resdk"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Assert PR is up-to-date
+        if: github.event_name == 'pull_request'
+        run: |
+          git_change_target_merge_base=$(git merge-base HEAD origin/${{ github.base_ref }})
+          git_change_target_sha=$(git rev-parse origin/${{ github.base_ref }})
+
+          if [[ "${git_change_target_merge_base}" != "${git_change_target_sha}" ]]; then
+            echo "Pull request is not up-to-date!"
+            echo "Please, rebase your pull request on top of '${{ github.base_ref }}' (commit: ${git_change_target_sha})."
+            exit 1
+          fi
+
+      - name: Set up environment
+        run: |
+          mkdir -p frontend/genjs/schema
+          echo '{}' > frontend/genjs/schema/configuration.json
+
+      - name: Run tests
+        run: |
+          ${{ env.TOX_COMMAND }} -e ${{ matrix.toxenv }}
+
+  build:
+    runs-on: arc-runner
+    needs: [test, e2e, ecr_login]
+    if: startsWith(github.ref, 'refs/tags')
+    env:
+      PYTHON: "python3.12"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build
+        run: ${{ env.PYTHON }} -m pip install --user build
+
+      - name: Build a binary wheel and a source tarball
+        run: ${{ env.PYTHON }} -m build --sdist --wheel --outdir dist/ .
+
+      - name: Publish distribution to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1.8
+        with:
+          password: ${{ secrets.pypi_password }}
+
       - name: Upload coverage to Codecov
-        if: matrix.tox-env == 'py38' || matrix.tox-env == 'py39' || matrix.tox-env == 'py310' || matrix.tox-env == 'py311' || matrix.tox-env == 'py312'
         uses: codecov/codecov-action@v1
         with:
           file: .coverage
 
-  build:
-    runs-on: ubuntu-22.04
-
-    needs: test
-
-    if: "startsWith(github.ref, 'refs/tags')"
-
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-      - name: Install build
-        run: python -m pip install --user build
-      - name: Build a binary wheel and a source tarball
-        run: python -m build --sdist --wheel --outdir dist/ .
-      - name: Publish distribution to PyPI
-        uses: pypa/gh-action-pypi-publish@master
-        with:
-          password: ${{ secrets.pypi_password }}
