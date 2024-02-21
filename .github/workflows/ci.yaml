@@ -34,12 +34,11 @@ jobs:
 
     container:
       image: 342286153875.dkr.ecr.us-east-1.amazonaws.com/genialis/ci/arc-runner:latest
-      options: --hostname gbase
-      # volumes:
-      #   - /run/docker:/var/run/docker
-      #   # Process executors must mount certain volumes, so the directories must be shared on the host.
-      #   - /tmp:/tmp
-      #   - /home/runner/_work:/home/runner/_work
+      volumes:
+        - /run/docker:/var/run/docker
+        # Process executors must mount certain volumes, so the directories must be shared on the host.
+        - /tmp:/tmp
+        - /home/runner/_work:/home/runner/_work
       credentials:
         username: AWS
         password: ${{ needs.ecr_login.outputs.ecr_password }}
@@ -62,20 +61,30 @@ jobs:
     needs: [test, ecr_login]
     env:
       TOX_COMMAND: "python3.12 -m tox --skip-missing-interpreters false"
-      DOCKER_HOST: unix:///run/docker/docker.sock
-      GENESIS_POSTGRESQL_NAME: resolwe-genialis
-      GENESIS_POSTGRESQL_USER: genialis-base
-      GENESIS_POSTGRESQL_HOST: postgres
-      GENESIS_POSTGRESQL_PORT: 5432
-      GENESIS_ES_PORT: 59210
-      GENESIS_REDIS_HOST: redis
-      GENESIS_REDIS_PORT: 6379
-      GENESIS_RESDK_PATH: "/home/runner/_work/resolwe-bio-py/resolwe-bio-py"
-      GENESIS_REST_THROTTLING: '{"login": "100000/hour", "credentials": "100000/hour", "email": "100000/hour"}'
+      TOXENV: py310-e2e-resdk
 
-    strategy:
-      matrix:
-        toxenv: ["py310-e2e-resdk"]
+    container:
+      image: 342286153875.dkr.ecr.us-east-1.amazonaws.com/genialis/ci/arc-runner:latest
+      options: --hostname resdk
+      volumes:
+        - /run/docker:/var/run/docker
+        # Process executors must mount certain volumes, so the directories must be shared on the host.
+        - /tmp:/tmp
+        - /home/runner/_work:/home/runner/_work
+      env:
+        DOCKER_HOST: unix:///run/docker/docker.sock
+        GENESIS_POSTGRESQL_NAME: resolwe-genialis
+        GENESIS_POSTGRESQL_USER: genialis-base
+        GENESIS_POSTGRESQL_HOST: postgres
+        GENESIS_POSTGRESQL_PORT: 5432
+        GENESIS_ES_PORT: 59210
+        GENESIS_REDIS_HOST: redis
+        GENESIS_REDIS_PORT: 6379
+        GENESIS_RESDK_PATH: "/home/runner/_work/resolwe-bio-py/resolwe-bio-py"
+        GENESIS_REST_THROTTLING: '{"login": "100000/hour", "credentials": "100000/hour", "email": "100000/hour"}'
+      credentials:
+        username: AWS
+        password: ${{ needs.ecr_login.outputs.ecr_password }}
 
     steps:
       - name: Checkout
@@ -100,7 +109,7 @@ jobs:
 
       - name: Run tests
         run: |
-          ${{ env.TOX_COMMAND }} -e ${{ matrix.toxenv }}
+          ${{ env.TOX_COMMAND }} -e ${{ env.TOXENV }}
 
   build:
     runs-on: arc-runner
@@ -108,6 +117,12 @@ jobs:
     if: startsWith(github.ref, 'refs/tags')
     env:
       PYTHON: "python3.12"
+    container:
+      image: 342286153875.dkr.ecr.us-east-1.amazonaws.com/genialis/ci/arc-runner:latest
+      credentials:
+        username: AWS
+        password: ${{ needs.ecr_login.outputs.ecr_password }}
+
     steps:
       - uses: actions/checkout@v4
 
