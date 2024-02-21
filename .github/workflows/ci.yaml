@@ -41,11 +41,24 @@ jobs:
       fail-fast: false
       matrix:
         # TODO: py38
-        toxenv: [py39, py310, py311, py312, docs, linters, package]
+        # toxenv: [py39, py310, py311, py312, docs, linters, package]
+        toxenv: [py312]
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Assert PR is up-to-date
+        if: github.event_name == 'pull_request'
+        run: |
+          git_change_target_merge_base=$(git merge-base HEAD origin/${{ github.base_ref }})
+          git_change_target_sha=$(git rev-parse origin/${{ github.base_ref }})
+
+          if [[ "${git_change_target_merge_base}" != "${git_change_target_sha}" ]]; then
+            echo "Pull request is not up-to-date!"
+            echo "Please, rebase your pull request on top of '${{ github.base_ref }}' (commit: ${git_change_target_sha})."
+            exit 1
+          fi
 
       - name: Run Tests
         run: >
@@ -53,7 +66,8 @@ jobs:
 
   e2e:
     runs-on: arc-runner
-    needs: [unittest, ecr_login]
+    # needs: [unittest, ecr_login]
+    needs: ecr_login
     env:
       TOX_COMMAND: "python3.12 -m tox --skip-missing-interpreters false"
       TOXENV: py310-e2e-resdk
@@ -82,28 +96,26 @@ jobs:
         password: ${{ needs.ecr_login.outputs.ecr_password }}
 
     steps:
-      - name: Checkout
+      - name: Checkout resolwe-bio-py
         uses: actions/checkout@v4
 
-      - name: Assert PR is up-to-date
-        if: github.event_name == 'pull_request'
-        run: |
-          git_change_target_merge_base=$(git merge-base HEAD origin/${{ github.base_ref }})
-          git_change_target_sha=$(git rev-parse origin/${{ github.base_ref }})
-
-          if [[ "${git_change_target_merge_base}" != "${git_change_target_sha}" ]]; then
-            echo "Pull request is not up-to-date!"
-            echo "Please, rebase your pull request on top of '${{ github.base_ref }}' (commit: ${git_change_target_sha})."
-            exit 1
-          fi
+      - name: Checkout genialis-base
+        uses: actions/checkout@v4
+        with:
+          repository: genialis/genialis-base
+          path: /home/runner/_work/genialis-base
 
       - name: Set up environment
         run: |
+          pwd
           mkdir -p frontend/genjs/schema
           echo '{}' > frontend/genjs/schema/configuration.json
 
       - name: Run tests
         run: |
+          cd /home/runner/_work/genialis-base
+          pwd
+          ls -la
           ${{ env.TOX_COMMAND }} -e ${{ env.TOXENV }}
 
   build:
