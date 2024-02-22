@@ -1,5 +1,9 @@
 name: ReSDK CI
 
+# # Allow PAT to read other repositories (genialis-base)
+# permissions:
+#   contents: read
+
 on:
   push:
     branches:
@@ -103,7 +107,7 @@ jobs:
       - name: Checkout genialis-base
         uses: actions/checkout@v4
         with:
-          repository: genialis/genialis-base
+          repository: plojyon/genialis-base # TODO: change to genialis/
           ref: master
           path: ${{ env.WORKDIR }}/genialis-base
 
