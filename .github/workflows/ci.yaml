@@ -133,15 +133,20 @@ jobs:
           path: ${{ env.WORKDIR }}/genialis-base
           token: ${{ secrets.PAT }}
 
-      - name: Set up environment
-        run: |
-          pwd
-          mkdir -p frontend/genjs/schema
-          echo '{}' > frontend/genjs/schema/configuration.json
-
       - name: Run tests
         run: |
           cd ${{ env.WORKDIR }}/genialis-base
+
+          # Prepare frontend configuration
+          mkdir -p frontend/genjs/schema
+          echo '{}' > frontend/genjs/schema/configuration.json
+
+          # Make sure `python` refers to the tox environment's Python
+          export PATH=`pwd`/.tox/${{ matrix.toxenv }}/bin:$PATH
+
+          # job.container.network is uninitialized at the time of setting environment variables
+          export GENESIS_EXECUTOR_NETWORK=${{ job.container.network }}
+
           ${{ env.TOX_COMMAND }} -e ${{ env.TOXENV }}
 
   build:
