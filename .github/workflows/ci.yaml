@@ -104,6 +104,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: genialis/genialis-base
+          ref: master
           path: ${{ env.WORKDIR }}/genialis-base
 
       - name: Set up environment
