@@ -107,7 +107,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: plojyon/genialis-base # TODO: change to genialis/
-          ref: master
+          ref: arc-runners
           path: ${{ env.WORKDIR }}/genialis-base
           token: ${{ secrets.PAT }}
 
