@@ -1,9 +1,5 @@
 name: ReSDK CI
 
-# Allow PAT to read other repositories (genialis-base)
-permissions:
-  contents: read
-
 on:
   push:
     branches:
@@ -72,6 +68,9 @@ jobs:
     runs-on: arc-runner
     # needs: [unittest, ecr_login]
     needs: ecr_login
+    # Allow read to other repositories (genialis-base)
+    permissions:
+      contents: read
     env:
       TOX_COMMAND: "python3.12 -m tox --skip-missing-interpreters false"
       TOXENV: py310-e2e-resdk
