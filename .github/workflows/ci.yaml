@@ -109,7 +109,7 @@ jobs:
           repository: plojyon/genialis-base # TODO: change to genialis/
           ref: master
           path: ${{ env.WORKDIR }}/genialis-base
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PAT }}
 
       - name: Set up environment
         run: |
