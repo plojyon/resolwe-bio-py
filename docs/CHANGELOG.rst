@@ -5,6 +5,15 @@ Change Log
 All notable changes to this project are documented in this file.
 
 
+==========
+Unreleased
+==========
+
+Added
+-----
+- Add ``restart`` method to the ``Data`` resource
+
+
 ===================
 21.1.0 - 2023-02-09
 ===================
