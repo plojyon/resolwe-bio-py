@@ -99,6 +99,27 @@ jobs:
         username: AWS
         password: ${{ needs.ecr_login.outputs.ecr_password }}
 
+    services:
+      postgres:
+        image: public.ecr.aws/docker/library/postgres:14
+        env:
+          POSTGRES_USER: genialis-base
+          POSTGRES_HOST: postgres
+          POSTGRES_HOST_AUTH_METHOD: trust
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: public.ecr.aws/docker/library/redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    
     steps:
       - name: Checkout resolwe-bio-py
         uses: actions/checkout@v4
