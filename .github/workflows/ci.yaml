@@ -107,7 +107,7 @@ jobs:
       - name: Checkout genialis-base
         uses: actions/checkout@v4
         with:
-          repository: genialis/genialis-base # TODO: change to genialis/
+          repository: plojyon/genialis-base # TODO: change to genialis/
           ref: master
           path: ${{ env.WORKDIR }}/genialis-base
 
