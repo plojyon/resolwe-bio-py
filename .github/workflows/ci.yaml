@@ -120,11 +120,6 @@ jobs:
       - name: Run tests
         run: |
           cd ${{ env.WORKDIR }}/genialis-base
-          pwd
-          ls -la
-          cd genialis-base
-          pwd
-          ls -la
           ${{ env.TOX_COMMAND }} -e ${{ env.TOXENV }}
 
   build:
