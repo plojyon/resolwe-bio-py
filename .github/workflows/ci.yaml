@@ -79,22 +79,23 @@ jobs:
     container:
       image: 342286153875.dkr.ecr.us-east-1.amazonaws.com/genialis/ci/arc-runner:latest
       options: --hostname resdk
-      volumes:
-        - /run/docker:/var/run/docker
-        # Process executors must mount certain volumes, so the directories must be shared on the host.
-        - /tmp:/tmp
-        - /home/runner/_work:/home/runner/_work
       env:
         DOCKER_HOST: unix:///run/docker/docker.sock
         GENESIS_POSTGRESQL_NAME: resolwe-genialis
         GENESIS_POSTGRESQL_USER: genialis-base
         GENESIS_POSTGRESQL_HOST: postgres
         GENESIS_POSTGRESQL_PORT: 5432
-        GENESIS_ES_PORT: 59210
         GENESIS_REDIS_HOST: redis
         GENESIS_REDIS_PORT: 6379
         GENESIS_RESDK_PATH: ${{ env.WORKDIR }}
         GENESIS_REST_THROTTLING: '{"login": "100000/hour", "credentials": "100000/hour", "email": "100000/hour"}'
+        GENESIS_LISTENER_HOSTS: '{"local": "0.0.0.0"}'
+        GENESIS_COMMUNICATION_CONTAINER_LISTENER_CONNECTION: '{"local": "gbase"}'
+      volumes:
+        - /run/docker:/var/run/docker
+        # Process executors must mount certain volumes, so the directories must be shared on the host.
+        - /tmp:/tmp
+        - /home/runner/_work:/home/runner/_work
       credentials:
         username: AWS
         password: ${{ needs.ecr_login.outputs.ecr_password }}
@@ -173,4 +174,3 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1.8
         with:
           password: ${{ secrets.pypi_password }}
-
