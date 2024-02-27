@@ -11,37 +11,16 @@ on:
   workflow_dispatch:
 
 jobs:
-  ecr_login:
-    runs-on: ubuntu-latest
-    outputs:
-      ecr_password: ${{ steps.retrieve_password.outputs.ecr_password }}
-    steps:
-      - name: Set up AWS CLI
-        uses: chrislennon/action-aws-cli@1.1
-      - name: Retrieve ECR password
-        id: retrieve_password
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: us-east-1
-        run: echo "ecr_password=$(aws ecr get-login-password)" >> $GITHUB_OUTPUT
-
   unittest:
-    needs: ecr_login
     runs-on: arc-runner
     env:
-      TOX_COMMAND: "python3.12 -m tox --skip-missing-interpreters false"
+      TOX_COMMAND: "tox --skip-missing-interpreters false"
 
-    container:
-      image: 342286153875.dkr.ecr.us-east-1.amazonaws.com/genialis/ci/arc-runner:latest
-      credentials:
-        username: AWS
-        password: ${{ needs.ecr_login.outputs.ecr_password }}
     strategy:
       fail-fast: false
       matrix:
-        # TODO: py38
-        # toxenv: [py39, py310, py311, py312, docs, linters, package]
+        # TODO: restore
+        # toxenv: [py38, py39, py310, py311, py312, docs, linters, package]
         toxenv: [py312]
 
     steps:
@@ -66,47 +45,23 @@ jobs:
 
   e2e:
     runs-on: arc-runner
-    # needs: [unittest, ecr_login]
-    needs: ecr_login
-    # Grant read permissions to GITHUB_TOKEN to allow checkout of genialis-base.
-    permissions:
-      contents: read
+    # needs: unittest # TODO: restore
     env:
-      TOX_COMMAND: "python3.12 -m tox --skip-missing-interpreters false"
-      TOXENV: py310-e2e-resdk
-      WORKDIR: "/home/runner/_work/resolwe-bio-py/resolwe-bio-py"
-
-    container:
-      image: 342286153875.dkr.ecr.us-east-1.amazonaws.com/genialis/ci/arc-runner:latest
-      options: --hostname resdk
-      env:
-        DOCKER_HOST: unix:///run/docker/docker.sock
-        GENESIS_POSTGRESQL_NAME: resolwe-genialis
-        GENESIS_POSTGRESQL_USER: genialis-base
-        GENESIS_POSTGRESQL_HOST: postgres
-        GENESIS_POSTGRESQL_PORT: 5432
-        GENESIS_REDIS_HOST: redis
-        GENESIS_REDIS_PORT: 6379
-        GENESIS_RESDK_PATH: ${{ env.WORKDIR }}
-        GENESIS_REST_THROTTLING: '{"login": "100000/hour", "credentials": "100000/hour", "email": "100000/hour"}'
-        GENESIS_LISTENER_HOSTS: '{"local": "0.0.0.0"}'
-        GENESIS_COMMUNICATION_CONTAINER_LISTENER_CONNECTION: '{"local": "gbase"}'
-      volumes:
-        - /run/docker:/var/run/docker
-        # Process executors must mount certain volumes, so the directories must be shared on the host.
-        - /tmp:/tmp
-        - /home/runner/_work:/home/runner/_work
-      credentials:
-        username: AWS
-        password: ${{ needs.ecr_login.outputs.ecr_password }}
+      GENESIS_POSTGRESQL_NAME: resolwe-genialis
+      GENESIS_POSTGRESQL_USER: genialis-base
+      GENESIS_POSTGRESQL_PORT: 55434
+      GENESIS_REDIS_PORT: 56381
+      GENESIS_RESDK_PATH: ".."
+      GENESIS_REST_THROTTLING: '{"login": "100000/hour", "credentials": "100000/hour", "email": "100000/hour"}'
 
     services:
       postgres:
         image: public.ecr.aws/docker/library/postgres:14
         env:
           POSTGRES_USER: genialis-base
-          POSTGRES_HOST: postgres
           POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 55434:5432
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -115,6 +70,8 @@ jobs:
 
       redis:
         image: public.ecr.aws/docker/library/redis:7-alpine
+        ports:
+          - 56381:6379
         options: >-
           --health-cmd "redis-cli ping"
           --health-interval 10s
@@ -130,37 +87,28 @@ jobs:
         with:
           repository: plojyon/genialis-base # TODO: change to genialis/
           ref: arc-runners
-          path: ${{ env.WORKDIR }}/genialis-base
+          path: genialis-base
           token: ${{ secrets.PAT }}
 
       - name: Run tests
         run: |
-          cd ${{ env.WORKDIR }}/genialis-base
+          cd genialis-base
 
           # Prepare frontend configuration
           mkdir -p frontend/genjs/schema
           echo '{}' > frontend/genjs/schema/configuration.json
 
           # Make sure `python` refers to the tox environment's Python
-          export PATH=`pwd`/.tox/${{ matrix.toxenv }}/bin:$PATH
+          export PATH=`pwd`/.tox/py310-e2e-resdk/bin:$PATH
 
-          # job.container.network is uninitialized at the time of setting environment variables
-          export GENESIS_EXECUTOR_NETWORK=${{ job.container.network }}
-
-          ${{ env.TOX_COMMAND }} -e ${{ env.TOXENV }}
+          tox --skip-missing-interpreters false py310-e2e-resdk
 
   build:
     runs-on: arc-runner
-    needs: [unittest, e2e, ecr_login]
+    needs: [unittest, e2e]
     if: startsWith(github.ref, 'refs/tags')
     env:
-      PYTHON: "python3.12"
-    container:
-      image: 342286153875.dkr.ecr.us-east-1.amazonaws.com/genialis/ci/arc-runner:latest
-      credentials:
-        username: AWS
-        password: ${{ needs.ecr_login.outputs.ecr_password }}
-
+      PYTHON: "python3.12" # TODO: 311?
     steps:
       - uses: actions/checkout@v4
 
