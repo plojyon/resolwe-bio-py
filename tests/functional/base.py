@@ -7,12 +7,18 @@ from unittest.mock import patch
 from resdk import Resolwe
 
 URL = os.environ.get("SERVER_URL", "http://localhost:8000")
-USER_USERNAME = "user"
-USER_EMAIL = "user@genialis.com"
-USER_PASSWORD = "user"
-ADMIN_USERNAME = "admin"
-ADMIN_EMAIL = "admin@genialis.com"
-ADMIN_PASSWORD = "admin"
+
+# Get the regular user credentials from environment variables.
+# Fallback to default values if the environment variables are not set.
+USER_USERNAME = os.environ.get("USER_USERNAME", "user")
+USER_EMAIL = os.environ.get("USER_EMAIL", "user@genialis.com")
+USER_PASSWORD = os.environ.get("USER_PASSWORD", "user")
+
+# Get the admin user credentials from environment variables.
+# Fallback to default values if the environment variables are not set.
+ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
+ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "admin@genialis.com")
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin")
 
 FILES_PATH = os.path.normpath(
     os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "files")

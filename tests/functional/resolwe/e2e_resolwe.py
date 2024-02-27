@@ -1,6 +1,6 @@
 import resdk
 
-from ..base import ADMIN_USERNAME, USER_USERNAME, BaseResdkFunctionalTest
+from ..base import ADMIN_EMAIL, USER_EMAIL, BaseResdkFunctionalTest
 
 
 class TestRun(BaseResdkFunctionalTest):
@@ -73,7 +73,7 @@ class TestDataUsage(BaseResdkFunctionalTest):
         self.assertEqual(set(usage_info[0].keys()), self.expected_fields)
 
     def test_ordering(self):
-        usage_info = self.res.data_usage(ordering=["username"])
+        usage_info = self.res.data_usage(ordering=["-username"])
         self.assertEqual(len(usage_info), 2)
-        self.assertEqual(usage_info[0]["username"], ADMIN_USERNAME)
-        self.assertEqual(usage_info[1]["username"], USER_USERNAME)
+        self.assertEqual(usage_info[0]["username"], ADMIN_EMAIL)
+        self.assertEqual(usage_info[1]["username"], USER_EMAIL)

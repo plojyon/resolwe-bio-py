@@ -1,6 +1,6 @@
 from resdk.exceptions import ResolweServerError
 
-from ..base import USER_USERNAME, BaseResdkFunctionalTest
+from ..base import ADMIN_EMAIL, USER_EMAIL, BaseResdkFunctionalTest
 
 
 class TestPermissions(BaseResdkFunctionalTest):
@@ -22,7 +22,7 @@ class TestPermissions(BaseResdkFunctionalTest):
         with self.assertRaises(LookupError):
             self.user_res.collection.get(self.test_collection.id)
 
-        self.test_collection.permissions.set_user(USER_USERNAME, "view")
+        self.test_collection.permissions.set_user(USER_EMAIL, "view")
 
         # User can see the collection, but cannot edit it.
         user_collection = self.user_res.collection.get(self.test_collection.id)
@@ -30,13 +30,13 @@ class TestPermissions(BaseResdkFunctionalTest):
         with self.assertRaises(ResolweServerError):
             user_collection.save()
 
-        self.test_collection.permissions.set_user(USER_USERNAME, "edit")
+        self.test_collection.permissions.set_user(USER_EMAIL, "edit")
 
         # User can edit the collection.
         user_collection.name = "Different name"
         user_collection.save()
 
-        self.test_collection.permissions.set_user(USER_USERNAME, "view")
+        self.test_collection.permissions.set_user(USER_EMAIL, "view")
 
         # Edit permission is removed again.
         user_collection.name = "Different name 2"
@@ -44,23 +44,30 @@ class TestPermissions(BaseResdkFunctionalTest):
             user_collection.save()
 
     def test_get_holders_with_perm(self):
-        self.test_collection.permissions.set_user(USER_USERNAME, "edit")
+        self.test_collection.permissions.set_user(USER_EMAIL, "edit")
         self.test_collection.permissions.set_public("view")
 
         self.assertEqual(len(self.test_collection.permissions.owners), 1)
-        self.assertEqual(self.test_collection.permissions.owners[0].get_name(), "admin")
+        self.assertEqual(
+            self.test_collection.permissions.owners[0].get_name(), ADMIN_EMAIL
+        )
 
         self.assertEqual(len(self.test_collection.permissions.editors), 2)
         self.assertEqual(
-            self.test_collection.permissions.editors[0].get_name(), "admin"
+            self.test_collection.permissions.editors[0].get_name(), ADMIN_EMAIL
         )
-        self.assertEqual(self.test_collection.permissions.editors[1].get_name(), "user")
+        self.assertEqual(
+            self.test_collection.permissions.editors[1].get_name(), "E2E Tester"
+        )
 
         self.assertEqual(len(self.test_collection.permissions.viewers), 3)
         self.assertEqual(
-            self.test_collection.permissions.viewers[0].first_name, "admin"
+            self.test_collection.permissions.viewers[0].first_name, ADMIN_EMAIL
         )
-        self.assertEqual(self.test_collection.permissions.viewers[1].first_name, "user")
+
+        self.assertEqual(
+            self.test_collection.permissions.viewers[1].first_name, "E2E Tester"
+        )
         self.assertEqual(self.test_collection.permissions.viewers[2].username, "public")
 
     def test_copy_from(self):

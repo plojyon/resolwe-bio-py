@@ -1,11 +1,123 @@
 name: ReSDK E2E
 
 on:
-  pull_request:
   workflow_dispatch:
+  workflow_call:
+
+env:
+  # Registry settings.
+  REGISTRY: "396487289173.dkr.ecr.eu-west-1.amazonaws.com"
+  AWS_REGION: "eu-west-1"
+  K3D_BASE_IMAGE: genialis/ci/k3d-base:v1.28.8-k3s1
+  # Environment
+  ENV_FILE: "/workdir/e2e/config/resolwe-bio-py.env"
 
 jobs:
   e2e:
     runs-on: e2e-runner
+
     steps:
-      - run: echo "Running."
+      - name: Checkout resolwe-bio-py
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Import the environment from file
+        run: |
+          grep -Ev ^'(#|$)' ${{ env.ENV_FILE }} >> $GITHUB_ENV
+
+      - name: Install ReSDK and its testing dependencies
+        run: |
+          python${{ env.PYTHON_VERSION }} -m pip install .[test]
+
+      - name: Reset Docker credentials store
+        run: |
+          # Docker is configured to use the ecr credentials helper,
+          # which clashes with the aws-actions/configure-aws-credentials action.
+          rm -f ~/.docker/config.json
+
+      - name: Login to ECR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          image: "${{ env.REGISTRY }}/docker.io/tonistiigi/binfmt:latest"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Show versions
+        run: |
+          helmfile --version
+          helm version
+          kubectl version --client
+          sops --version
+          velero version
+
+      - name: Create K3d cluster
+        run: |
+          cd /workdir
+          aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ env.REGISTRY }}
+          # Work around authentication error by prefetching k3d base images
+          docker pull ${{ env.REGISTRY }}/${{ env.K3D_BASE_IMAGE }}
+          docker pull ${{ env.REGISTRY }}/docker.io/library/registry:2
+          # TODO: Add a way to override k3d-config.yaml base image tag
+          k3d cluster create --config e2e/k3d/k3d-config.yaml
+
+      - name: Add hosts to /etc/hosts
+        run: |
+          sudo echo "172.18.0.2 ws.local.genialis.io local.genialis.io" | sudo tee -a /etc/hosts
+
+      - name: Deploy Helm charts
+        run: |
+          cd /workdir
+          helmfile -e local -f helmfile-service.yaml sync
+          kubectl apply -f e2e/k3d/patched_coredns.yml
+          kubectl rollout restart deployment coredns -n kube-system
+          kubectl wait --for=condition=available --timeout=1200s -n kube-system deployment/coredns
+
+      - name: Authorize cluster to pull private repositories
+        run: |
+          kubectl config set-context --current --namespace=default
+          kubectl get pods
+          kubectl wait pods -l app=pod-identity-webhook --for condition=Ready --timeout=1m
+          kubectl create job --from=cronjob/ecr-auth -n default ecr-auth-manual
+          kubectl wait --for=condition=complete --timeout=1m job/ecr-auth-manual
+          kubectl rollout restart deployment -n velero velero
+          kubectl wait --for=condition=available --timeout=300s -n velero deployment/velero
+
+      - name: Restore Velero edge snapshot
+        run: |
+          echo "List backups"
+          velero backup get
+          echo "Restore"
+          velero restore create --include-namespaces default --from-backup edge --wait
+          echo "Get restore"
+          velero restore get
+          RESTORE_NAME=$(velero restore get | grep edge | awk '{print $1}')
+          echo "Describe restore"
+          velero restore describe $RESTORE_NAME
+          echo "Logs restore"
+          velero restore logs $RESTORE_NAME
+
+      - name: Try the cluster
+        run: |
+          kubectl wait --for=condition=available --timeout=1200s -n default deployment/postgres
+          # Until postgres is fully restored, the services will fail
+          # Perform a clean restart of all services after the database is online
+          kubectl rollout restart deployment asgi-server channels-manager listener background-task uploader
+          kubectl wait --for=condition=available --timeout=1200s --all deployments
+
+      - name: Test curl
+        run: |
+          ping local.genialis.io -c 1
+
+      - name: Run tests
+        run: |
+          # Make sure `python` refers to the tox environment's Python
+          export PATH=`pwd`/.tox/py310-e2e-resdk/bin:$PATH
+          python${{ env.PYTHON_VERSION }} -m pytest --cov=resdk --cov-report=xml:.reports/resdk_e2e_cov.xml \
+            --junit-xml=.reports/resdk_e2e_report.xml tests/functional/**/e2e_*.py
