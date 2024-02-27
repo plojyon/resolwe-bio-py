@@ -101,7 +101,7 @@ jobs:
           # Make sure `python` refers to the tox environment's Python
           export PATH=`pwd`/.tox/py310-e2e-resdk/bin:$PATH
 
-          tox --skip-missing-interpreters false py310-e2e-resdk
+          tox --skip-missing-interpreters false -e py310-e2e-resdk
 
   build:
     runs-on: arc-runner
