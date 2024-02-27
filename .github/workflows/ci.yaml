@@ -86,9 +86,9 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: plojyon/genialis-base # TODO: change to genialis/
-          ref: arc-runners
+          ref: arc-runners # TODO: remove
           path: genialis-base
-          token: ${{ secrets.PAT }}
+          token: ${{ secrets.PAT }} # TODO: restore
 
       - name: Run tests
         run: |
