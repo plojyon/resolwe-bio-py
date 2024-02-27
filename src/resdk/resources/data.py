@@ -2,6 +2,7 @@
 
 import json
 import logging
+from typing import Optional
 from urllib.parse import urljoin
 
 from resdk.constants import CHUNK_SIZE
@@ -222,6 +223,32 @@ class Data(BaseResolweResource):
             self._children = self.resolwe.data.filter(id__in=ids)
 
         return self._children
+
+    def restart(
+        self,
+        storage: Optional[int] = None,
+        memory: Optional[int] = None,
+        cores: Optional[int] = None,
+    ):
+        """Restart the data object.
+
+        The units for storage are gigabytes and for memory are megabytes.
+
+        The resources that are not specified (or set no None) are reset to their
+        default values.
+        """
+        overrides = {
+            key: value
+            for key, value in {
+                "storage": storage,
+                "memory": memory,
+                "cores": cores,
+            }.items()
+            if value is not None
+        }
+        self.resolwe.api.data(self.id).restart.post(
+            {"resource_overrides": {self.id: overrides}}
+        )
 
     def _files_dirs(self, field_type, file_name=None, field_name=None):
         """Get list of downloadable fields."""
