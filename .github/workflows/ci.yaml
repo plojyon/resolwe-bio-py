@@ -43,7 +43,7 @@ jobs:
 
   e2e:
     runs-on: arc-runner
-    # needs: unittest # TODO: restore
+    needs: unittest
     env:
       GENESIS_POSTGRESQL_NAME: resolwe-genialis
       GENESIS_POSTGRESQL_USER: genialis-base
