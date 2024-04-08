@@ -14,6 +14,12 @@ Added
 - Add ``restart`` method to the ``Data`` resource
 
 
+Fixed
+-----
+- Fix fetching ``RNATables`` for collections with missing MultiQC objects by
+  using nullable integer data type ``Int64`` for integer columns.
+
+
 ===================
 21.1.0 - 2023-02-09
 ===================

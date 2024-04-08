@@ -136,7 +136,7 @@ MQC_GENERAL_COLUMNS = [
     {
         "name": "STAR quantification_mqc-generalstats-star_quantification-Assigned_reads",
         "slug": "star_assigned_reads",
-        "type": "int64",
+        "type": "Int64",
         "agg_func": "sum",
     },
     {
