@@ -164,39 +164,12 @@ MQC_GENERAL_COLUMNS = [
         "agg_func": "mean",
     },
     {
-        "name": "RNA-SeQC_mqc-generalstats-rna_seqc-Expression_Profiling_Efficiency",
-        "slug": "profiling_efficiency",
-        "type": "float64",
-        "agg_func": "mean",
-    },
-    {
-        "name": "RNA-SeQC_mqc-generalstats-rna_seqc-Genes_Detected",
-        "slug": "genes_detected",
-        "type": "Int64",
-        "agg_func": "mean",
-    },
-    {
         "slug": "strandedness_code",
         "type": "string",
     },
     {
         "slug": "genome_build",
         "type": "string",
-    },
-]
-
-MQC_COVERAGE_COLUMNS = [
-    {
-        "name": "Genes used in 3' bias",
-        "slug": "num_genes_three_prime_bias",
-        "type": "Int64",
-        "agg_func": "mean",
-    },
-    {
-        "name": "Mean 3' bias",
-        "slug": "mean_three_prime_bias",
-        "type": "float64",
-        "agg_func": "mean",
     },
 ]
 
@@ -237,11 +210,6 @@ def general_multiqc_parser(file_object, name, column_names):
 def multiqc_general_stats_parser(file_object, name):
     """Parse "multiqc_general_stats.txt" file."""
     return general_multiqc_parser(file_object, name, MQC_GENERAL_COLUMNS)
-
-
-def multiqc_coverage_parser(file_object, name):
-    """Parse "multiqc_rna-seqc_coverage_stats.txt" file."""
-    return general_multiqc_parser(file_object, name, MQC_COVERAGE_COLUMNS)
 
 
 def multiqc_strand_parser(file_object, name):
@@ -506,7 +474,6 @@ class RNATables(BaseTables):
                 "uri_general": f"{mqc.id}/multiqc_data/multiqc_general_stats.txt",
                 "uri_strand": f"{mqc.id}/multiqc_data/multiqc_library_strandedness.txt",
                 "uri_build": f"{mqc.id}/multiqc_data/multiqc_sample_info.txt",
-                "uri_coverage": f"{mqc.id}/multiqc_data/multiqc_rna-seqc_coverage_stats.txt",
             }
 
         df = pd.DataFrame(index=[sample.id for sample in self._samples])
@@ -515,7 +482,6 @@ class RNATables(BaseTables):
             "uri_general": multiqc_general_stats_parser,
             "uri_strand": multiqc_strand_parser,
             "uri_build": multiqc_build_parser,
-            "uri_coverage": multiqc_coverage_parser,
         }
         for type_, parser in parsers.items():
             uris = [item[type_] for item in mqc_db.values()]
@@ -528,10 +494,7 @@ class RNATables(BaseTables):
         STRANDEDNESS_COLUMN = [{"slug": "strandedness_code", "type": "category"}]
         column_types = {
             c["slug"]: c["type"]
-            for c in MQC_GENERAL_COLUMNS
-            + MQC_COVERAGE_COLUMNS
-            + BUILD_COLUMN
-            + STRANDEDNESS_COLUMN
+            for c in MQC_GENERAL_COLUMNS + BUILD_COLUMN + STRANDEDNESS_COLUMN
             if c["slug"] in df.columns
         }
         df = df[column_types.keys()].astype(column_types)

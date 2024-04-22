@@ -9,10 +9,13 @@ All notable changes to this project are documented in this file.
 Unreleased
 ==========
 
+Changed
+-------
+- Remove ``RNA-SeQC`` metrics from ``RNATables`` QC fields
+
 Added
 -----
 - Add ``restart`` method to the ``Data`` resource
-
 
 Fixed
 -----
