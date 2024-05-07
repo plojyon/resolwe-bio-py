@@ -7,3 +7,5 @@ include .readthedocs.yaml
 include tox.ini
 recursive-include tests *.py
 recursive-include tests/files *
+# Exclude e2e files
+recursive-exclude e2e *
