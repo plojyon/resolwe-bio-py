@@ -359,7 +359,7 @@ class VariantTables(BaseTables):
         """
         try:
             allele_line = row.get("SAMPLENAME1.GT", np.nan)
-            allele_re = r"^([ACGT]+)/([ACGT]+)$"
+            allele_re = r"^([ATGC*]+)/([ATGC*]+)$"
             allele1, allele2 = re.match(allele_re, allele_line).group(1, 2)
         except AttributeError:
             # AttributeError is raised when there is no match, e.g.

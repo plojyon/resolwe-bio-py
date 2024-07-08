@@ -21,6 +21,7 @@ Fixed
 -----
 - Fix fetching ``RNATables`` for collections with missing MultiQC objects by
   using nullable integer data type ``Int64`` for integer columns.
+- Fix ``VariantTables`` to correctly handle multiallelic variants
 
 
 ===================
