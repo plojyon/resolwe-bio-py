@@ -105,8 +105,28 @@ jobs:
 
       - name: Try the cluster
         run: |
-          kubectl wait --for=condition=available --timeout=1200s -n default deployment/postgres
           # Until postgres is fully restored, the services will fail
+          kubectl wait --for=condition=available --timeout=1200s -n default deployment/postgres
+          # Patch the channels manager to use the null executor
+          kubectl patch deployment channels-manager -n default --patch '{
+            "spec": {
+              "template": {
+                "spec": {
+                  "containers": [
+                    {
+                      "name": "channels-manager",
+                      "env": [
+                        {
+                          "name": "GENESIS_EXECUTOR_NULL",
+                          "value": "1"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          }'
           # Perform a clean restart of all services after the database is online
           kubectl rollout restart deployment asgi-server channels-manager listener background-task uploader
           kubectl wait --for=condition=available --timeout=1200s --all deployments
