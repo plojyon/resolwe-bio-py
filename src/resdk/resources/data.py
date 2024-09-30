@@ -2,6 +2,7 @@
 
 import json
 import logging
+import os
 from typing import Optional
 from urllib.parse import urljoin
 
@@ -324,19 +325,16 @@ class Data(BaseResolweResource):
 
         return file_list
 
-    def download(self, file_name=None, field_name=None, download_dir=None):
+    def download(
+        self,
+        file_name: Optional[str] = None,
+        field_name: Optional[str] = None,
+        download_dir: Optional[str] = None,
+    ):
         """Download Data object's files and directories.
 
         Download files and directories from the Resolwe server to the
         download directory (defaults to the current working directory).
-
-        :param file_name: name of file or directory
-        :type file_name: string
-        :param field_name: file or directory field name
-        :type field_name: string
-        :param download_dir: download path
-        :type download_dir: string
-        :rtype: None
 
         Data objects can contain multiple files and directories. All are
         downloaded by default, but may be filtered by name or output
@@ -349,11 +347,47 @@ class Data(BaseResolweResource):
         if file_name and field_name:
             raise ValueError("Only one of file_name or field_name may be given.")
 
-        files = [
-            "{}/{}".format(self.id, fname)
-            for fname in self.files(file_name, field_name)
-        ]
-        self.resolwe._download_files(files, download_dir)
+        file_names = self.files(file_name, field_name)
+        files = ["{}/{}".format(self.id, fname) for fname in file_names]
+
+        self.resolwe._download_files(files=files, download_dir=download_dir)
+
+        return file_names
+
+    def download_and_rename(
+        self,
+        custom_file_name: str,
+        overwrite_existing: bool = False,
+        field_name: Optional[str] = None,
+        file_name: Optional[str] = None,
+        download_dir: Optional[str] = None,
+    ):
+        """Download and rename a single file from the Data object."""
+
+        if not field_name and not file_name:
+            raise ValueError("Either 'file_name' or 'field_name' must be given.")
+
+        if download_dir is None:
+            download_dir = os.getcwd()
+        destination_file_path = os.path.join(download_dir, custom_file_name)
+        if os.path.exists(destination_file_path) and not overwrite_existing:
+            raise FileExistsError(
+                f"File with path '{destination_file_path}' already exists. Skipping download."
+            )
+
+        source_file_name = self.download(
+            file_name=file_name,
+            field_name=field_name,
+            download_dir=download_dir,
+        )[0]
+
+        source_file_path = os.path.join(download_dir, source_file_name)
+
+        logging.info(f"Renaming file '{source_file_name}' to '{custom_file_name}'.")
+        os.rename(
+            source_file_path,
+            destination_file_path,
+        )
 
     def stdout(self):
         """Return process standard output (stdout.txt file content).

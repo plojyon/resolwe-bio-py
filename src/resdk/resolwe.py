@@ -462,7 +462,10 @@ class Resolwe:
         return Data(resolwe=self, **model_data)
 
     def _download_files(
-        self, files: List[Union[str, Path]], download_dir=None, show_progress=True
+        self,
+        files: List[Union[str, Path]],
+        download_dir: Union[str, None] = None,
+        show_progress: bool = True,
     ):
         """Download files.
 
@@ -470,10 +473,8 @@ class Resolwe:
         directory (defaults to the current working directory).
 
         :param files: files to download
-        :type files: list of file URI
         :param download_dir: download directory
-        :type download_dir: string
-        :rtype: None
+            If not specified, the current working directory is used.
 
         """
         if not download_dir:
@@ -486,7 +487,6 @@ class Resolwe:
 
         if not files:
             self.logger.info("No files to download.")
-
         else:
             self.logger.info("Downloading files to %s:", download_dir)
             # Store the sizes of files in the given directory.

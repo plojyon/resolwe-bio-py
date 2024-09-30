@@ -178,14 +178,32 @@ class TestData(unittest.TestCase):
 
         Data.download(data_mock)
         data_mock.resolwe._download_files.assert_called_once_with(
-            ["123/file1.txt", "123/file2.fq.gz"], None
+            files=["123/file1.txt", "123/file2.fq.gz"],
+            download_dir=None,
         )
 
         data_mock.reset_mock()
         Data.download(data_mock, download_dir="/some/path/")
         data_mock.resolwe._download_files.assert_called_once_with(
-            ["123/file1.txt", "123/file2.fq.gz"], "/some/path/"
+            files=["123/file1.txt", "123/file2.fq.gz"],
+            download_dir="/some/path/",
         )
+
+        data_mock.reset_mock()
+        data_mock.files.return_value = ["file1.txt"]
+        with patch("os.rename") as mock_rename:
+            Data.download_and_rename(
+                data_mock,
+                custom_file_name="text_file1.txt",
+                field_name="txt",
+                download_dir="/some/path/",
+            )
+
+            data_mock.download.assert_called_once_with(
+                file_name=None, field_name="txt", download_dir="/some/path/"
+            )
+
+            mock_rename.assert_called_once()
 
     @patch("resdk.resolwe.Resolwe")
     @patch("resdk.resources.data.urljoin")
