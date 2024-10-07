@@ -5,6 +5,15 @@ Change Log
 All notable changes to this project are documented in this file.
 
 
+==========
+Unreleased
+==========
+
+Fixed
+-----
+- Fix fetching ``qc`` data from deploys with local data storage
+
+
 ===================
 21.2.0 - 2024-07-10
 ===================

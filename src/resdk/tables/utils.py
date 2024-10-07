@@ -3,7 +3,7 @@
 import asyncio
 import json
 from io import BytesIO
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 
 import aiohttp
 import pandas as pd
@@ -32,6 +32,11 @@ def _uri_to_url(resolwe, uris):
     return json.loads(response.content.decode("utf-8"))
 
 
+def is_absolute(url: str) -> bool:
+    """Return if the given URL absolute."""
+    return bool(urlparse(url).netloc)
+
+
 async def _batch_download(resolwe, uris, parser) -> pd.DataFrame:
     """Download multiple files defined by their uri asynchronously."""
     try:
@@ -39,9 +44,13 @@ async def _batch_download(resolwe, uris, parser) -> pd.DataFrame:
     except HTTPError:
         return pd.DataFrame()
 
-    async with aiohttp.ClientSession() as session:
+    def prepare_url(url):
+        """Prepent the base url if it is not absolute."""
+        return url if is_absolute(url) else urljoin(resolwe.url, url)
+
+    async with aiohttp.ClientSession(cookies=resolwe.session.cookies) as session:
         futures = [
-            _download_file(uri, url, session, parser)
+            _download_file(uri, prepare_url(url), session, parser)
             for uri, url in uri_to_url.items()
             if url
         ]
