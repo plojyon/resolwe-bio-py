@@ -212,9 +212,8 @@ class TestTutorialCreate(BaseResdkDocsFunctionalTest):
         self.allow_run_process(self.res, "upload-fastq-single")
         self.allow_run_process(self.res, "alignment-star")
         self.allow_run_process(self.res, "workflow-bbduk-star-featurecounts-qc")
-        # Set permissions for using descriptor_schemas:
+        # Set permissions for using descriptor_schema.
         self.allow_use_descriptor_schema(self.res, "reads")
-        self.allow_use_descriptor_schema(self.res, "sample")
 
     def test_tutorial_create(self):
         """Test tutorial-create."""
