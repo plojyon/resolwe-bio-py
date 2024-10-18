@@ -12,16 +12,9 @@ Added
 -----
 - Add an argument for custom file naming of downloaded files
   and propagate this change in ``Data`` resource
-
-
-==========
-Unreleased
-==========
-
-Added
------
 - Add support for predictions
 - Add version to annotation field
+- Add a resolwe method for fetching the server module versions
 
 
 ===================

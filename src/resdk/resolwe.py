@@ -32,7 +32,7 @@ from packaging import version
 from resdk.uploader import Uploader
 
 from .constants import CHUNK_SIZE
-from .exceptions import ValidationError, handle_http_exception
+from .exceptions import ResolweServerError, ValidationError, handle_http_exception
 from .query import (
     AnnotationFieldQuery,
     AnnotationValueQuery,
@@ -65,6 +65,7 @@ DEFAULT_URL = "http://localhost:8000"
 AUTOMATIC_LOGIN_POSTFIX = "saml-auth/api-login/"
 INTERACTIVE_LOGIN_POSTFIX = "saml-auth/remote-login/"
 MINIMAL_SUPPORTED_VERSION_POSTFIX = "api/resdk_minimal_supported_version"
+SERVER_MODULE_VERSIONS_POSTFIX = "/about/versions"
 
 
 class ResolweResource(slumber.Resource):
@@ -211,6 +212,15 @@ class Resolwe:
             self.logger.warning(
                 "Warning: unable to read the minimal supported version from the server."
             )
+
+    def version_output(self) -> dict:
+        """Output the version of the server modules."""
+        url = urljoin(self.url, SERVER_MODULE_VERSIONS_POSTFIX)
+        try:
+            response = requests.get(url)
+        except requests.exceptions.RequestException:
+            raise ResolweServerError("Unable to read the server version.")
+        return response.json()
 
     def _validate_url(self, url):
         if not re.match(r"https?://", url):
