@@ -51,6 +51,7 @@ class AnnotationField(BaseResource):
         "validator_regex",
         "vocabulary",
         "required",
+        "version",
     )
 
     def __init__(self, resolwe: "Resolwe", **model_data):

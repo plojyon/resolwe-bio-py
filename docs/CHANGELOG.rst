@@ -21,6 +21,7 @@ Unreleased
 Added
 -----
 - Add support for predictions
+- Add version to annotation field
 
 
 ===================
