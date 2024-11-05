@@ -16,7 +16,7 @@ import operator
 
 import tqdm
 
-from resdk.resources import AnnotationField, DescriptorSchema, Process
+from resdk.resources import AnnotationField, DescriptorSchema, PredictionField, Process
 from resdk.resources.base import BaseResource
 
 
@@ -420,6 +420,45 @@ class AnnotationValueQuery(ResolweQuery):
             # Get corresponding annotation field details in a single query and attach it to
             # the values.
             for field in self.resolwe.annotation_field.filter(id__in=missing.keys()):
+                for value in missing[field.id]:
+                    value._field = field
+                    value._original_values["field"] = field._original_values
+
+
+class PredictionFieldQuery(ResolweQuery):
+    """Add additional method to the prediction field query."""
+
+    def from_path(self, full_path: str) -> "PredictionField":
+        """Get the PredictionField from full path.
+
+        :raises LookupError: when field at the specified path does not exist.
+        """
+        group_name, field_name = full_path.split(".", maxsplit=1)
+        return self.get(name=field_name, group__name=group_name)
+
+
+class PredictionValueQuery(ResolweQuery):
+    """Populate prediction fields with a single query."""
+
+    def _fetch(self):
+        """Make request to the server and populate cache.
+
+        Fetch all values and their fields with 2 queries.
+        """
+        # Execute the query in a single request.
+        super()._fetch()
+
+        missing = collections.defaultdict(list)
+        for value in self._cache:
+            if value._field is None:
+                missing[value.field_id].append(value)
+
+        if missing:
+            # Get corresponding annotation field details in a single query and attach it to
+            # the values.
+            for field in self.resolwe.prediction_field.filter(
+                id__in=missing.keys()
+            ).iterate():
                 for value in missing[field.id]:
                     value._field = field
                     value._original_values["field"] = field._original_values

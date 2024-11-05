@@ -14,6 +14,15 @@ Added
   and propagate this change in ``Data`` resource
 
 
+==========
+Unreleased
+==========
+
+Added
+-----
+- Add support for predictions
+
+
 ===================
 21.2.1 - 2024-10-08
 ===================

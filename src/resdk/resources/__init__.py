@@ -54,6 +54,18 @@ Resource classes
    :members:
    :inherited-members:
 
+.. autoclass:: resdk.resources.PredictionValue
+   :members:
+   :inherited-members:
+
+.. autoclass:: resdk.resources.PredictionGroup
+   :members:
+   :inherited-members:
+
+.. autoclass:: resdk.resources.PredictionField
+   :members:
+   :inherited-members:
+
 .. autoclass:: resdk.resources.User
    :members:
    :inherited-members:
@@ -98,6 +110,7 @@ from .data import Data
 from .descriptor import DescriptorSchema
 from .geneset import Geneset
 from .metadata import Metadata
+from .predictions import PredictionField, PredictionGroup, PredictionValue
 from .process import Process
 from .relation import Relation
 from .sample import Sample
@@ -113,6 +126,9 @@ __all__ = (
     "Geneset",
     "Group",
     "Metadata",
+    "PredictionField",
+    "PredictionGroup",
+    "PredictionValue",
     "Sample",
     "Process",
     "Relation",

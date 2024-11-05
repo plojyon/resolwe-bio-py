@@ -1,7 +1,7 @@
 """Sample resource."""
 
 import logging
-from typing import TYPE_CHECKING, Any, Dict, Optional
+from typing import TYPE_CHECKING, Any, Dict, Optional, Union
 
 from resdk.exceptions import ResolweServerError
 from resdk.shortcuts.sample import SampleUtilsMixin
@@ -12,6 +12,7 @@ from .collection import BaseCollection, Collection
 
 if TYPE_CHECKING:
     from .annotations import AnnotationValue
+    from .predictions import ClassPredictionType, ScorePredictionType
 
 
 class Sample(SampleUtilsMixin, BaseCollection):
@@ -253,6 +254,11 @@ class Sample(SampleUtilsMixin, BaseCollection):
         """Get the annotations for the given sample."""
         return self.resolwe.annotation_value.filter(entity=self.id)
 
+    @property
+    def predictions(self):
+        """Get the predictions for the given sample."""
+        return self.resolwe.prediction_value.filter(entity=self.id)
+
     def get_annotation(self, full_path: str) -> "AnnotationValue":
         """Get the AnnotationValue from full path.
 
@@ -303,3 +309,20 @@ class Sample(SampleUtilsMixin, BaseCollection):
             {"field_path": key, "value": value} for key, value in annotations.items()
         ]
         self.api(self.id).set_annotations.post(payload)
+
+    def get_predictions(self) -> Dict[str, Any]:
+        """Get all predictions for the given sample in a dictionary."""
+        return {
+            str(prediction.field): prediction.value
+            for prediction in self.predictions.all()
+        }
+
+    def set_predictions(
+        self,
+        predictions: Dict[str, Union["ScorePredictionType", "ClassPredictionType"]],
+    ):
+        """Bulk set predictions on the sample."""
+        payload = [
+            {"field_path": key, "value": value} for key, value in predictions.items()
+        ]
+        self.api(self.id).set_predictions.post(payload)

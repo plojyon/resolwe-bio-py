@@ -33,7 +33,13 @@ from resdk.uploader import Uploader
 
 from .constants import CHUNK_SIZE
 from .exceptions import ValidationError, handle_http_exception
-from .query import AnnotationFieldQuery, AnnotationValueQuery, ResolweQuery
+from .query import (
+    AnnotationFieldQuery,
+    AnnotationValueQuery,
+    PredictionFieldQuery,
+    PredictionValueQuery,
+    ResolweQuery,
+)
 from .resources import (
     AnnotationField,
     AnnotationValue,
@@ -43,6 +49,8 @@ from .resources import (
     Geneset,
     Group,
     Metadata,
+    PredictionField,
+    PredictionValue,
     Process,
     Relation,
     Sample,
@@ -108,6 +116,8 @@ class Resolwe:
     resource_query_class = {
         AnnotationValue: AnnotationValueQuery,
         AnnotationField: AnnotationFieldQuery,
+        PredictionValue: PredictionValueQuery,
+        PredictionField: PredictionFieldQuery,
     }
 
     # Map resource class to ResolweQuery name
@@ -126,6 +136,8 @@ class Resolwe:
         Mapping: "mapping",
         Geneset: "geneset",
         Metadata: "metadata",
+        PredictionField: "prediction_field",
+        PredictionValue: "prediction_value",
     }
     # Map ResolweQuery name to it's slug_field
     slug_field_mapping = {
