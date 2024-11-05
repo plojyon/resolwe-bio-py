@@ -419,7 +419,9 @@ class AnnotationValueQuery(ResolweQuery):
         if missing:
             # Get corresponding annotation field details in a single query and attach it to
             # the values.
-            for field in self.resolwe.annotation_field.filter(id__in=missing.keys()):
+            for field in self.resolwe.annotation_field.filter(
+                id__in=missing.keys()
+            ).iterate():
                 for value in missing[field.id]:
                     value._field = field
                     value._original_values["field"] = field._original_values
