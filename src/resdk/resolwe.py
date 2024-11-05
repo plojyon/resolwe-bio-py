@@ -114,30 +114,30 @@ class Resolwe:
     # Map between resource and Query map. Default in ResorweQuery, only overrides must
     # be listed here.
     resource_query_class = {
-        AnnotationValue: AnnotationValueQuery,
         AnnotationField: AnnotationFieldQuery,
-        PredictionValue: PredictionValueQuery,
+        AnnotationValue: AnnotationValueQuery,
         PredictionField: PredictionFieldQuery,
+        PredictionValue: PredictionValueQuery,
     }
 
     # Map resource class to ResolweQuery name
     resource_query_mapping = {
         AnnotationField: "annotation_field",
         AnnotationValue: "annotation_value",
-        Data: "data",
         Collection: "collection",
-        Sample: "sample",
-        Relation: "relation",
-        Process: "process",
+        Data: "data",
         DescriptorSchema: "descriptor_schema",
-        User: "user",
-        Group: "group",
         Feature: "feature",
-        Mapping: "mapping",
         Geneset: "geneset",
+        Group: "group",
+        Mapping: "mapping",
         Metadata: "metadata",
         PredictionField: "prediction_field",
         PredictionValue: "prediction_value",
+        Process: "process",
+        Relation: "relation",
+        Sample: "sample",
+        User: "user",
     }
     # Map ResolweQuery name to it's slug_field
     slug_field_mapping = {
