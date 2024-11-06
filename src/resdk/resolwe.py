@@ -543,7 +543,7 @@ class Resolwe:
                 computed_md5 = md5(os.path.join(download_dir, file_path, file_name))
                 if expected_md5 != computed_md5:
                     raise ValueError(
-                        f"Checksum of downloaded file {file_name} does not match the expected value."
+                        f"Checksum ({computed_md5}) of downloaded file {file_name} does not match the expected value of {expected_md5}."
                     )
 
     def data_usage(self, **query_params):
