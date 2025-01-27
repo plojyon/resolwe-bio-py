@@ -15,6 +15,7 @@ Added
 - Add support for predictions
 - Add version to annotation field
 - Add a resolwe method for fetching the server module versions
+- Add support for ``Python 3.13``
 
 
 ===================
