@@ -17,6 +17,10 @@ Added
 - Add a resolwe method for fetching the server module versions
 - Add support for ``Python 3.13``
 
+Changed
+-------
+- Drop support for ``Python 3.8``
+
 
 ===================
 21.2.1 - 2024-10-08
