@@ -195,11 +195,14 @@ class Uploader:
         if self.resolwe.session is None:
             raise RuntimeError("Session has not been initialized.")
 
-        with file_path.open("rb") as file_, tqdm.tqdm(
-            total=file_size,
-            disable=not show_progress,
-            desc=f"Uploading file {file_path}",
-        ) as progress_bar:
+        with (
+            file_path.open("rb") as file_,
+            tqdm.tqdm(
+                total=file_size,
+                disable=not show_progress,
+                desc=f"Uploading file {file_path}",
+            ) as progress_bar,
+        ):
             while True:
                 chunk = file_.read(CHUNK_SIZE)
                 if not chunk:

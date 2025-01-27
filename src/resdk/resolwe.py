@@ -540,13 +540,16 @@ class Resolwe:
 
                 file_size = sizes[file_directory][file_name]
 
-                with tqdm.tqdm(
-                    total=file_size,
-                    disable=not show_progress,
-                    desc=f"Downloading file {file_name}",
-                ) as progress_bar, open(
-                    os.path.join(download_dir, file_path, file_name), "wb"
-                ) as file_handle:
+                with (
+                    tqdm.tqdm(
+                        total=file_size,
+                        disable=not show_progress,
+                        desc=f"Downloading file {file_name}",
+                    ) as progress_bar,
+                    open(
+                        os.path.join(download_dir, file_path, file_name), "wb"
+                    ) as file_handle,
+                ):
                     response = self.session.get(file_url, stream=True, auth=self.auth)
 
                     if not response.ok:
