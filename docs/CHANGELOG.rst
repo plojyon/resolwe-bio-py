@@ -21,6 +21,10 @@ Changed
 -------
 - Drop support for ``Python 3.8``
 
+Fixed
+-----
+- Fix multi-file download stopped after downolading html file
+
 
 ===================
 21.2.1 - 2024-10-08

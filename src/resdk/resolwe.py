@@ -563,7 +563,7 @@ class Resolwe:
                 if file_name.endswith(".html"):
                     # Due to backend processing, html file fields have
                     # checksums that are difficult to reproduce here.
-                    return
+                    continue
                 expected_md5 = checksums[file_directory][file_name]
                 computed_md5 = md5(os.path.join(download_dir, file_path, file_name))
                 if expected_md5 != computed_md5:
